@@ -35,7 +35,7 @@ fun HabitTimeCard(
             .padding(vertical = 6.dp, horizontal = 2.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Row(

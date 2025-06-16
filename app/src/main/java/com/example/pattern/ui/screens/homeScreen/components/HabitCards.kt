@@ -1,16 +1,16 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.pattern.data.model.Habit
 
 @Composable
@@ -29,16 +28,16 @@ fun HabitCards(
     onHabitTimeChecked: () -> Unit,
 ) {
     val scroll = rememberScrollState()
-    Box(
+    Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
+            .fillMaxSize()
             .padding(paddingValues)
-            .padding(horizontal = 8.dp, vertical = 16.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(24.dp)
-            )
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -49,12 +48,12 @@ fun HabitCards(
             verticalArrangement = Arrangement.Top
         ) {
             Text(
-                modifier = Modifier.padding(10.dp),
                 text = "My Habits",
-                fontSize = 22.sp,
-                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.padding(vertical = 12.dp)
             )
             habits.forEach { habit ->
                 HabitTaskCard(habit = habit, onHabitChecked = onHabitChecked)
