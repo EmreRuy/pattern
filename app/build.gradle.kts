@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.pattern"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.pattern"
@@ -33,9 +33,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
+
     buildFeatures {
         compose = true
     }
@@ -66,5 +70,5 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.konfetti.compose)
-
+    implementation(libs.androidx.material.icons.extended)
 }

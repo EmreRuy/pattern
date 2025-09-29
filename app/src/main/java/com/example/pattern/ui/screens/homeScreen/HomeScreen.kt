@@ -77,7 +77,6 @@ fun HomeScreen() {
             triggerConfetti = false
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
         ConfettiView(
             explodeConfetti = explodeConfetti,
             explodeConfettiCallback = { explodeConfetti = false }
@@ -188,7 +187,6 @@ fun HomeScreen() {
                 )
             }
         }
-    }
 }
 
 
