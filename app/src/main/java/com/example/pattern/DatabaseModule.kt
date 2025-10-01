@@ -29,10 +29,11 @@ object DatabaseModule {
             HabitDatabase::class.java,
             "habit_database"
         )
-            // Since we are using converters, allow database migrations
+            // Since I use converters, allowing database migrations
             .fallbackToDestructiveMigration(true)
             .build()
     }
+
     @Provides
     fun provideHabitDao(database: HabitDatabase): HabitDao {
         return database.habitDao()

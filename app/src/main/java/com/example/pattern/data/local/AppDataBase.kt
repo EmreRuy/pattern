@@ -9,7 +9,7 @@ import androidx.room.TypeConverters
     version = 1,
     exportSchema = false
 )
-@TypeConverters(Converters::class) // Tell Room to use our custom Type Converters
+@TypeConverters(Converters::class) // Tell Room to use my custom Type Converters
 abstract class HabitDatabase : RoomDatabase() {
 
     // Define the DAOs that belong to this database

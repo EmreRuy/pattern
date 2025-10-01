@@ -28,7 +28,6 @@ import androidx.compose.runtime.setValue
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import dagger.hilt.android.AndroidEntryPoint
 
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +54,7 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { showSheet = false },
                         sheetState = sheetState,
                     ) {
-                        AddHabitScreen(onSaveSuccess = { showSheet = false } )
+                        AddHabitScreen(onSaveSuccess = { showSheet = false })
                     }
                 }
                 Scaffold(
@@ -65,7 +64,6 @@ class MainActivity : ComponentActivity() {
                             currentRoute = currentRoute,
                             onItemClick = { item ->
                                 if (item.route == Screens.Add.route) {
-                                    // Shows bottom sheet instead of navigating
                                     showSheet = true
                                 } else if (currentRoute != item.route) {
                                     navController.navigate(item.route) {

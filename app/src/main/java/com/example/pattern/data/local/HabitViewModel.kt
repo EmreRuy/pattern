@@ -21,11 +21,8 @@ class HabitViewModel @Inject constructor(
     private val repository: HabitRepository
 ) : ViewModel() {
 
-    // --- State Management for HomeView ---
-
     /**
      * The StateFlow that the HomeView will observe. It contains the list of all habits
-     * and UI status (like loading).
      */
     val homeUiState: StateFlow<HomeUiState> = repository.getAllHabitsStream()
         .map { habits ->
@@ -50,15 +47,14 @@ class HabitViewModel @Inject constructor(
             println("Error: Habit name cannot be empty.")
             return
         }
-
-        // 1. Convert hours/minutes into a single Int in minutes
+        // Converts hours/minutes into a single Int in minutes
         val totalDurationInMinutes = if (type == HabitType.BUILD) {
             (durationHours * 60) + durationMinutes
         } else {
             null
         }
 
-        // 2. Create the Habit Entity object
+        // Creates the Habit Entity object
         val newHabit = Habit(
             name = name.trim(),
             type = type,
@@ -67,14 +63,12 @@ class HabitViewModel @Inject constructor(
             selectedDays = selectedDays,
             reminderEnabled = reminderEnabled
         )
-
-        // 3. Launch a coroutine to insert the data off the main thread
+        // Launch a coroutine to insert the data off the main thread
         viewModelScope.launch {
             try {
                 repository.insertHabit(newHabit)
                 println("Habit saved successfully: ${newHabit.name}")
             } catch (e: Exception) {
-                // Handle the error (e.g., logging or showing a toast to the user)
                 println("Failed to save habit: ${e.message}")
             }
         }

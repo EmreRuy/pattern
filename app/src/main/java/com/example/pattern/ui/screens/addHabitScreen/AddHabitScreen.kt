@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pattern.data.local.HabitType
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.screens.addHabitScreen.components.EmojiSelector
@@ -25,7 +24,7 @@ import java.time.LocalTime
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitScreen(
-    onSaveSuccess: () -> Unit, // Renamed 'onSave' for clarity, now called after save logic
+    onSaveSuccess: () -> Unit,
     habitViewModel: HabitViewModel = hiltViewModel()
 ) {
     var habitName by remember { mutableStateOf("") }
@@ -35,14 +34,14 @@ fun AddHabitScreen(
     var emoji by remember { mutableStateOf("🔥") }
     var buildHabitDays by remember { mutableStateOf(listOf<DayOfWeek>()) }
 
-    // 2. Add State for the missing duration (required for database insertion)
+    // State for the missing duration
     var durationHours by remember { mutableIntStateOf(0) }
     var durationMinutes by remember { mutableIntStateOf(30) }
 
     val focusManager = LocalFocusManager.current
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("New Habit") }) } // Added a basic Top Bar for context
+        topBar = { TopAppBar(title = { Text("New Habit") }) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -69,10 +68,11 @@ fun AddHabitScreen(
                     selectedDays = buildHabitDays,
                     onDaysChange = { buildHabitDays = it },
                     // Pass duration state down
-                  /*  durationHours = durationHours,
-                    onDurationHoursChange = { durationHours = it },
-                    durationMinutes = durationMinutes,
-                    onDurationMinutesChange = { durationMinutes = it } */
+                    /*  durationHours = durationHours,
+                      onDurationHoursChange = { durationHours = it },
+                      durationMinutes = durationMinutes,
+                      onDurationMinutesChange = { durationMinutes = it } */
+                    // will be added later, remember this!!
                 )
 
                 ReminderCard(reminderEnabled, reminderTime, onToggle = { reminderEnabled = it })
@@ -80,20 +80,18 @@ fun AddHabitScreen(
 
                 Box(modifier = Modifier.padding(bottom = 16.dp)) {
                     Button(
-                        // 3. Implement the Save logic
                         onClick = {
-                            // Convert the habit type string to the Enum
+                            // Converting the habit type string to the Enum
                             val habitTypeEnum = when (habitType) {
                                 "Build" -> HabitType.BUILD
                                 "Quit" -> HabitType.QUIT
                                 "Task" -> HabitType.TASK
                                 else -> HabitType.BUILD
                             }
-
                             // Convert the DayOfWeek list to the database's List<Boolean> format
                             val dayListBooleans = DayOfWeek.entries.map { it in buildHabitDays }
 
-                            // Calls the ViewModel function to insert data
+                            // this one Calls the ViewModel function to insert data
                             habitViewModel.saveNewHabit(
                                 name = habitName,
                                 type = habitTypeEnum,
@@ -106,7 +104,9 @@ fun AddHabitScreen(
 
                             onSaveSuccess()
                         },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         enabled = habitName.isNotBlank()
                     ) {

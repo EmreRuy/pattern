@@ -17,38 +17,30 @@ class HabitRepository @Inject constructor(
 ) {
 
     /**
-     * Retrieves all habits from the local database.
-     * The Flow stream ensures the HomeView automatically updates in real-time
+      Retrieves all habits from the local database.
+      The Flow stream ensures the HomeView automatically updates in real-time
      */
     fun getAllHabitsStream(): Flow<List<Habit>> {
         return habitDao.getAllHabits()
     }
 
     /**
-     * Retrieves a single habit by ID.
+     Retrieves a single habit by ID.
      */
     fun getHabitStream(id: Long): Flow<Habit?> {
         return habitDao.getHabit(id)
     }
 
     /**
-     Inserts a new Habit into the database.
      This will be called when the user clicks 'Save' on the AddHabitScreen.
      */
     suspend fun insertHabit(habit: Habit) {
         habitDao.insert(habit)
     }
 
-    /**
-     Updates an existing Habit.
-     */
     suspend fun updateHabit(habit: Habit) {
         habitDao.update(habit)
     }
-
-    /**
-     * Deletes a Habit.
-     */
     suspend fun deleteHabit(habit: Habit) {
         habitDao.delete(habit)
     }

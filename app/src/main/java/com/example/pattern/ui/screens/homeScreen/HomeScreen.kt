@@ -60,18 +60,14 @@ fun PreviewOfHomeScreen() {
 fun HomeScreen(
     habitViewModel: HabitViewModel = hiltViewModel()
 ) {
-    // 1. Collect the real-time state from the ViewModel
+    // collecting real time state from viewmodel
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
-
     var explodeConfetti by remember { mutableStateOf(false) }
     var triggerConfetti by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val selectedDay = remember { mutableIntStateOf(180) }
-    // NOTE: Ensure generateNext365Days is accessible here or defined at file level
     val dayList = remember { generateNext365Days() }
-
     LaunchedEffect(Unit) {
-        // Scroll to 'today' (index 180) on initial load
         listState.scrollToItem(selectedDay.intValue)
     }
     LaunchedEffect(triggerConfetti) {
@@ -81,34 +77,21 @@ fun HomeScreen(
             triggerConfetti = false
         }
     }
-
-    // --- START OF FIXED DATE/INDEX LOGIC ---
-
-    // 1. Determine the exact LocalDate for the selected index (mirroring generateNext365Days)
     val today = LocalDate.now(ZoneId.systemDefault())
-
     val selectedDate = remember(selectedDay.intValue) {
         today
-            .minusDays(180)             // Start from 180 days ago
-            .plusDays(selectedDay.intValue.toLong()) // Add the current index (0-364)
+            .minusDays(180)
+            .plusDays(selectedDay.intValue.toLong())
     }
-
-    // 2. Calculate the required database index (0=Mon, 6=Sun)
-    // DayOfWeek.value is 1 (Mon) to 7 (Sun). We convert it to 0-6.
     val selectedDbIndex = selectedDate.dayOfWeek.value - 1
 
-    // 3. Filter the live list of habits based on the correct database index
+
     val habits = uiState.habitList
         .filter { habit ->
-            // Check if the habit is marked for the calculated day index
             habit.selectedDays.getOrNull(selectedDbIndex) == true
         }
-        .map { it.toUiModel() } // Assuming 'toUiModel()' is defined elsewhere and accessible
+        .map { it.toUiModel() }
 
-    // --- END OF FIXED DATE/INDEX LOGIC ---
-
-
-    // Assuming ConfettiView is defined elsewhere
     ConfettiView(
         explodeConfetti = explodeConfetti,
         explodeConfettiCallback = { explodeConfetti = false }
@@ -122,7 +105,6 @@ fun HomeScreen(
                         .background(MaterialTheme.colorScheme.background)
                         .padding(vertical = 8.dp)
                 ) {
-                    // Top Row with Menu, App Name, Settings (unchanged)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -130,7 +112,6 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // These require R.drawable.menu and R.drawable.settings to be available
                         Icon(
                             painter = painterResource(id = R.drawable.menu),
                             contentDescription = "Menu Icon",
@@ -138,7 +119,6 @@ fun HomeScreen(
                             tint = MaterialTheme.colorScheme.onBackground
                         )
 
-                        // 2. App Name Text
                         Text(
                             text = stringResource(id = R.string.app_name),
                             fontSize = 22.sp,
@@ -147,7 +127,6 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
 
-                        // 3. Settings Icon
                         Icon(
                             painter = painterResource(id = R.drawable.settings),
                             contentDescription = "Settings Icon",
@@ -157,7 +136,7 @@ fun HomeScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Calendar/Date Selector Row (unchanged)
+                    // Calendar/Date Selector Row
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -194,8 +173,7 @@ fun HomeScreen(
                 }
             }
         ) { paddingValues ->
-
-            // 4. Pass the filtered list to your display component
+            // Passing the filtered list
             HabitCards(
                 habits = habits,
                 paddingValues = paddingValues,
@@ -206,10 +184,11 @@ fun HomeScreen(
                     triggerConfetti = true
                 }
             )
-            // Optional: Show a message if there are no habits for the selected day
             if (habits.isEmpty() && uiState.habitList.isNotEmpty() && !uiState.isLoading) {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -220,7 +199,9 @@ fun HomeScreen(
             } else if (uiState.habitList.isEmpty() && !uiState.isLoading) {
                 // Initial empty state when no habits exist in the database
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
