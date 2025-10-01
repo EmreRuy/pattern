@@ -1,5 +1,6 @@
 package com.example.pattern
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.room.Room
+import com.example.pattern.data.local.AppDatabase
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 
 class MainActivity : ComponentActivity() {
@@ -95,4 +98,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
+fun provideDatabase(context: Context): AppDatabase {
+    return Room.databaseBuilder(
+        context.applicationContext,
+        AppDatabase::class.java,
+        "habit_db"
+    )
+        .fallbackToDestructiveMigration(false) // easy development migrations
+        .build()
+}

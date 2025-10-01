@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -71,4 +72,13 @@ dependencies {
 
     implementation(libs.konfetti.compose)
     implementation(libs.androidx.material.icons.extended)
+
+    // Room Runtime
+    implementation(libs.androidx.room.runtime)
+
+    // Room Kotlin Extensions (Kotlin Coroutine Flow, support)
+    implementation(libs.androidx.room.ktx)
+
+    // Room Compiler
+    ksp(libs.androidx.room.compiler)
 }
