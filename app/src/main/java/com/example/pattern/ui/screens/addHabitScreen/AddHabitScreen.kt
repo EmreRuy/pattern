@@ -11,6 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pattern.data.local.HabitType
+import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.screens.addHabitScreen.components.EmojiSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitDetailsCard
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitTypeSelectorModern
@@ -20,51 +24,91 @@ import java.time.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddHabitScreen(onSave: () -> Unit) {
+fun AddHabitScreen(
+    onSaveSuccess: () -> Unit, // Renamed 'onSave' for clarity, now called after save logic
+    habitViewModel: HabitViewModel = hiltViewModel()
+) {
     var habitName by remember { mutableStateOf("") }
     var habitType by remember { mutableStateOf("Build") }
     var reminderEnabled by remember { mutableStateOf(false) }
     var reminderTime by remember { mutableStateOf(LocalTime.now()) }
     var emoji by remember { mutableStateOf("🔥") }
     var buildHabitDays by remember { mutableStateOf(listOf<DayOfWeek>()) }
+
+    // 2. Add State for the missing duration (required for database insertion)
+    var durationHours by remember { mutableIntStateOf(0) }
+    var durationMinutes by remember { mutableIntStateOf(30) }
+
     val focusManager = LocalFocusManager.current
 
-    Scaffold { padding ->
-        // I wrapped the whole column inside of a box so that after user done with typing and click somewhere else it clears focus
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("New Habit") }) } // Added a basic Top Bar for context
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
-                    focusManager.clearFocus(force = true) // this  is forcing clear focus and hide keyboard
+                    focusManager.clearFocus(force = true)
                 }
         ) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 HabitDetailsCard(habitName) { habitName = it }
+
                 HabitTypeSelectorModern(
                     selectedType = habitType,
                     onTypeChange = { habitType = it },
                     selectedDays = buildHabitDays,
-                    onDaysChange = { buildHabitDays = it }
+                    onDaysChange = { buildHabitDays = it },
+                    // Pass duration state down
+                  /*  durationHours = durationHours,
+                    onDurationHoursChange = { durationHours = it },
+                    durationMinutes = durationMinutes,
+                    onDurationMinutesChange = { durationMinutes = it } */
                 )
+
                 ReminderCard(reminderEnabled, reminderTime, onToggle = { reminderEnabled = it })
                 EmojiSelector(emoji) { emoji = it }
-                Box(modifier = Modifier.padding(bottom =  16.dp)) {
+
+                Box(modifier = Modifier.padding(bottom = 16.dp)) {
                     Button(
-                        onClick = onSave,
-                        modifier = Modifier.fillMaxWidth(),
+                        // 3. Implement the Save logic
+                        onClick = {
+                            // Convert the habit type string to the Enum
+                            val habitTypeEnum = when (habitType) {
+                                "Build" -> HabitType.BUILD
+                                "Quit" -> HabitType.QUIT
+                                "Task" -> HabitType.TASK
+                                else -> HabitType.BUILD
+                            }
+
+                            // Convert the DayOfWeek list to the database's List<Boolean> format
+                            val dayListBooleans = DayOfWeek.entries.map { it in buildHabitDays }
+
+                            // Calls the ViewModel function to insert data
+                            habitViewModel.saveNewHabit(
+                                name = habitName,
+                                type = habitTypeEnum,
+                                durationHours = durationHours,
+                                durationMinutes = durationMinutes,
+                                selectedDays = dayListBooleans,
+                                reminderEnabled = reminderEnabled,
+                                iconCode = emoji
+                            )
+
+                            onSaveSuccess()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        enabled = habitName.isNotBlank()
                     ) {
                         Text("Save", style = MaterialTheme.typography.titleMedium)
                     }

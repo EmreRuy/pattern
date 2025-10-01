@@ -11,17 +11,17 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HabitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHabit(habit: Habit)
+    suspend fun insert(habit: Habit): Long
 
     @Update
-    suspend fun updateHabit(habit: Habit)
+    suspend fun update(habit: Habit)
 
     @Delete
-    suspend fun deleteHabit(habit: Habit)
+    suspend fun delete(habit: Habit)
 
-    @Query("SELECT * FROM habits ORDER BY id DESC")
+    @Query("SELECT * FROM habits WHERE id = :id")
+    fun getHabit(id: Long): Flow<Habit?>
+
+    @Query("SELECT * FROM habits ORDER BY createdAt DESC")
     fun getAllHabits(): Flow<List<Habit>>
-
-    @Query("SELECT * FROM habits WHERE id = :habitId LIMIT 1")
-    suspend fun getHabitById(habitId: Int): Habit?
 }

@@ -2,59 +2,81 @@ package com.example.pattern.data.local
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class HabitViewModel(
-    private val dao: HabitDao
+data class HomeUiState(
+    val habitList: List<Habit> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
+@HiltViewModel
+class HabitViewModel @Inject constructor(
+    private val repository: HabitRepository
 ) : ViewModel() {
 
-    // Expose all habits as a StateFlow so Compose can observe changes
-    val habits = dao.getAllHabits()
+    // --- State Management for HomeView ---
+
+    /**
+     * The StateFlow that the HomeView will observe. It contains the list of all habits
+     * and UI status (like loading).
+     */
+    val homeUiState: StateFlow<HomeUiState> = repository.getAllHabitsStream()
+        .map { habits ->
+            HomeUiState(habitList = habits)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+            initialValue = HomeUiState(isLoading = true)
         )
 
-    // Add a new habit
-    fun addHabit(
+    fun saveNewHabit(
         name: String,
-        type: String,
-        emoji: String,
-        durationHours: Int?,
-        durationMinutes: Int?,
-        selectedDays: String,
+        type: HabitType,
+        durationHours: Int,
+        durationMinutes: Int,
+        selectedDays: List<Boolean>,
         reminderEnabled: Boolean,
-        reminderTime: String?
+        iconCode: String
     ) {
-        viewModelScope.launch {
-            val habit = Habit(
-                name = name,
-                type = type,
-                emoji = emoji,
-                durationHours = durationHours,
-                durationMinutes = durationMinutes,
-                reminderEnabled = reminderEnabled,
-                reminderTime = reminderTime,
-                selectedDays = selectedDays
-            )
-            dao.insertHabit(habit)
+        if (name.isBlank()) {
+            println("Error: Habit name cannot be empty.")
+            return
         }
-    }
 
-    // Update an existing habit
-    fun updateHabit(habit: Habit) {
-        viewModelScope.launch {
-            dao.updateHabit(habit)
+        // 1. Convert hours/minutes into a single Int in minutes
+        val totalDurationInMinutes = if (type == HabitType.BUILD) {
+            (durationHours * 60) + durationMinutes
+        } else {
+            null
         }
-    }
 
-    // Delete a habit
-    fun deleteHabit(habit: Habit) {
+        // 2. Create the Habit Entity object
+        val newHabit = Habit(
+            name = name.trim(),
+            type = type,
+            iconCode = iconCode,
+            durationInMinutes = totalDurationInMinutes,
+            selectedDays = selectedDays,
+            reminderEnabled = reminderEnabled
+        )
+
+        // 3. Launch a coroutine to insert the data off the main thread
         viewModelScope.launch {
-            dao.deleteHabit(habit)
+            try {
+                repository.insertHabit(newHabit)
+                println("Habit saved successfully: ${newHabit.name}")
+            } catch (e: Exception) {
+                // Handle the error (e.g., logging or showing a toast to the user)
+                println("Failed to save habit: ${e.message}")
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -68,6 +69,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.androidx.ui.text.google.fonts)
+    //hilt Nav Compose
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.konfetti.compose)
@@ -81,4 +83,10 @@ dependencies {
 
     // Room Compiler
     ksp(libs.androidx.room.compiler)
+    //Gson
+    implementation(libs.gson)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
 }

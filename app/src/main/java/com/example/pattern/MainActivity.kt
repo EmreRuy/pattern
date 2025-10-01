@@ -1,6 +1,5 @@
 package com.example.pattern
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,10 +25,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.room.Room
-import com.example.pattern.data.local.AppDatabase
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
+import dagger.hilt.android.AndroidEntryPoint
 
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { showSheet = false },
                         sheetState = sheetState,
                     ) {
-                        AddHabitScreen(onSave = { showSheet = false })
+                        AddHabitScreen(onSaveSuccess = { showSheet = false } )
                     }
                 }
                 Scaffold(
@@ -96,14 +96,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-fun provideDatabase(context: Context): AppDatabase {
-    return Room.databaseBuilder(
-        context.applicationContext,
-        AppDatabase::class.java,
-        "habit_db"
-    )
-        .fallbackToDestructiveMigration(false) // easy development migrations
-        .build()
 }
