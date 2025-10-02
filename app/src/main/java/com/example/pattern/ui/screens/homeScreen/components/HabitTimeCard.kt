@@ -22,12 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.pattern.data.model.Habit
+import com.example.pattern.data.model.HabitCard
 
 @Composable
 fun HabitTimeCard(
-    habit: Habit,
-    onHabitTimeChecked: () -> Unit,
+    habit: HabitCard,
+    onHabitTimeChecked: () -> Unit
 ) {
     Card(
         modifier = Modifier

@@ -22,16 +22,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.pattern.data.model.Habit
+import com.example.pattern.data.model.HabitCard
 
 @Composable
 fun HabitTaskCard(
-    habit: Habit,
-    onHabitChecked: () -> Unit
+    habit: HabitCard,
+    onHabitChecked: () -> Unit,
+    onCardClick: (Int) -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onCardClick(habit.id) }
             .padding(vertical = 6.dp, horizontal = 2.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(

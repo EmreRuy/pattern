@@ -10,6 +10,10 @@ sealed class Screens(val route: String) {
     object Home : Screens("home_route")
     object Add : Screens("add_route")
     object Profile : Screens("profile_route")
+    object HabitDetail : Screens("habit_detail_route/{habitId}") {
+        // Helper function to dynamically construct the route when navigating
+        fun createRoute(habitId: Int) = "habit_detail_route/$habitId"
+    }
 }
 
 data class BottomNavigationItem(

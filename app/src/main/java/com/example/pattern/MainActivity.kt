@@ -25,6 +25,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitCardDetailsScreen
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -84,10 +87,27 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(paddingValues)
                     ) {
                         composable(Screens.Home.route) {
-                            HomeScreen()
+                            HomeScreen(navController = navController)
                         }
                         composable(Screens.Profile.route) {
                             ProfileScreen()
+                        }
+                        composable(
+                            route = Screens.HabitDetail.route,
+                            arguments = listOf(
+                                navArgument("habitId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val habitId = backStackEntry.arguments?.getInt("habitId")
+                            if (habitId != null) {
+                                // This screen will cover the entire view
+                                HabitCardDetailsScreen(
+                                    habitId = habitId,
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
                         }
                     }
                 }

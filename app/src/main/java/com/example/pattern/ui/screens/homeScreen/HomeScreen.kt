@@ -39,26 +39,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import com.example.pattern.R
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.data.local.toUiModel
 import com.example.pattern.ui.components.ConfettiView
+import com.example.pattern.ui.navigation.Screens
 import com.example.pattern.ui.screens.homeScreen.components.HabitCards
 import com.example.pattern.utils.generateNext365Days
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.ZoneId
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewOfHomeScreen() {
-    HomeScreen()
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    habitViewModel: HabitViewModel = hiltViewModel()
+    habitViewModel: HabitViewModel = hiltViewModel(),
+    navController: NavHostController,
 ) {
     // collecting real time state from viewmodel
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
@@ -182,6 +180,9 @@ fun HomeScreen(
                 },
                 onHabitTimeChecked = {
                     triggerConfetti = true
+                },
+                onHabitCardClick = { habitId ->
+                    navController.navigate(Screens.HabitDetail.createRoute(habitId))
                 }
             )
             if (habits.isEmpty() && uiState.habitList.isNotEmpty() && !uiState.isLoading) {

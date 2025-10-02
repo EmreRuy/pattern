@@ -14,20 +14,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.pattern.data.model.Habit
+import com.example.pattern.data.model.HabitCard
 
 @Composable
 fun HabitCards(
-    habits: List<Habit>,
+    habits: List<HabitCard>,
     paddingValues: PaddingValues,
     onHabitChecked: () -> Unit,
     onHabitTimeChecked: () -> Unit,
+    onHabitCardClick: (Int) -> Unit,
 ) {
-    val scroll = rememberScrollState()
+    val scrollUi = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(scroll)
+                .verticalScroll(scrollUi)
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -42,7 +43,7 @@ fun HabitCards(
                 modifier = Modifier.padding(vertical = 12.dp)
             )
             habits.forEach { habit ->
-                HabitTaskCard(habit = habit, onHabitChecked = onHabitChecked)
+                HabitTaskCard(habit = habit, onHabitChecked = onHabitChecked, onHabitCardClick)
                 HabitTimeCard(habit = habit, onHabitTimeChecked = onHabitTimeChecked)
             }
         }
