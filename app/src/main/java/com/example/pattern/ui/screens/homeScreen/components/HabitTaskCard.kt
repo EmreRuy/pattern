@@ -28,7 +28,7 @@ import com.example.pattern.data.model.HabitCard
 fun HabitTaskCard(
     habit: HabitCard,
     onHabitChecked: () -> Unit,
-    onCardClick: (Int) -> Unit,
+    onCardClick: (Int) -> Unit
 ) {
     Card(
         modifier = Modifier

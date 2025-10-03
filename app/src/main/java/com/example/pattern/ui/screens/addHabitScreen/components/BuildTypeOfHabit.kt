@@ -3,18 +3,13 @@ package com.example.pattern.ui.screens.addHabitScreen.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -29,8 +24,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.pattern.di.DaySelector
 import com.example.pattern.ui.screens.profileScreen.components.WheelDurationPicker
 import java.time.DayOfWeek
 
@@ -85,43 +80,10 @@ fun BuildTypeOfHabit(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-            val daysOfWeek = DayOfWeek.entries.toTypedArray()
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                daysOfWeek.forEach { day ->
-                    val isSelected = selectedDays.contains(day)
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            val updated = if (isSelected) {
-                                selectedDays - day
-                            } else {
-                                selectedDays + day
-                            }
-                            onDaysChange(updated)
-                        },
-                        label = {
-                            Text(
-                                text = day.name.take(1).replaceFirstChar { it.uppercaseChar() },
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        shape = CircleShape,
-                        modifier = Modifier.size(48.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                            selectedLabelColor = MaterialTheme.colorScheme.primary,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            labelColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    )
-                }
-            }
+            DaySelector(
+                selectedDays = selectedDays,
+                onDaysChange = onDaysChange
+            )
         }
     }
 

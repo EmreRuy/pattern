@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.pattern.data.local.HabitType
 import com.example.pattern.data.model.HabitCard
 
 @Composable
@@ -25,27 +26,38 @@ fun HabitCards(
     onHabitCardClick: (Int) -> Unit,
 ) {
     val scrollUi = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(scrollUi)
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "My Habits",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
-            habits.forEach { habit ->
-                HabitTaskCard(habit = habit, onHabitChecked = onHabitChecked, onHabitCardClick)
-                HabitTimeCard(habit = habit, onHabitTimeChecked = onHabitTimeChecked)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(scrollUi)
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "My Habits",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.padding(vertical = 12.dp)
+        )
+
+        habits.forEach { habit ->
+            when (habit.type) {
+                HabitType.BUILD -> HabitTimeCard(
+                    habit = habit,
+                    onHabitTimeChecked = onHabitTimeChecked
+                )
+                HabitType.QUIT, HabitType.TASK -> HabitTaskCard(
+                    habit = habit,
+                    onHabitChecked = onHabitChecked,
+                    onCardClick = onHabitCardClick
+                )
             }
         }
     }
+}
 

@@ -111,10 +111,9 @@ fun HabitTypeSelectorModern(
             }
 
             "Quit" -> {
-                Text(
-                    text = "You're trying to quit something 🚫",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                QuitTypeOfHabit(
+                    selectedDays = selectedDays,
+                    onDaysChange = onDaysChange
                 )
             }
 

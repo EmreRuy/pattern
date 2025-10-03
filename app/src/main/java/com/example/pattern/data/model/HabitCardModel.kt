@@ -3,10 +3,12 @@ package com.example.pattern.data.model
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.pattern.data.local.HabitType
 
 data class HabitCard(
     val id: Int,
     val name: String,
+    val type: HabitType,
     val icon: ImageVector,
     var isChecked: MutableState<Boolean> = mutableStateOf(false),
     var isTimeChecked: MutableState<Boolean> = mutableStateOf(false)
