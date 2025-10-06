@@ -18,8 +18,9 @@ fun LocalHabit.toUiModel(): UiHabit {
         id = this.id,
         name = this.name,
         type = this.type,
+        iconEmoji = this.iconCode,
         icon = icon,
         isChecked = mutableStateOf(this.isCompleted),
-        isTimeChecked = mutableStateOf(false) // Assuming Habit does not track this
+        isTimeChecked = mutableStateOf(false)
     )
 }

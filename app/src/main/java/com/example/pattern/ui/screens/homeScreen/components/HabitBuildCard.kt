@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pattern.data.model.HabitCard
 
 @Composable
@@ -46,10 +47,9 @@ fun HabitBuildCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = habit.icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                Text(
+                    text = habit.iconEmoji ?: "",
+                    fontSize = 24.sp,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))

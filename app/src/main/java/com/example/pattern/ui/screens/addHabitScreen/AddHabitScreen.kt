@@ -108,7 +108,7 @@ fun AddHabitScreen(
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        enabled = habitName.isNotBlank()
+                        enabled = habitName.isNotBlank() && emoji.isNotBlank()
                     ) {
                         Text("Save", style = MaterialTheme.typography.titleMedium)
                     }
