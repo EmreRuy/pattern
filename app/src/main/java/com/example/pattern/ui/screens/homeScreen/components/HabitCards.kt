@@ -47,10 +47,11 @@ fun HabitCards(
 
         habits.forEach { habit ->
             when (habit.type) {
-                HabitType.BUILD -> HabitTimeCard(
+                HabitType.BUILD -> HabitBuildCard(
                     habit = habit,
                     onHabitTimeChecked = onHabitTimeChecked
                 )
+
                 HabitType.QUIT, HabitType.TASK -> HabitTaskCard(
                     habit = habit,
                     onHabitChecked = onHabitChecked,

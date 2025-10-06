@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.pattern.data.model.HabitCard
 
 @Composable
-fun HabitTimeCard(
+fun HabitBuildCard(
     habit: HabitCard,
     onHabitTimeChecked: () -> Unit
 ) {
