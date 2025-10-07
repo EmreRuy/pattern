@@ -4,7 +4,7 @@
 It demonstrates clean architecture, reactive programming, and best practices in Android development.
 
 ## Features
-- ✅ Create, track, and manage habits with different types: **Build**, **Quit**, and **Task**.  
+- ✅ Create, track, and manage habits with different types: **Grow**, **Drop**, and **Task**.  
 - 📅 Supports daily, weekly, and custom recurring schedules.  
 - 🎨 Clean, modern UI built with **Jetpack Compose**.  
 - 🗂️ Local persistence using **Room Database**.  
