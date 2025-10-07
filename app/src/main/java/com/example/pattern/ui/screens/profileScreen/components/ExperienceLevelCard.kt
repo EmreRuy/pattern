@@ -71,7 +71,7 @@ fun ExperienceLevelCard(
             Text(
                 text = "Step by step walk the thousand-mile road",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

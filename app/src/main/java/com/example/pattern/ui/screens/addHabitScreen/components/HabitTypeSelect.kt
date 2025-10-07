@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.DayOfWeek
 
@@ -33,17 +34,16 @@ fun HabitTypeSelectorModern(
     onDaysChange: (List<DayOfWeek>) -> Unit
 ) {
     val habitTypes = listOf(
-        "Build" to "🚀",
-        "Quit" to "🛑",
+        "Grow" to "🚀",
+        "Drop" to "🛑",
         "Task" to "🔁"
     )
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
+            .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -56,7 +56,7 @@ fun HabitTypeSelectorModern(
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = "Customize Your Habit",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -103,25 +103,24 @@ fun HabitTypeSelectorModern(
             }
         }
         when (selectedType) {
-            "Build" -> {
-                BuildTypeOfHabit(
+            "Grow" -> {
+                GrowTypeOfHabit(
                     selectedDays = selectedDays,
                     onDaysChange = onDaysChange
                 )
             }
 
-            "Quit" -> {
-                QuitTypeOfHabit(
+            "Drop" -> {
+                DropTypeOfHabit(
                     selectedDays = selectedDays,
                     onDaysChange = onDaysChange
                 )
             }
 
             "Task" -> {
-                Text(
-                    text = "You're managing a recurring task 🔁",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                TaskTypeOfHabits(
+                    selectedDays = selectedDays,
+                    onDaysChange = onDaysChange
                 )
             }
         }
