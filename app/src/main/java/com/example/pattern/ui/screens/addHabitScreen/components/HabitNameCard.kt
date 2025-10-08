@@ -39,7 +39,7 @@ fun PreviewOfHabitName() {
 fun HabitNameCard(habitName: String, onNameChange: (String) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -77,7 +77,7 @@ fun HabitNameCard(habitName: String, onNameChange: (String) -> Unit) {
                     fontSize = 20.sp,
                     lineHeight = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 ),
                 shape = RoundedCornerShape(20.dp),
 

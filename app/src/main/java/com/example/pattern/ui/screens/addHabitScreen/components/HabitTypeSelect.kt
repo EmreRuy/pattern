@@ -41,7 +41,7 @@ fun HabitTypeSelectorModern(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
