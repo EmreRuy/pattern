@@ -77,18 +77,20 @@ fun WheelDurationPicker(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Hours Picker
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 WheelPicker(
                     items = (0..23).map { it.toString().padStart(2, '0') },
                     selectedIndex = durationHours,
                     onSelectedIndexChange = { onDurationChange(it, durationMinutes) }
                 )
-                Text(
+              /*  Text(
                     "Hours",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
-                )
+                ) */
             }
             // Visual Separator
             Spacer(modifier = Modifier.width(24.dp))
@@ -106,12 +108,12 @@ fun WheelDurationPicker(
                     selectedIndex = durationMinutes / 5,
                     onSelectedIndexChange = { onDurationChange(durationHours, it * 5) }
                 )
-                Text(
+              /*  Text(
                     "Minutes",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
-                )
+                ) */
             }
         }
     }

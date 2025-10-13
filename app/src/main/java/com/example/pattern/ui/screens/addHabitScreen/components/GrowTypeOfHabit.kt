@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.addHabitScreen.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTimeFilled
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,8 +23,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -86,7 +87,7 @@ fun GrowTypeOfHabit(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surface)
                     .clickable { showDurationPicker = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -140,7 +141,7 @@ fun GrowTypeOfHabit(
                 ),
                 title = { Text("Select Duration") }
             )
-           HorizontalDivider(
+            HorizontalDivider(
                 thickness = DividerDefaults.Thickness,
                 color = MaterialTheme.colorScheme.outlineVariant
             )
@@ -158,19 +159,44 @@ fun GrowTypeOfHabit(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                TextButton(onClick = { showDurationPicker = false }) {
+                OutlinedButton(
+                    onClick = { showDurationPicker = false },
+                    shape = RoundedCornerShape(24.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    modifier = Modifier
+                        .height(48.dp)
+                        .weight(1f)
+                ) {
                     Text("Cancel")
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = {
-                    selectedHours = tempHours
-                    selectedMinutes = tempMinutes
-                    showDurationPicker = false
-                }) {
-                    Text("Confirm")
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        selectedHours = tempHours
+                        selectedMinutes = tempMinutes
+                        showDurationPicker = false
+                    },
+                    shape = RoundedCornerShape(24.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier
+                        .height(48.dp)
+                        .weight(1f),
+                    // elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text("Confirm", fontWeight = FontWeight.SemiBold)
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
