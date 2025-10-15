@@ -85,12 +85,6 @@ fun WheelDurationPicker(
                     selectedIndex = durationHours,
                     onSelectedIndexChange = { onDurationChange(it, durationMinutes) }
                 )
-              /*  Text(
-                    "Hours",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold
-                ) */
             }
             // Visual Separator
             Spacer(modifier = Modifier.width(24.dp))
@@ -98,7 +92,8 @@ fun WheelDurationPicker(
                 modifier = Modifier
                     .height(80.dp)
                     .width(1.dp),
-                thickness = DividerDefaults.Thickness, color = MaterialTheme.colorScheme.outlineVariant
+                thickness = DividerDefaults.Thickness,
+                color = MaterialTheme.colorScheme.outlineVariant
             )
             Spacer(modifier = Modifier.width(24.dp))
             // Minutes Picker
@@ -108,12 +103,6 @@ fun WheelDurationPicker(
                     selectedIndex = durationMinutes / 5,
                     onSelectedIndexChange = { onDurationChange(durationHours, it * 5) }
                 )
-              /*  Text(
-                    "Minutes",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold
-                ) */
             }
         }
     }

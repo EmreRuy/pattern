@@ -1,6 +1,7 @@
 package com.example.pattern.ui.screens.addHabitScreen.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -33,13 +36,14 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -56,28 +60,40 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            FlowRow(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+
+            // Emoji Grid
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                listOf(
-                    "🔥", "🏃", "📚", "💧", "🌿", "😴", "🧘", "🍎", "💪", "📝",
-                    "🎨", "🎧", "🚴", "🏊", "🏋️‍♂️", "🥗", "🛌", "🎯", "📖", "🧩",
-                    "💡", "🎹", "🎤", "🖌️", "🎬", "🎲", "🕹️", "🌞", "🌙", "🕊️"
-                ).forEach { icon ->
-                    Surface(
-                        shape = CircleShape,
-                        color = if (selectedEmoji == icon)
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        else MaterialTheme.colorScheme.surface,
-                        tonalElevation = if (selectedEmoji == icon) 4.dp else 0.dp,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onEmojiChange(icon) }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(icon, fontSize = 24.sp)
+                FlowRow(
+                    modifier = Modifier.wrapContentWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val emojis = listOf(
+                        "🔥", "🏃", "📚", "💧", "🌿", "😴", "🧘", "🍎", "💪", "📝",
+                        "🎨", "🎧", "🚴", "🏊", "🏋️‍♂️", "🥗", "🛌", "🎯", "📖", "🧩",
+                        "💡", "🎹", "🎤", "🖌️", "🎬", "🎲", "🕹️", "🌞", "🌙", "🕊️"
+                    )
+                    emojis.forEach { icon ->
+                        val interactionSource = remember { MutableInteractionSource() }
+                        Surface(
+                            shape = CircleShape,
+                            color = if (selectedEmoji == icon)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            else MaterialTheme.colorScheme.surface,
+                            tonalElevation = if (selectedEmoji == icon) 4.dp else 0.dp,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) { onEmojiChange(icon) }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(icon, fontSize = 24.sp)
+                            }
                         }
                     }
                 }
