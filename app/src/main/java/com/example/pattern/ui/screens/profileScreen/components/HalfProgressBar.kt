@@ -76,20 +76,9 @@ fun ProfileExtraCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                InfoSquare(
-                    label = "Done", color = MaterialTheme.colorScheme.primary,
-                    number = 176
-                )
-                InfoSquare(
-                    label = "Skipped",
-                    color = MaterialTheme.colorScheme.secondary,
-                    number = 75
-                )
-                InfoSquare(
-                    label = "Total XP",
-                    color = MaterialTheme.colorScheme.tertiary,
-                    number = 1286
-                )
+                InfoSquare(label = "Done", number = 176, color = MaterialTheme.colorScheme.primary)
+                InfoSquare(label = "Skip", number = 75, color = MaterialTheme.colorScheme.secondary)
+                InfoSquare(label = "Total XP", number = 1286, color = MaterialTheme.colorScheme.tertiary)
             }
         }
     }

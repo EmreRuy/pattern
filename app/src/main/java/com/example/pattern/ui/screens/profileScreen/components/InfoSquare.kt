@@ -1,10 +1,14 @@
 package com.example.pattern.ui.screens.profileScreen.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,36 +19,42 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 
 @Composable
 fun InfoSquare(
     label: String,
-    color: Color,
+    number: Int,
     modifier: Modifier = Modifier,
-    number: Int
+    color: Color
 ) {
     Box(
         modifier = modifier
             .size(80.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(color),
-        contentAlignment = Alignment.TopCenter
+            .clip(RoundedCornerShape(14.dp))
+            .background(color)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(14.dp)
+            ),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.padding(8.dp).fillMaxSize().fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-        ){
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
-                modifier = Modifier.padding(top = 4.dp),
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.surface
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = number.toString(),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.surface
             )
         }
