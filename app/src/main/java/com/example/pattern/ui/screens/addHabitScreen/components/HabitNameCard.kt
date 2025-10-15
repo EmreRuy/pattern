@@ -61,7 +61,7 @@ fun HabitNameCard(habitName: String, onNameChange: (String) -> Unit) {
                 )
                 Text(
                     text = "Define Your Goal",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

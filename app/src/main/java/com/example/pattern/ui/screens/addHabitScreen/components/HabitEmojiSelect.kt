@@ -46,7 +46,7 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
             // Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.AddReaction,
@@ -56,8 +56,8 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
                 )
                 Text(
                     "Choose Icon",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 

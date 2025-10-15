@@ -7,12 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.pattern.data.local.HabitType
 import com.example.pattern.data.model.HabitCard
@@ -32,19 +29,10 @@ fun HabitCards(
             .fillMaxWidth()
             .verticalScroll(scrollUi)
             .padding(paddingValues)
-            .padding(horizontal = 16.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "My Habits",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.padding(vertical = 12.dp)
-        )
-
         habits.forEach { habit ->
             when (habit.type) {
                 HabitType.BUILD -> HabitBuildCard(
