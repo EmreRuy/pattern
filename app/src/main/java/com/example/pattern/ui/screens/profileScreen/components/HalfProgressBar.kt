@@ -43,11 +43,10 @@ fun ProfileExtraCard(
     title: String = "Extra Score",
     percentage: Float,
     number: Int,
-    modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surfaceVariant
 ) {
     Card(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 12.dp)
             .wrapContentHeight(),
@@ -78,19 +77,24 @@ fun ProfileExtraCard(
             ) {
                 InfoSquare(label = "Done", number = 176, color = MaterialTheme.colorScheme.primary)
                 InfoSquare(label = "Skip", number = 75, color = MaterialTheme.colorScheme.secondary)
-                InfoSquare(label = "Total XP", number = 1286, color = MaterialTheme.colorScheme.tertiary)
+                InfoSquare(
+                    label = "Total XP",
+                    number = 1286,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
             }
         }
     }
 }
 
+//I will fix this late, there is a padding, offset problem here, maybe I'll change the UI
 @Composable
 fun HalfCircularProgressBar(
     percentage: Float,
     number: Int,
     fontSize: TextUnit = 32.sp,
-    width: Dp = 155.dp,
-    height: Dp = 100.dp,
+    width: Dp = 170.dp,
+    height: Dp = 150.dp,
     color: Color = MaterialTheme.colorScheme.primary,
     backgroundColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     strokeWidth: Dp = 12.dp,
@@ -105,16 +109,17 @@ fun HalfCircularProgressBar(
             delayMillis = animDelay
         ), label = ""
     )
+
     LaunchedEffect(Unit) {
         animationPlayed = true
     }
+
     Box(
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(modifier = Modifier.size(width = width, height = height * 1.4f)) {
-            val arcOffset = Offset.Zero
+        Canvas(modifier = Modifier.size(width = width, height = height)) {
             val arcSize = Size(size.width, size.height)
-            // Draws background arc
+            // Draw background arc
             drawArc(
                 color = backgroundColor,
                 startAngle = 180f,
@@ -122,9 +127,8 @@ fun HalfCircularProgressBar(
                 useCenter = false,
                 style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round),
                 size = arcSize,
-                topLeft = arcOffset
+                topLeft = Offset.Zero
             )
-            // Draws animated foreground arc
             drawArc(
                 color = color,
                 startAngle = 180f,
@@ -132,12 +136,11 @@ fun HalfCircularProgressBar(
                 useCenter = false,
                 style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round),
                 size = arcSize,
-                topLeft = arcOffset
+                topLeft = Offset.Zero
             )
         }
         Box(
-            modifier = Modifier
-                .offset(y = (-height / 7)) // puts the text inside of the half circle
+            modifier = Modifier.offset(y = (-height / 12))
         ) {
             Text(
                 text = (curPercentage.value * number).toInt().toString(),
@@ -148,5 +151,36 @@ fun HalfCircularProgressBar(
         }
     }
 }
+/*
+@Composable
+fun StreakFlame(
+    streak: Int,
+    maxStreak: Int = 30,
+    size: Dp = 100.dp,
+    flameColor: Color = MaterialTheme.colorScheme.primary
+) {
+    val fillFraction = (streak / maxStreak.toFloat()).coerceIn(0f, 1f)
+
+    Box(
+        modifier = Modifier.size(size),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        // Background flame (gray)
+        Icon(
+            painter = painterResource(id = R.drawable.settings), // use your flame drawable
+            contentDescription = "Flame Background",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Filled flame
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(fillFraction)
+                .background(flameColor)
+        )
+    }
+} */
 
 

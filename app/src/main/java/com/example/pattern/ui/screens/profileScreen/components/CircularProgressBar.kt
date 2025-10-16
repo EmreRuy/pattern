@@ -31,6 +31,7 @@ fun CircularProgressBar(
     fontSize: TextUnit = 28.sp,
     radius: Dp = 70.dp,
     color: Color = MaterialTheme.colorScheme.primary,
+    backgroundColor: Color = Color.Gray.copy(alpha = 0.4f),
     strokeWidth: Dp = 10.dp,
     animDuration: Int = 3000,
     animDelay: Int = 0,
@@ -43,20 +44,25 @@ fun CircularProgressBar(
             delayMillis = animDelay
         )
     )
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(true) {
         animationPlayed = true
     }
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.size(radius * 2f)
     ) {
-        Canvas(
-            modifier = Modifier.size(radius * 2f)
-        ) {
+        Canvas(modifier = Modifier.size(radius * 2f)) {
+            drawArc(
+                color = backgroundColor,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
+            )
             drawArc(
                 color = color,
                 startAngle = -90f,
-                360 * curPercentage.value,
+                sweepAngle = 360 * curPercentage.value,
                 useCenter = false,
                 style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
             )
