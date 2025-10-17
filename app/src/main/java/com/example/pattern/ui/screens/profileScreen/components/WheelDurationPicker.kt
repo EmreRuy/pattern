@@ -68,7 +68,6 @@ fun WheelDurationPicker(
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
             )
         }
-        //Picker Area Layout and Styling
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -76,7 +75,6 @@ fun WheelDurationPicker(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Hours Picker
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -86,7 +84,6 @@ fun WheelDurationPicker(
                     onSelectedIndexChange = { onDurationChange(it, durationMinutes) }
                 )
             }
-            // Visual Separator
             Spacer(modifier = Modifier.width(24.dp))
             HorizontalDivider(
                 modifier = Modifier
@@ -99,9 +96,9 @@ fun WheelDurationPicker(
             // Minutes Picker
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 WheelPicker(
-                    items = (0..59 step 5).map { it.toString().padStart(2, '0') },
-                    selectedIndex = durationMinutes / 5,
-                    onSelectedIndexChange = { onDurationChange(durationHours, it * 5) }
+                    items = (0..59).map { it.toString().padStart(2, '0') },
+                    selectedIndex = durationMinutes,
+                    onSelectedIndexChange = { onDurationChange(durationHours, it) }
                 )
             }
         }
