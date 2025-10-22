@@ -145,7 +145,7 @@ fun GrowTypeOfHabit(
                 thickness = DividerDefaults.Thickness,
                 color = MaterialTheme.colorScheme.outlineVariant
             )
-
+            // this is gonna be changed to a new modern design on the new updates, now it has flaws
             WheelDurationPicker(
                 durationHours = tempHours,
                 durationMinutes = tempMinutes,
@@ -190,7 +190,6 @@ fun GrowTypeOfHabit(
                     modifier = Modifier
                         .height(48.dp)
                         .weight(1f),
-                    // elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary

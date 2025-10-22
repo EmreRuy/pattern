@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+//This is gonna be fixed or new design on the next updates
 @Composable
 fun WheelDurationPicker(
     durationHours: Int,

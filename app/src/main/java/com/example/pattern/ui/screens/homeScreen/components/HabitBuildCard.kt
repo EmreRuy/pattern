@@ -28,11 +28,13 @@ import com.example.pattern.data.model.HabitCard
 @Composable
 fun HabitBuildCard(
     habit: HabitCard,
-    onHabitTimeChecked: () -> Unit
+    onHabitTimeChecked: () -> Unit,
+    onCardClick: (Int) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onCardClick(habit.id) }
             .padding(vertical = 6.dp, horizontal = 2.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(

@@ -37,7 +37,8 @@ fun HabitCards(
             when (habit.type) {
                 HabitType.BUILD -> HabitBuildCard(
                     habit = habit,
-                    onHabitTimeChecked = onHabitTimeChecked
+                    onHabitTimeChecked = onHabitTimeChecked,
+                    onCardClick = onHabitCardClick
                 )
 
                 HabitType.QUIT, HabitType.TASK -> HabitTaskCard(
