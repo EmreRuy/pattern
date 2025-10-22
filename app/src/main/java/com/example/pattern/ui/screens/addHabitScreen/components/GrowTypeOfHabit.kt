@@ -60,7 +60,6 @@ fun GrowTypeOfHabit(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Day Selector Section
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 text = "Select Habit Schedule",
@@ -123,7 +122,6 @@ fun GrowTypeOfHabit(
             }
         }
     }
-    // Bottom Sheet (remains unchanged as it was already clean and modern)
     if (showDurationPicker) {
         ModalBottomSheet(
             onDismissRequest = { showDurationPicker = false },

@@ -1,7 +1,6 @@
 package com.example.pattern.ui.screens.addHabitScreen.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -24,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.DayOfWeek
@@ -41,18 +38,15 @@ fun HabitTypeSelectorModern(
         "Drop" to "🛑",
         "Task" to "🔁"
     )
-
-    // 💡 MODERN CARD IMPLEMENTATION: Use Surface for the main container
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        // Use surfaceContainerHigh and tonalElevation for a prominent, elegant M3 card
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         tonalElevation = 4.dp
     ) {
         Column(
-            modifier = Modifier.padding(24.dp), // Apply padding inside the Surface
-            verticalArrangement = Arrangement.spacedBy(16.dp), // Increased spacing for elegance
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -62,23 +56,18 @@ fun HabitTypeSelectorModern(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(28.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp)) // Increased spacer
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Customize Your Habit",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    // Use onSurface for standard text contrast on the elevated surface
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
-
-            // Separator for clean structure
             HorizontalDivider(
                 Modifier.padding(vertical = 4.dp),
                 DividerDefaults.Thickness,
                 DividerDefaults.color
             )
-
-            // Habit Type Selection (FlowRow remains unchanged internally)
             FlowRow(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -91,7 +80,7 @@ fun HabitTypeSelectorModern(
                         onClick = { onTypeChange(type) },
                         shape = RoundedCornerShape(50),
                         color = if (isSelected)
-                            MaterialTheme.colorScheme.primaryContainer // M3 color for selected items
+                            MaterialTheme.colorScheme.primaryContainer
                         else
                             MaterialTheme.colorScheme.surface,
                         tonalElevation = if (isSelected) 2.dp else 0.dp,
