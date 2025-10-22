@@ -15,8 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddReaction
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,22 +31,18 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        )
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.AddReaction,
@@ -60,8 +56,11 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            // Emoji Grid
+            HorizontalDivider(
+                Modifier.padding(vertical = 4.dp),
+                DividerDefaults.Thickness,
+                DividerDefaults.color
+            )
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -81,15 +80,16 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
                         Surface(
                             shape = CircleShape,
                             color = if (selectedEmoji == icon)
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.surface,
                             tonalElevation = if (selectedEmoji == icon) 4.dp else 0.dp,
                             modifier = Modifier
                                 .size(48.dp)
                                 .clickable(
                                     interactionSource = interactionSource,
-                                    indication = null
-                                ) { onEmojiChange(icon) }
+                                    indication = null,
+                                    onClick = { onEmojiChange(icon) }
+                                )
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(icon, fontSize = 24.sp)
