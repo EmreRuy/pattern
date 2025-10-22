@@ -19,7 +19,7 @@ fun HabitCardDetailsScreen(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "Habit Detail Screen")
+            Text(text = "Habit Cards Detail Screen")
             Text(text = "Habit ID: $habitId")
 
             Button(onClick = onBack) {
