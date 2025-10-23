@@ -43,7 +43,7 @@ fun HabitBuildCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(22.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
