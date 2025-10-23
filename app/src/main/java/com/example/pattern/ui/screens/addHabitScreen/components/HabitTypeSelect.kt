@@ -41,7 +41,7 @@ fun HabitTypeSelectorModern(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 4.dp
     ) {
         Column(

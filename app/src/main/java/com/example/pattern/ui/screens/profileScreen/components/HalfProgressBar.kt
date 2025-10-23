@@ -43,7 +43,7 @@ fun ProfileExtraCard(
     title: String = "Extra Score",
     percentage: Float,
     number: Int,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer
 ) {
     Card(
         modifier = Modifier

@@ -38,7 +38,7 @@ fun HabitBuildCard(
             .padding(vertical = 6.dp, horizontal = 2.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Row(

@@ -34,7 +34,7 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -80,7 +80,7 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
                         Surface(
                             shape = CircleShape,
                             color = if (selectedEmoji == icon)
-                                MaterialTheme.colorScheme.primaryContainer
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
                             else MaterialTheme.colorScheme.surface,
                             tonalElevation = if (selectedEmoji == icon) 4.dp else 0.dp,
                             modifier = Modifier
