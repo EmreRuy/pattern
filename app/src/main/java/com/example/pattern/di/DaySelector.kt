@@ -49,10 +49,16 @@ fun DaySelector(
                 shape = CircleShape,
                 modifier = Modifier.size(48.dp),
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    selectedLabelColor = MaterialTheme.colorScheme.primary,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    labelColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
+                    labelColor = MaterialTheme.colorScheme.onSurface,
+                    selectedLabelColor = MaterialTheme.colorScheme.primary
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = MaterialTheme.colorScheme.outlineVariant,
+                    borderWidth = 1.dp,
+                    enabled = true,
+                    selected = true
                 )
             )
         }
