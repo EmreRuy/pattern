@@ -60,7 +60,7 @@ fun HabitTypeSelectorModern(
                 Text(
                     text = "Customize Your Habit",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             HorizontalDivider(
@@ -82,10 +82,10 @@ fun HabitTypeSelectorModern(
                         color = if (isSelected)
                             MaterialTheme.colorScheme.primaryContainer
                         else
-                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.surfaceContainerLowest,
                         tonalElevation = if (isSelected) 2.dp else 0.dp,
                         border = if (!isSelected) BorderStroke(
-                            1.dp,
+                            0.7.dp,
                             MaterialTheme.colorScheme.outline
                         ) else null
                     ) {

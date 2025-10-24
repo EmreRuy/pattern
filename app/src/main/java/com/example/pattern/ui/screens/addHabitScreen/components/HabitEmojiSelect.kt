@@ -81,7 +81,7 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
                             shape = CircleShape,
                             color = if (selectedEmoji == icon)
                                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                            else MaterialTheme.colorScheme.surface,
+                            else MaterialTheme.colorScheme.surfaceContainerLowest,
                             tonalElevation = if (selectedEmoji == icon) 4.dp else 0.dp,
                             modifier = Modifier
                                 .size(48.dp)
