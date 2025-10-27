@@ -36,7 +36,7 @@ fun LinearProgressBar(
     width: Dp = 300.dp,
     height: Dp = 10.dp,
     color: Color = MaterialTheme.colorScheme.primary,
-    backgroundColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest, // we gotta decide on this. it works pretty on light theme but dark theme nah
     animDuration: Int = 3000,
     animDelay: Int = 0
 ) {

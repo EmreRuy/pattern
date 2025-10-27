@@ -96,7 +96,7 @@ fun HalfCircularProgressBar(
     width: Dp = 170.dp,
     height: Dp = 150.dp,
     color: Color = MaterialTheme.colorScheme.primary,
-    backgroundColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     strokeWidth: Dp = 12.dp,
     animDuration: Int = 3000,
     animDelay: Int = 0,
