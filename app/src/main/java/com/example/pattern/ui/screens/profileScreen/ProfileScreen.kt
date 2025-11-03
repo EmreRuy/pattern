@@ -36,11 +36,11 @@ fun ProfileScreen() {
             percentage = 0.75f,
             number = 100,
         )
-       ProfileExtraCard(
-           title = "Your Streak",
-           percentage = 0.60f,
-           number = 100
-       )
+        ProfileExtraCard(
+            title = "Your Streak",
+            percentage = 0.60f,
+            number = 100
+        )
         ProfileStatCard(
             title = "Total Completed Tasks",
             percentage = 1f,

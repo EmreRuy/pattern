@@ -15,6 +15,7 @@ materialIconsExtended = "1.7.8"
 room = "2.8.2"
 ksp = "2.2.20-2.0.3"
 gson = "2.13.2"
+uiText = "1.9.4"
 
 [libraries]
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
@@ -43,6 +44,7 @@ androidx-material-icons-extended = { group = "androidx.compose.material", name =
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 
 
 [plugins]
