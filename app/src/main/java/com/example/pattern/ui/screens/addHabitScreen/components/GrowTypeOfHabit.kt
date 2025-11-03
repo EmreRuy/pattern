@@ -48,9 +48,12 @@ import java.time.DayOfWeek
 fun GrowTypeOfHabit(
     selectedDays: List<DayOfWeek>,
     onDaysChange: (List<DayOfWeek>) -> Unit,
+    durationHours: Int,
+    durationMinutes: Int,
+    onDurationChange: (Int, Int) -> Unit
 ) {
-    var selectedHours by remember { mutableIntStateOf(0) }
-    var selectedMinutes by remember { mutableIntStateOf(0) }
+    val selectedHours = durationHours
+    val selectedMinutes = durationMinutes
     var showDurationPicker by remember { mutableStateOf(false) }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     Column(
@@ -179,8 +182,7 @@ fun GrowTypeOfHabit(
 
                 OutlinedButton(
                     onClick = {
-                        selectedHours = tempHours
-                        selectedMinutes = tempMinutes
+                        onDurationChange(tempHours, tempMinutes)
                         showDurationPicker = false
                     },
                     shape = RoundedCornerShape(24.dp),

@@ -31,7 +31,10 @@ fun HabitTypeSelectorModern(
     selectedType: String,
     onTypeChange: (String) -> Unit,
     selectedDays: List<DayOfWeek>,
-    onDaysChange: (List<DayOfWeek>) -> Unit
+    onDaysChange: (List<DayOfWeek>) -> Unit,
+    durationHours: Int,
+    durationMinutes: Int,
+    onDurationChange: (Int, Int) -> Unit
 ) {
     val habitTypes = listOf(
         "Grow" to "🚀",
@@ -114,7 +117,10 @@ fun HabitTypeSelectorModern(
                 "Grow" -> {
                     GrowTypeOfHabit(
                         selectedDays = selectedDays,
-                        onDaysChange = onDaysChange
+                        onDaysChange = onDaysChange,
+                        durationHours = durationHours,
+                        durationMinutes = durationMinutes,
+                        onDurationChange = onDurationChange
                     )
                 }
 

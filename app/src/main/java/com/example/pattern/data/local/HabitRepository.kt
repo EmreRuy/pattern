@@ -27,7 +27,7 @@ class HabitRepository @Inject constructor(
     /**
      Retrieves a single habit by ID.
      */
-    fun getHabitStream(id: Long): Flow<Habit?> {
+    fun getHabitStream(id: Int): Flow<Habit?> {
         return habitDao.getHabit(id)
     }
 

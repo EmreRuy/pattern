@@ -58,12 +58,12 @@ fun AddHabitScreen(
                     onTypeChange = { habitType = it },
                     selectedDays = buildHabitDays,
                     onDaysChange = { buildHabitDays = it },
-                    // Pass duration state down
-                    /*  durationHours = durationHours,
-                      onDurationHoursChange = { durationHours = it },
-                      durationMinutes = durationMinutes,
-                      onDurationMinutesChange = { durationMinutes = it } */
-                    // will be added later, remember this!!
+                    durationHours = durationHours,
+                    durationMinutes = durationMinutes,
+                    onDurationChange = { h, m ->
+                        durationHours = h
+                        durationMinutes = m
+                    }
                 )
                 //  ReminderCard(reminderEnabled, reminderTime, onToggle = { reminderEnabled = it })
                 EmojiSelector(emoji) { emoji = it }

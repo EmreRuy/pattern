@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.pattern.data.local.Habit
 
 
 // --- 1. Data Model (Simulating data from a repository/database) ---
@@ -133,12 +134,11 @@ fun DetailItem(label: String, value: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCardDetailsScreen(
-    habitId: Int, // The habitId is now used to fetch the data
+    habit: HabitDetailsUi,
     onBack: () -> Unit,
 ) {
     // use a ViewModel to fetch this data based on habitId.
     // I use dummy data for demonstration.
-    val habit = dummyHabit
 
     val accentColor = habit.accentColor
     val scrollState = rememberScrollState()

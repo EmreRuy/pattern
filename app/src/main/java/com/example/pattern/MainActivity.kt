@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitCardDetailsScreen
+import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -99,15 +100,10 @@ class MainActivity : ComponentActivity() {
                                     type = NavType.IntType
                                 }
                             )
-                        ) { backStackEntry ->
-                            val habitId = backStackEntry.arguments?.getInt("habitId")
-                            if (habitId != null) {
-                                // This screen will cover the entire view
-                                HabitCardDetailsScreen(
-                                    habitId = habitId,
-                                    onBack = { navController.popBackStack() }
-                                )
-                            }
+                        ) {
+                            HabitDetailsRoute(
+                                onBack = { navController.popBackStack() }
+                            )
                         }
                     }
                 }
