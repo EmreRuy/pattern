@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.ui.graphics.Color
@@ -27,7 +26,7 @@ import java.time.format.DateTimeFormatter
 
 @HiltViewModel
 class HabitDetailsViewModel @Inject constructor(
-    private val repository: HabitRepository,
+    repository: HabitRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -59,7 +58,7 @@ class HabitDetailsViewModel @Inject constructor(
 
 fun iconFromCode(code: String): ImageVector = when (code) {
     "fitness" -> Icons.Default.FitnessCenter
-    "book" -> Icons.Default.MenuBook
+    "book" -> Icons.AutoMirrored.Filled.MenuBook
     "water" -> Icons.Default.WaterDrop
     "sleep" -> Icons.Default.Bedtime
     else -> Icons.Default.Star

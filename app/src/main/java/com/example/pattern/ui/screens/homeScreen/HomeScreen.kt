@@ -2,6 +2,7 @@ package com.example.pattern.ui.screens.homeScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -146,7 +147,10 @@ fun HomeScreen(
                                 Box(
                                     modifier = Modifier
                                         .width(120.dp)
-                                        .clickable { selectedDay.intValue = index }
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { selectedDay.intValue = index }
                                         .background(
                                             if (selectedDay.intValue == index)
                                                 MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
