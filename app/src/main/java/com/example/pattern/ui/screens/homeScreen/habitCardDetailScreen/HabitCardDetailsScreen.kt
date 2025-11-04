@@ -1,6 +1,9 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,9 +40,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.pattern.data.local.Habit
 
@@ -136,6 +145,7 @@ fun DetailItem(label: String, value: String) {
 fun HabitCardDetailsScreen(
     habit: HabitDetailsUi,
     onBack: () -> Unit,
+    onDelete: () -> Unit
 ) {
     // use a ViewModel to fetch this data based on habitId.
     // I use dummy data for demonstration.
@@ -161,8 +171,29 @@ fun HabitCardDetailsScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { /* TODO: Edit logic */ }) {
-                        Text("Edit", color = MaterialTheme.colorScheme.primary)
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val pressed by interactionSource.collectIsPressedAsState()
+
+                    FilledTonalIconButton(
+                        onClick = onDelete,
+                        interactionSource = interactionSource,
+                        shape = CircleShape,
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier
+                            .size(40.dp)
+                            .graphicsLayer {
+                                val scale = if (pressed) 0.94f else 1f   // subtle micro-interaction
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Habit"
+                        )
                     }
                 }
             )

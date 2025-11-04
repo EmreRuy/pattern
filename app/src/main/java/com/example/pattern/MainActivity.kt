@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitCardDetailsScreen
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import dagger.hilt.android.AndroidEntryPoint

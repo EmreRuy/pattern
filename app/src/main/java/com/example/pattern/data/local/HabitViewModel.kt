@@ -73,4 +73,15 @@ class HabitViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteHabit(habit: Habit) {
+        viewModelScope.launch {
+            try {
+                repository.deleteHabit(habit)
+                println("Habit deleted: ${habit.name}")
+            } catch (e: Exception) {
+                println("Failed to delete habit: ${e.message}")
+            }
+        }
+    }
 }

@@ -26,7 +26,11 @@ fun HabitDetailsRoute(
         else -> {
             HabitCardDetailsScreen(
                 habit = habit,
-                onBack = onBack
+                onBack = onBack,
+                onDelete = {
+                    viewModel.deleteHabit(habit.id)
+                    onBack()
+                }
             )
         }
     }

@@ -16,17 +16,19 @@ import com.example.pattern.data.local.HabitRepository
 import com.example.pattern.data.local.HabitType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @HiltViewModel
 class HabitDetailsViewModel @Inject constructor(
-    repository: HabitRepository,
+    private val repository: HabitRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -41,20 +43,32 @@ class HabitDetailsViewModel @Inject constructor(
                 null
             )
 
+    fun deleteHabit(habitId: Int) {
+        viewModelScope.launch {
+            repository.getHabitStream(habitId).collect { habit ->
+                if (habit != null) {
+                    repository.deleteHabit(habit)
+                }
+                cancel()
+            }
+        }
+    }
+
     private fun Habit.toUi(): HabitDetailsUi {
         return HabitDetailsUi(
             id = id,
             name = name,
             icon = iconFromCode(iconCode),
             accentColor = accentFromIconCode(iconCode),
-            currentStreak = if (isCompleted) 1 else 0, // placeholder for now
-            totalCompletions = 0, // placeholder until you add a completion table
+            currentStreak = if (isCompleted) 1 else 0, // placeholder
+            totalCompletions = 0, // placeholder
             goal = goalLabel(type, durationInMinutes),
             frequency = frequencyLabel(selectedDays),
             createdOn = createdAt.toUiDate()
         )
     }
 }
+
 
 fun iconFromCode(code: String): ImageVector = when (code) {
     "fitness" -> Icons.Default.FitnessCenter
@@ -97,7 +111,7 @@ fun frequencyLabel(selectedDays: List<Boolean>): String {
     val active = days.zip(selectedDays).filter { it.second }.map { it.first }
 
     return when {
-        active.size == 7 -> "Every day"
+        active.size == 7 -> "Everyday"
         active.size == 5 && active.containsAll(listOf("Mon","Tue","Wed","Thu","Fri")) -> "Weekdays"
         active.size == 2 && active.containsAll(listOf("Sat","Sun")) -> "Weekends"
         active.isEmpty() -> "No schedule"
