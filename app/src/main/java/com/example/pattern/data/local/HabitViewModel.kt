@@ -20,9 +20,8 @@ data class HomeUiState(
 class HabitViewModel @Inject constructor(
     private val repository: HabitRepository
 ) : ViewModel() {
-
-    /**
-     * The StateFlow that the HomeView will observe. It contains the list of all habits
+    /*
+      The StateFlow that the HomeView will observe. It contains the list of all habits
      */
     val homeUiState: StateFlow<HomeUiState> = repository.getAllHabitsStream()
         .map { habits ->
@@ -63,24 +62,12 @@ class HabitViewModel @Inject constructor(
             selectedDays = selectedDays,
             reminderEnabled = reminderEnabled
         )
-        // Launch a coroutine to insert the data off the main thread
         viewModelScope.launch {
             try {
                 repository.insertHabit(newHabit)
                 println("Habit saved successfully: ${newHabit.name}")
             } catch (e: Exception) {
                 println("Failed to save habit: ${e.message}")
-            }
-        }
-    }
-
-    fun deleteHabit(habit: Habit) {
-        viewModelScope.launch {
-            try {
-                repository.deleteHabit(habit)
-                println("Habit deleted: ${habit.name}")
-            } catch (e: Exception) {
-                println("Failed to delete habit: ${e.message}")
             }
         }
     }

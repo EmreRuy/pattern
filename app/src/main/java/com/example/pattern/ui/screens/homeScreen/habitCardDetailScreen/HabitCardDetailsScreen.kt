@@ -1,7 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -185,7 +184,7 @@ fun HabitCardDetailsScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .graphicsLayer {
-                                val scale = if (pressed) 0.94f else 1f   // subtle micro-interaction
+                                val scale = if (pressed) 0.94f else 1f
                                 scaleX = scale
                                 scaleY = scale
                             }
