@@ -40,43 +40,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.pattern.data.local.Habit
-
-
-// --- 1. Data Model (Simulating data from a repository/database) ---
-data class HabitDetails(
-    val id: Int,
-    val name: String,
-    val icon: ImageVector,
-    val accentColor: Color,
-    val currentStreak: Int,
-    val totalCompletions: Int,
-    val frequency: String,
-    val goal: String,
-    val createdOn: String
-)
-
-// Dummy data for preview and demonstration
-val dummyHabit = HabitDetails(
-    id = 1,
-    name = "Daily Reading",
-    icon = Icons.Default.FitnessCenter, // Placeholder icon
-    accentColor = Color(0xFF1E88E5), // Blue 600
-    currentStreak = 14,
-    totalCompletions = 45,
-    frequency = "Every Day",
-    goal = "30 minutes per day",
-    createdOn = "Sep 15, 2025"
-)
 
 @Composable
 fun RowScope.StatCard(
@@ -89,7 +57,7 @@ fun RowScope.StatCard(
         modifier = modifier.weight(1f),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = accentColor.copy(alpha = 0.15f) // Subtle background tint
+            containerColor = accentColor.copy(alpha = 0.15f)
         )
     ) {
         Column(
@@ -147,8 +115,6 @@ fun HabitCardDetailsScreen(
     onDelete: () -> Unit
 ) {
     // use a ViewModel to fetch this data based on habitId.
-    // I use dummy data for demonstration.
-
     val accentColor = habit.accentColor
     val scrollState = rememberScrollState()
 
