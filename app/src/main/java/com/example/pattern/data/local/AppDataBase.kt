@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [Habit::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class) // Tell Room to use my custom Type Converters

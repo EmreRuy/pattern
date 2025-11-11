@@ -38,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.pattern.di.DaySelector
 import com.example.pattern.ui.screens.profileScreen.components.WheelDurationPicker
 import java.time.DayOfWeek
 

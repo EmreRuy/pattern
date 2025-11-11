@@ -1,4 +1,4 @@
-package com.example.pattern.di
+package com.example.pattern.ui.screens.addHabitScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow

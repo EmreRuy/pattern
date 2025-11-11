@@ -2,6 +2,7 @@ package com.example.pattern.data.local
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pattern.data.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -40,7 +41,8 @@ class HabitViewModel @Inject constructor(
         durationMinutes: Int,
         selectedDays: List<Boolean>,
         reminderEnabled: Boolean,
-        iconCode: String
+        iconCode: String,
+        accentColorHex: String
     ) {
         if (name.isBlank()) {
             println("Error: Habit name cannot be empty.")
@@ -60,7 +62,8 @@ class HabitViewModel @Inject constructor(
             iconCode = iconCode,
             durationInMinutes = totalDurationInMinutes,
             selectedDays = selectedDays,
-            reminderEnabled = reminderEnabled
+            reminderEnabled = reminderEnabled,
+            accentColorHex = accentColorHex
         )
         viewModelScope.launch {
             try {

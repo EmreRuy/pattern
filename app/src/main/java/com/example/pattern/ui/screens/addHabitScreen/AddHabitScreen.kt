@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.screens.addHabitScreen.components.ColorSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.EmojiSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitNameCard
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitTypeSelectorModern
@@ -35,6 +36,7 @@ fun AddHabitScreen(
     //For the missing hours and minutes yet
     var durationHours by remember { mutableIntStateOf(0) }
     var durationMinutes by remember { mutableIntStateOf(30) }
+    var selectedColor by remember { mutableStateOf("#77DD77") }
     Scaffold { padding ->
         Box(
             modifier = Modifier
@@ -53,6 +55,10 @@ fun AddHabitScreen(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 HabitNameCard(habitName) { habitName = it }
+                ColorSelector(
+                    selectedColor = selectedColor,
+                    onColorSelected = { selectedColor = it }
+                )
                 HabitTypeSelectorModern(
                     selectedType = habitType,
                     onTypeChange = { habitType = it },
@@ -76,7 +82,8 @@ fun AddHabitScreen(
                     reminderEnabled = reminderEnabled,
                     emoji = emoji,
                     habitViewModel = habitViewModel,
-                    onSaveSuccess = onSaveSuccess
+                    onSaveSuccess = onSaveSuccess,
+                    accentColorHex = selectedColor
                 )
             }
         }

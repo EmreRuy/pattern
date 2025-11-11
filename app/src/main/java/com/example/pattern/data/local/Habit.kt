@@ -14,7 +14,8 @@ data class Habit(
     val iconCode: String,
     val reminderEnabled: Boolean = false,
     val isCompleted: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val accentColorHex: String = "#77DD77"
 )
 
 enum class HabitType {

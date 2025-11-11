@@ -1,5 +1,7 @@
-package com.example.pattern.data.local
+package com.example.pattern.data.repository
 
+import com.example.pattern.data.local.Habit
+import com.example.pattern.data.local.HabitDao
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow

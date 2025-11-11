@@ -12,7 +12,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.local.Habit
-import com.example.pattern.data.local.HabitRepository
+import com.example.pattern.data.repository.HabitRepository
 import com.example.pattern.data.local.HabitType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
