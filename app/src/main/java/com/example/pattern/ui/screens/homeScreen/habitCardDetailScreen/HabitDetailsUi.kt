@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 data class HabitDetailsUi(
     val id: Int,
     val name: String,
-    val icon: ImageVector,
+    val icon: String?,
     val accentColor: Color,
     val currentStreak: Int,
     val totalCompletions: Int,

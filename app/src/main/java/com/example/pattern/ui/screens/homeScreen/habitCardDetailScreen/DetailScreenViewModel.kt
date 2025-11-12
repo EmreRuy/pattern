@@ -59,7 +59,7 @@ class HabitDetailsViewModel @Inject constructor(
         return HabitDetailsUi(
             id = id,
             name = name,
-            icon = iconFromCode(iconCode),
+            icon = iconCode,
             accentColor = Color(accentColorHex.toColorInt()),
             currentStreak = if (isCompleted) 1 else 0, // placeholder
             totalCompletions = 0, // placeholder

@@ -44,6 +44,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun RowScope.StatCard(
@@ -56,7 +58,7 @@ fun RowScope.StatCard(
         modifier = modifier.weight(1f),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = accentColor.copy(alpha = 0.15f)
+            containerColor = accentColor //.copy(alpha = 0.15f)
         )
     ) {
         Column(
@@ -68,7 +70,7 @@ fun RowScope.StatCard(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
-                color = accentColor
+                color = MaterialTheme.colorScheme.surface
             )
             // Descriptive label
             Text(
@@ -177,14 +179,13 @@ fun HabitCardDetailsScreen(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(accentColor.copy(alpha = 0.15f)),
+                    .background(accentColor/* .copy(alpha = 0.15f) */),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = habit.icon,
-                    contentDescription = "Habit Icon",
-                    modifier = Modifier.size(40.dp),
-                    tint = accentColor
+                Text(
+                    text = habit.icon ?: "⭐",
+                    fontSize = 40.sp,
+                    textAlign = TextAlign.Center
                 )
             }
 
