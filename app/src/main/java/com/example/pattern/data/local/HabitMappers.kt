@@ -21,6 +21,7 @@ fun LocalHabit.toUiModel(): UiHabit {
         iconEmoji = this.iconCode,
         icon = icon,
         isChecked = mutableStateOf(this.isCompleted),
-        isTimeChecked = mutableStateOf(false)
+        isTimeChecked = mutableStateOf(false),
+        accentColorHex = accentColorHex
     )
 }

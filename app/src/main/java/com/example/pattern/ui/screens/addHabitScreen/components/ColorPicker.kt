@@ -34,8 +34,14 @@ fun ColorSelector(
     onColorSelected: (String) -> Unit
 ) {
     val colors = listOf(
-        "#1E88E5", "#8E24AA", "#039BE5", "#5E35B1",
-        "#43A047", "#FB8C00", "#E53935", "#00897B"
+        "#A8D8EA",
+        "#AA96DA",
+        "#FCBAD3",
+        "#FFFFD2",
+        "#B5EAD7",
+        "#FFDAC1",
+        "#C7CEEA",
+        "#FFD5CD"
     )
 
     LazyRow(

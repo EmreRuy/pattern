@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import androidx.core.graphics.toColorInt
 
 @HiltViewModel
 class HabitDetailsViewModel @Inject constructor(
@@ -59,7 +60,7 @@ class HabitDetailsViewModel @Inject constructor(
             id = id,
             name = name,
             icon = iconFromCode(iconCode),
-            accentColor = accentFromIconCode(iconCode),
+            accentColor = Color(accentColorHex.toColorInt()),
             currentStreak = if (isCompleted) 1 else 0, // placeholder
             totalCompletions = 0, // placeholder
             goal = goalLabel(type, durationInMinutes),
@@ -77,14 +78,6 @@ fun iconFromCode(code: String): ImageVector = when (code) {
     "sleep" -> Icons.Default.Bedtime
     else -> Icons.Default.Star
 }
-fun accentFromIconCode(code: String) = when (code) {
-    "fitness" -> Color(0xFF1E88E5) // Blue
-    "book" -> Color(0xFF8E24AA) // Purple
-    "water" -> Color(0xFF039BE5) // Light blue
-    "sleep" -> Color(0xFF5E35B1) // Deep purple
-    else -> Color(0xFF1E88E5)
-}
-
 fun goalLabel(type: HabitType, minutes: Int?): String {
     if (type != HabitType.BUILD || minutes == null) return ""
 
