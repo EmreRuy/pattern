@@ -74,4 +74,18 @@ class HabitViewModel @Inject constructor(
             }
         }
     }
+    fun startTimer(habitId: Int) {
+        viewModelScope.launch {
+            val current = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
+            repository.updateHabit(current.copy(timerStartTime = System.currentTimeMillis()))
+        }
+    }
+
+    fun stopTimer(habitId: Int) {
+        viewModelScope.launch {
+            val current = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
+            repository.updateHabit(current.copy(timerStartTime = null))
+        }
+    }
+
 }

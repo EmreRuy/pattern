@@ -9,13 +9,14 @@ data class Habit(
     val id: Int = 0,
     val name: String,
     val type: HabitType,
-    val durationInMinutes: Int? = null, // Only for Build habits
+    val durationInMinutes: Int?,
     val selectedDays: List<Boolean>,
     val iconCode: String,
     val reminderEnabled: Boolean = false,
     val isCompleted: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
-    val accentColorHex: String = "#77DD77"
+    val accentColorHex: String = "#77DD77",
+    val timerStartTime: Long? = null
 )
 
 enum class HabitType {

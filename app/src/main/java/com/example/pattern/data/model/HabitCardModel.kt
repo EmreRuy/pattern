@@ -13,5 +13,7 @@ data class HabitCard(
     val iconEmoji: String? = null,
     var isChecked: MutableState<Boolean> = mutableStateOf(false),
     var isTimeChecked: MutableState<Boolean> = mutableStateOf(false),
-    val accentColorHex: String
+    val accentColorHex: String,
+    val durationInMinutes: Int?,
+    val timerStartTime: Long? = null
 )

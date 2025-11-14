@@ -19,11 +19,12 @@ fun HabitCards(
     habits: List<HabitCard>,
     paddingValues: PaddingValues,
     onHabitChecked: () -> Unit,
-    onHabitTimeChecked: () -> Unit,
+    onTimerFinished: () -> Unit,
     onHabitCardClick: (Int) -> Unit,
+    onStartTimer: (HabitCard) -> Unit,
+    onStopTimer: (HabitCard) -> Unit,
 ) {
     val scrollUi = rememberScrollState()
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,8 +38,10 @@ fun HabitCards(
             when (habit.type) {
                 HabitType.BUILD -> HabitBuildCard(
                     habit = habit,
-                    onHabitTimeChecked = onHabitTimeChecked,
-                    onCardClick = onHabitCardClick
+                    onTimerFinished = onTimerFinished,
+                    onCardClick = onHabitCardClick,
+                    onStartTimer = onStartTimer,
+                    onStopTimer = onStopTimer
                 )
 
                 HabitType.QUIT, HabitType.TASK -> HabitTaskCard(

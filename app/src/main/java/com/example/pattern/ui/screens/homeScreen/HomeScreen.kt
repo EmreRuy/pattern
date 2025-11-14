@@ -179,11 +179,11 @@ fun HomeScreen(
                 habits = habits,
                 paddingValues = paddingValues,
                 onHabitChecked = {
-                    triggerConfetti = true
+                  //  triggerConfetti = true
                 },
-                onHabitTimeChecked = {
-                    triggerConfetti = true
-                },
+                onTimerFinished = { triggerConfetti = true },
+                onStartTimer = { habitViewModel.startTimer(it.id) },
+                onStopTimer  = { habitViewModel.stopTimer(it.id) },
                 onHabitCardClick = { habitId ->
                     navController.navigate(Screens.HabitDetail.createRoute(habitId))
                 }
