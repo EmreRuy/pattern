@@ -28,8 +28,6 @@ fun AddHabitScreen(
 ) {
     var habitName by remember { mutableStateOf("") }
     var habitType by remember { mutableStateOf("Grow") }
-    var reminderEnabled by remember { mutableStateOf(false) }
-    // var reminderTime by remember { mutableStateOf(LocalTime.now()) }
     var emoji by remember { mutableStateOf("🔥") }
     var buildHabitDays by remember { mutableStateOf(listOf<DayOfWeek>()) }
     val focusManager = LocalFocusManager.current
@@ -79,7 +77,6 @@ fun AddHabitScreen(
                     buildHabitDays = buildHabitDays,
                     durationHours = durationHours,
                     durationMinutes = durationMinutes,
-                    reminderEnabled = reminderEnabled,
                     emoji = emoji,
                     habitViewModel = habitViewModel,
                     onSaveSuccess = onSaveSuccess,

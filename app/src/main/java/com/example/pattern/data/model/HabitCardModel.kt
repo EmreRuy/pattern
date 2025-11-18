@@ -15,5 +15,7 @@ data class HabitCard(
     var isTimeChecked: MutableState<Boolean> = mutableStateOf(false),
     val accentColorHex: String,
     val durationInMinutes: Int?,
-    val timerStartTime: Long? = null
+    val timerStartTime: Long? = null,
+    val timerPauseTime: Long? = null,
+    val isCompleted: Boolean = false
 )

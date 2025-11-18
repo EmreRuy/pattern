@@ -40,7 +40,6 @@ class HabitViewModel @Inject constructor(
         durationHours: Int,
         durationMinutes: Int,
         selectedDays: List<Boolean>,
-        reminderEnabled: Boolean,
         iconCode: String,
         accentColorHex: String
     ) {
@@ -62,7 +61,6 @@ class HabitViewModel @Inject constructor(
             iconCode = iconCode,
             durationInMinutes = totalDurationInMinutes,
             selectedDays = selectedDays,
-            reminderEnabled = reminderEnabled,
             accentColorHex = accentColorHex
         )
         viewModelScope.launch {
@@ -76,16 +74,73 @@ class HabitViewModel @Inject constructor(
     }
     fun startTimer(habitId: Int) {
         viewModelScope.launch {
-            val current = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
-            repository.updateHabit(current.copy(timerStartTime = System.currentTimeMillis()))
+            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
+
+            // If already completed, don't allow restart
+            if (habit.isCompleted) return@launch
+
+            val updated = habit.copy(
+                timerStartTime = System.currentTimeMillis(),
+                timerPauseTime = null // clear pause
+            )
+
+            repository.updateHabit(updated)
         }
     }
 
-    fun stopTimer(habitId: Int) {
+
+    fun pauseTimer(habitId: Int) {
         viewModelScope.launch {
-            val current = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
-            repository.updateHabit(current.copy(timerStartTime = null))
+            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
+
+            // Can't pause if already completed
+            if (habit.isCompleted) return@launch
+
+            // Don't pause if timer wasn't running
+            if (habit.timerStartTime == null) return@launch
+
+            val updated = habit.copy(
+                timerPauseTime = System.currentTimeMillis()
+            )
+
+            repository.updateHabit(updated)
         }
     }
+
+    fun resumeTimer(habitId: Int) {
+        viewModelScope.launch {
+            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
+
+            if (habit.isCompleted) return@launch
+            if (habit.timerStartTime == null) return@launch
+            if (habit.timerPauseTime == null) return@launch // can't resume unless paused
+
+            val now = System.currentTimeMillis()
+            val pausedDuration = now - habit.timerPauseTime
+
+            val newStartTime = habit.timerStartTime + pausedDuration
+
+            val updated = habit.copy(
+                timerStartTime = newStartTime,
+                timerPauseTime = null // cleared because running now
+            )
+
+            repository.updateHabit(updated)
+        }
+    }
+    fun finishTimer(habitId: Int) {
+        viewModelScope.launch {
+            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
+
+            val updated = habit.copy(
+                isCompleted = true,
+                timerStartTime = null,
+                timerPauseTime = null
+            )
+
+            repository.updateHabit(updated)
+        }
+    }
+
 
 }

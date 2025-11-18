@@ -24,6 +24,8 @@ fun LocalHabit.toUiModel(): UiHabit {
         isTimeChecked = mutableStateOf(false),
         accentColorHex = accentColorHex,
         durationInMinutes = this.durationInMinutes,
-        timerStartTime = this.timerStartTime
+        timerStartTime = this.timerStartTime,
+        timerPauseTime = this.timerPauseTime,
+        isCompleted = this.isCompleted
     )
 }

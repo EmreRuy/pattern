@@ -179,15 +179,26 @@ fun HomeScreen(
                 habits = habits,
                 paddingValues = paddingValues,
                 onHabitChecked = {
-                  //  triggerConfetti = true
+                    // triggerConfetti = true   // optional
                 },
-                onTimerFinished = { triggerConfetti = true },
-                onStartTimer = { habitViewModel.startTimer(it.id) },
-                onStopTimer  = { habitViewModel.stopTimer(it.id) },
+                onTimerFinished = { habitCard ->
+                    habitViewModel.finishTimer(habitCard.id)
+                    triggerConfetti = true
+                },
+                onStartTimer = { habitCard ->
+                    habitViewModel.startTimer(habitCard.id)
+                },
+                onPauseTimer = { habitCard ->
+                    habitViewModel.pauseTimer(habitCard.id)
+                },
+                onResumeTimer = { habitCard ->
+                    habitViewModel.resumeTimer(habitCard.id)
+                },
                 onHabitCardClick = { habitId ->
                     navController.navigate(Screens.HabitDetail.createRoute(habitId))
                 }
             )
+
             if (habits.isEmpty() && uiState.habitList.isNotEmpty() && !uiState.isLoading) {
                 Box(
                     modifier = Modifier

@@ -22,7 +22,6 @@ fun SaveHabitButton(
     buildHabitDays: List<DayOfWeek>,
     durationHours: Int,
     durationMinutes: Int,
-    reminderEnabled: Boolean,
     emoji: String,
     habitViewModel: HabitViewModel,
     onSaveSuccess: () -> Unit,
@@ -46,7 +45,6 @@ fun SaveHabitButton(
                     durationHours = durationHours,
                     durationMinutes = durationMinutes,
                     selectedDays = dayListBooleans,
-                    reminderEnabled = reminderEnabled,
                     iconCode = emoji,
                     accentColorHex = accentColorHex
                 )

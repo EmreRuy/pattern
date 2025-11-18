@@ -1,30 +1,18 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,11 +23,8 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,36 +36,29 @@ import kotlinx.coroutines.delay
 @Composable
 fun HabitBuildCard(
     habit: HabitCard,
-    onTimerFinished: () -> Unit,
-    onCardClick: (Int) -> Unit,
     onStartTimer: (HabitCard) -> Unit,
-    onStopTimer: (HabitCard) -> Unit,
+    onPauseTimer: (HabitCard) -> Unit,
+    onResumeTimer: (HabitCard) -> Unit,
+    onTimerFinished: (HabitCard) -> Unit,
+    onCardClick: (Int) -> Unit,
 ) {
     val isDark = isSystemInDarkTheme()
     val surface = MaterialTheme.colorScheme.surface
-    val fallbackColor = MaterialTheme.colorScheme.surfaceContainer
+    val fallbackColor = MaterialTheme.colorScheme.surfaceContainerHigh
+
     val accentColor = remember(habit.accentColorHex, isDark) {
-        val base = try {
-            Color(habit.accentColorHex.toColorInt())
-        } catch (_: Exception) {
-            fallbackColor
-        }
-        if (isDark) {
-            blendColors(base, surface, 0.4f)
-        } else {
-            base
-        }
+        runCatching { Color(habit.accentColorHex.toColorInt()) }
+            .getOrDefault(fallbackColor)
+            .let { if (isDark) blendColors(it, surface, 0.35f) else it }
     }
+    // Timer state
     val showSuccess = remember { mutableStateOf(false) }
-    val totalMillis = (habit.durationInMinutes ?: 0) * 60 * 1000L
+    val totalMillis = (habit.durationInMinutes ?: 0) * 60_000L
 
-    //start time (may be null)
-    val timerStartTime = habit.timerStartTime
+    val isRunning = habit.timerStartTime != null && habit.timerPauseTime == null
+    val isPaused = habit.timerStartTime != null && habit.timerPauseTime != null
+    val isCompleted = habit.isCompleted
 
-    val isPlaying = remember(timerStartTime) { timerStartTime != null }
-
-
-    // update "current time"
     val currentTime by produceState(System.currentTimeMillis()) {
         while (true) {
             value = System.currentTimeMillis()
@@ -88,181 +66,121 @@ fun HabitBuildCard(
         }
     }
 
-    //remaining time
-    val remainingTime = remember(currentTime, timerStartTime) {
-        if (timerStartTime == null) totalMillis
-        else (totalMillis - (currentTime - timerStartTime)).coerceAtLeast(0L)
+    val remainingTime = remember(
+        currentTime,
+        habit.timerStartTime,
+        habit.timerPauseTime,
+        habit.isCompleted
+    ) {
+        when {
+            isCompleted -> 0L
+            habit.timerStartTime == null -> totalMillis
+            isPaused -> (totalMillis - (habit.timerPauseTime - habit.timerStartTime))
+                .coerceAtLeast(0L)
+
+            else -> (totalMillis - (currentTime - habit.timerStartTime))
+                .coerceAtLeast(0L)
+        }
     }
+
     LaunchedEffect(remainingTime) {
-        if (remainingTime <= 0) {
+        if (!isCompleted && remainingTime <= 0) {
             showSuccess.value = true
-            onTimerFinished()
+            onTimerFinished(habit)
             delay(1200)
             showSuccess.value = false
         }
     }
 
     val formattedTime = remember(remainingTime) {
-        val totalSec = (remainingTime / 1000).coerceAtLeast(0)
-        val hours = totalSec / 3600
-        val minutes = (totalSec % 3600) / 60
-        val seconds = totalSec % 60
-        if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds)
-        else "%02d:%02d".format(minutes, seconds)
+        val sec = (remainingTime / 1000).coerceAtLeast(0)
+        val h = sec / 3600
+        val m = (sec % 3600) / 60
+        val s = sec % 60
+
+        if (h > 0) "%d:%02d:%02d".format(h, m, s)
+        else "%02d:%02d".format(m, s)
     }
 
     val progress = remember(remainingTime, totalMillis) {
         if (totalMillis == 0L) 0f
-        else 1f - (remainingTime.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
+        else 1f - (remainingTime.toFloat() / totalMillis.toFloat())
+            .coerceIn(0f, 1f)
     }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 2.dp)
+            .padding(vertical = 10.dp, horizontal = 6.dp)
+            .clip(RoundedCornerShape(28.dp))
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) { onCardClick(habit.id) },
-        shape = RoundedCornerShape(32.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         ),
-        elevation = CardDefaults.cardElevation(pressedElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
+
         Row(
             modifier = Modifier
-                .padding(22.dp)
+                .padding(horizontal = 22.dp, vertical = 20.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Left side — Icon + Title
+            //Left side
             Row(verticalAlignment = Alignment.CenterVertically) {
+
                 Text(
                     text = habit.iconEmoji.orEmpty(),
-                    fontSize = 26.sp,
-                    modifier = Modifier.size(32.dp)
+                    fontSize = 30.sp,
+                    modifier = Modifier.padding(end = 14.dp)
                 )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = habit.name,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = accentColor
-                    )
-                )
-            }
 
-            // Right side — Timer + Progress ring
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (habit.durationInMinutes != null && habit.durationInMinutes > 0) {
+                Column {
                     Text(
-                        text = formattedTime,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier.size(42.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Canvas(Modifier.matchParentSize()) {
-                        // Background ring
-                        drawArc(
-                            color = Color.Black,
-                            startAngle = -90f,
-                            sweepAngle = 360f,
-                            useCenter = false,
-                            style = Stroke(width = 5f, cap = StrokeCap.Round)
-                        )
-                        // Foreground ring (progress)
-                        drawArc(
+                        text = habit.name,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
                             color = accentColor,
-                            startAngle = -90f,
-                            sweepAngle = 360f * progress,
-                            useCenter = false,
-                            style = Stroke(width = 5f, cap = StrokeCap.Round)
+                            fontSize = 19.sp,
+                            letterSpacing = (-0.3).sp
+                        )
+                    )
+
+                    if ((habit.durationInMinutes ?: 0) > 0) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = formattedTime,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 13.sp
+                            )
                         )
                     }
-                    Box(
-                        modifier = Modifier.size(42.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val color = MaterialTheme.colorScheme.surfaceVariant
-                        val secondColor = MaterialTheme.colorScheme.onSurface
-                        // Background circular progress ring
-                        Canvas(Modifier.matchParentSize()) {
-                            drawArc(
-                                color = color,
-                                startAngle = -90f,
-                                sweepAngle = 360f,
-                                useCenter = false,
-                                style = Stroke(width = 5f, cap = StrokeCap.Round)
-                            )
-                            drawArc(
-                                color = secondColor,
-                                startAngle = -90f,
-                                sweepAngle = 360f * progress,
-                                useCenter = false,
-                                style = Stroke(width = 5f, cap = StrokeCap.Round)
-                            )
-                        }
-                        if (showSuccess.value) {
-                            val scale by animateFloatAsState(
-                                targetValue = if (showSuccess.value) 1f else 0f,
-                                animationSpec = tween(
-                                    durationMillis = 500,
-                                    easing = FastOutSlowInEasing
-                                ),
-                                label = "successScale"
-                            )
-
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Success",
-                                tint = accentColor.copy(alpha = 0.9f),
-                                modifier = Modifier
-                                    .size((28 * scale).dp)
-                                    .graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                        alpha = scale
-                                    }
-                            )
-                        }
-                        Icon(
-                            imageVector = if (showSuccess.value) {
-                                Icons.Default.CheckCircle
-                            } else if (isPlaying) {
-                                Icons.Filled.Pause
-                            } else {
-                                Icons.Outlined.PlayArrow
-                            },
-                            contentDescription = when {
-                                showSuccess.value -> "Habit Done"
-                                isPlaying -> "Pause"
-                                else -> "Play"
-                            },
-                            tint = MaterialTheme.colorScheme.surface,
-                            modifier = Modifier
-                                .size(26.dp)
-                                .clickable {
-                                    if (isPlaying) {
-                                        onStopTimer(habit)
-                                    } else {
-                                        onStartTimer(habit)
-                                    }
-                                }
-                        )
-                    }
-
                 }
             }
+            TimerRing(
+                progress = progress,
+                accentColor = accentColor,
+                isCompleted = isCompleted,
+                isRunning = isRunning,
+                isPaused = isPaused,
+                showSuccess = showSuccess.value,
+                onClick = {
+                    when {
+                        isCompleted -> Unit
+                        isRunning -> onPauseTimer(habit)
+                        isPaused -> onResumeTimer(habit)
+                        else -> onStartTimer(habit)
+                    }
+                }
+            )
         }
     }
 }
+
+
