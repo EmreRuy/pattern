@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -36,28 +35,30 @@ fun TimerRing(
     onClick: () -> Unit
 ) {
     val ringSize = 48.dp
+    val iconSize = 28.dp
 
     Box(
         modifier = Modifier
             .size(ringSize)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                enabled = !isCompleted,
-                onClick = onClick
-            ),
+                indication = null
+            ) {
+                if (!isCompleted) onClick()
+            },
         contentAlignment = Alignment.Center
     ) {
-        val color = MaterialTheme.colorScheme.surface
-        // BACK ARC
+        val surfaceColor = MaterialTheme.colorScheme.surface
+        // RING
         Canvas(Modifier.matchParentSize()) {
             drawArc(
-                color = color,
+                color = surfaceColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
                 style = Stroke(width = 6f, cap = StrokeCap.Round)
             )
+
             drawArc(
                 color = accentColor,
                 startAngle = -90f,
@@ -66,40 +67,31 @@ fun TimerRing(
                 style = Stroke(width = 6f, cap = StrokeCap.Round)
             )
         }
-
-        // ICON
-        val icon = when {
-            isCompleted -> Icons.Default.CheckCircle
-            isRunning -> Icons.Filled.Pause
-            isPaused -> Icons.Outlined.PlayArrow
-            else -> Icons.Outlined.PlayArrow
-        }
-
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.scrim,
-            modifier = Modifier.size(26.dp)
-        )  // gonna work on here , the color and changing icons should be fixed for the best practice
-
-        // SUCCESS ANIMATION
-        if (showSuccess) {
+        if (isCompleted) {
             val scale by animateFloatAsState(
-                targetValue = if (showSuccess) 1f else 0f,
-                animationSpec = tween(600, easing = FastOutSlowInEasing),
+                targetValue = if (showSuccess) 1f else 1f,
+                animationSpec = tween(500, easing = FastOutSlowInEasing),
                 label = ""
             )
             Icon(
                 imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = Color.Unspecified,
+                contentDescription = "Done",
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .size((34 * scale).dp)
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        alpha = scale
-                    }
+                    .size(iconSize * scale)
+            )
+        } else {
+            val icon = when {
+                isRunning -> Icons.Filled.Pause
+                isPaused -> Icons.Outlined.PlayArrow
+                else -> Icons.Outlined.PlayArrow
+            }
+            val tint = MaterialTheme.colorScheme.scrim
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(iconSize)
             )
         }
     }
