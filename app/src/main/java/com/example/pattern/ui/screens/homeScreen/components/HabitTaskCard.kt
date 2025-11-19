@@ -25,11 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pattern.data.model.HabitCard
+import com.example.pattern.data.model.HabitCardModel
 
 @Composable
 fun HabitTaskCard(
-    habit: HabitCard,
+    habit: HabitCardModel,
     onHabitChecked: () -> Unit,
     onCardClick: (Int) -> Unit
 ) {

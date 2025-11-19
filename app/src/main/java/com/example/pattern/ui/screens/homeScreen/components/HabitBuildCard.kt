@@ -28,18 +28,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pattern.data.model.HabitCard
+import com.example.pattern.data.model.HabitCardModel
 import androidx.core.graphics.toColorInt
 import com.example.pattern.ui.screens.addHabitScreen.components.blendColors
 import kotlinx.coroutines.delay
 
 @Composable
 fun HabitBuildCard(
-    habit: HabitCard,
-    onStartTimer: (HabitCard) -> Unit,
-    onPauseTimer: (HabitCard) -> Unit,
-    onResumeTimer: (HabitCard) -> Unit,
-    onTimerFinished: (HabitCard) -> Unit,
+    habit: HabitCardModel,
+    onStartTimer: (HabitCardModel) -> Unit,
+    onPauseTimer: (HabitCardModel) -> Unit,
+    onResumeTimer: (HabitCardModel) -> Unit,
+    onTimerFinished: (HabitCardModel) -> Unit,
     onCardClick: (Int) -> Unit,
 ) {
     val isDark = isSystemInDarkTheme()

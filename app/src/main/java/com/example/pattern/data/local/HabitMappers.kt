@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.mutableStateOf
 import com.example.pattern.data.local.Habit as LocalHabit
-import com.example.pattern.data.model.HabitCard as UiHabit
+import com.example.pattern.data.model.HabitCardModel as UiHabit
 
 fun LocalHabit.toUiModel(): UiHabit {
     val icon = when (type) {

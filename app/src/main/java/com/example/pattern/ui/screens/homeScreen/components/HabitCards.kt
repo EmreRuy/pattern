@@ -12,18 +12,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.pattern.data.local.HabitType
-import com.example.pattern.data.model.HabitCard
+import com.example.pattern.data.model.HabitCardModel
 
 @Composable
 fun HabitCards(
-    habits: List<HabitCard>,
+    habits: List<HabitCardModel>,
     paddingValues: PaddingValues,
     onHabitChecked: () -> Unit,
-    onTimerFinished: (HabitCard) -> Unit,
+    onTimerFinished: (HabitCardModel) -> Unit,
     onHabitCardClick: (Int) -> Unit,
-    onStartTimer: (HabitCard) -> Unit,
-    onPauseTimer: (HabitCard) -> Unit,
-    onResumeTimer: (HabitCard) -> Unit,
+    onStartTimer: (HabitCardModel) -> Unit,
+    onPauseTimer: (HabitCardModel) -> Unit,
+    onResumeTimer: (HabitCardModel) -> Unit,
 ) {
     val scrollUi = rememberScrollState()
 

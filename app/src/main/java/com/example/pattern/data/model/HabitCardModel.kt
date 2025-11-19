@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.pattern.data.local.HabitType
 
-data class HabitCard(
+data class HabitCardModel(
     val id: Int,
     val name: String,
     val type: HabitType,
