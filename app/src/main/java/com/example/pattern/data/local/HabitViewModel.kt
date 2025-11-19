@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -22,7 +23,7 @@ class HabitViewModel @Inject constructor(
     private val repository: HabitRepository
 ) : ViewModel() {
     /*
-      The StateFlow that the HomeView will observe. It contains the list of all habits
+      The StateFlow that the HomeScreen will observe. It contains the list of all habits
      */
     val homeUiState: StateFlow<HomeUiState> = repository.getAllHabitsStream()
         .map { habits ->
@@ -33,6 +34,10 @@ class HabitViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = HomeUiState(isLoading = true)
         )
+
+    fun getDailyStatesForDate(date: String): Flow<List<HabitDailyState>> {
+        return repository.getDailyStatesForDate(date)
+    }
 
     fun saveNewHabit(
         name: String,
@@ -72,75 +77,64 @@ class HabitViewModel @Inject constructor(
             }
         }
     }
-    fun startTimer(habitId: Int) {
+
+    fun startTimer(habitId: Int, date: String) {
         viewModelScope.launch {
-            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
-
-            // If already completed, don't allow restart
-            if (habit.isCompleted) return@launch
-
-            val updated = habit.copy(
+            val currentDaily = repository.getDailyStateOnce(habitId, date)
+            if (currentDaily?.isCompleted == true) return@launch
+            val updated = HabitDailyState(
+                habitId = habitId,
+                date = date,
                 timerStartTime = System.currentTimeMillis(),
-                timerPauseTime = null // clear pause
+                timerPauseTime = null,
+                isCompleted = false
             )
-
-            repository.updateHabit(updated)
+            repository.upsertDailyState(updated)
         }
     }
 
-
-    fun pauseTimer(habitId: Int) {
+    fun pauseTimer(habitId: Int, date: String) {
         viewModelScope.launch {
-            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
-
-            // Can't pause if already completed
-            if (habit.isCompleted) return@launch
-
-            // Don't pause if timer wasn't running
-            if (habit.timerStartTime == null) return@launch
-
-            val updated = habit.copy(
+            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: return@launch
+            if (currentDaily.isCompleted) return@launch
+            if (currentDaily.timerStartTime == null) return@launch
+            val updated = currentDaily.copy(
                 timerPauseTime = System.currentTimeMillis()
             )
-
-            repository.updateHabit(updated)
+            repository.upsertDailyState(updated)
         }
     }
 
-    fun resumeTimer(habitId: Int) {
+    fun resumeTimer(habitId: Int, date: String) {
         viewModelScope.launch {
-            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
-
-            if (habit.isCompleted) return@launch
-            if (habit.timerStartTime == null) return@launch
-            if (habit.timerPauseTime == null) return@launch // can't resume unless paused
-
+            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: return@launch
+            if (currentDaily.isCompleted) return@launch
+            if (currentDaily.timerStartTime == null) return@launch
+            if (currentDaily.timerPauseTime == null) return@launch
             val now = System.currentTimeMillis()
-            val pausedDuration = now - habit.timerPauseTime
-
-            val newStartTime = habit.timerStartTime + pausedDuration
-
-            val updated = habit.copy(
+            val pausedDuration = now - currentDaily.timerPauseTime
+            val newStartTime = currentDaily.timerStartTime + pausedDuration
+            val updated = currentDaily.copy(
                 timerStartTime = newStartTime,
-                timerPauseTime = null // cleared because running now
+                timerPauseTime = null
             )
-
-            repository.updateHabit(updated)
+            repository.upsertDailyState(updated)
         }
     }
-    fun finishTimer(habitId: Int) {
-        viewModelScope.launch {
-            val habit = homeUiState.value.habitList.firstOrNull { it.id == habitId } ?: return@launch
 
-            val updated = habit.copy(
+    fun finishTimer(habitId: Int, date: String) {
+        viewModelScope.launch {
+            val currentDaily = repository.getDailyStateOnce(habitId, date)
+                ?: HabitDailyState(
+                    habitId = habitId,
+                    date = date
+                )
+            val updated = currentDaily.copy(
                 isCompleted = true,
                 timerStartTime = null,
                 timerPauseTime = null
             )
-
-            repository.updateHabit(updated)
+            repository.upsertDailyState(updated)
         }
     }
-
-
 }

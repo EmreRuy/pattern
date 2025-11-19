@@ -36,6 +36,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun HabitBuildCard(
     habit: HabitCardModel,
+    isToday: Boolean,
     onStartTimer: (HabitCardModel) -> Unit,
     onPauseTimer: (HabitCardModel) -> Unit,
     onResumeTimer: (HabitCardModel) -> Unit,
@@ -156,8 +157,8 @@ fun HabitBuildCard(
                             text = formattedTime,
                             style = MaterialTheme.typography.labelMedium.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
                             )
                         )
                     }
@@ -171,6 +172,7 @@ fun HabitBuildCard(
                 isPaused = isPaused,
                 showSuccess = showSuccess.value,
                 onClick = {
+                    if (!isToday) return@TimerRing
                     when {
                         isCompleted -> Unit
                         isRunning -> onPauseTimer(habit)

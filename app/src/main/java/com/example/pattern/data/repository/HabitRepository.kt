@@ -1,6 +1,7 @@
 package com.example.pattern.data.repository
 
 import com.example.pattern.data.local.Habit
+import com.example.pattern.data.local.HabitDailyState
 import com.example.pattern.data.local.HabitDao
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
@@ -19,22 +20,22 @@ class HabitRepository @Inject constructor(
 ) {
 
     /**
-      Retrieves all habits from the local database.
-      The Flow stream ensures the HomeView automatically updates in real-time
+    Retrieves all habits from the local database.
+    The Flow stream ensures the HomeView automatically updates in real-time
      */
     fun getAllHabitsStream(): Flow<List<Habit>> {
         return habitDao.getAllHabits()
     }
 
     /**
-     Retrieves a single habit by ID.
+    Retrieves a single habit by ID.
      */
     fun getHabitStream(id: Int): Flow<Habit?> {
         return habitDao.getHabit(id)
     }
 
     /**
-     This will be called when the user clicks 'Save' on the AddHabitScreen.
+    This will be called when the user clicks 'Save' on the AddHabitScreen.
      */
     suspend fun insertHabit(habit: Habit) {
         habitDao.insert(habit)
@@ -43,7 +44,18 @@ class HabitRepository @Inject constructor(
     suspend fun updateHabit(habit: Habit) {
         habitDao.update(habit)
     }
+
     suspend fun deleteHabit(habit: Habit) {
         habitDao.delete(habit)
     }
+
+    //For HabitDaily State, countdown timer problem fixed
+    fun getDailyStatesForDate(date: String): Flow<List<HabitDailyState>> =
+        habitDao.getDailyStatesForDate(date)
+
+    suspend fun upsertDailyState(state: HabitDailyState) =
+        habitDao.upsertDailyState(state)
+
+    suspend fun getDailyStateOnce(habitId: Int, date: String): HabitDailyState? =
+        habitDao.getDailyStateOnce(habitId, date)
 }

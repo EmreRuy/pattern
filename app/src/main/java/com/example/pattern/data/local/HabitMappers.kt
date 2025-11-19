@@ -5,27 +5,29 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.mutableStateOf
+import com.example.pattern.data.model.HabitCardModel
 import com.example.pattern.data.local.Habit as LocalHabit
 import com.example.pattern.data.model.HabitCardModel as UiHabit
 
-fun LocalHabit.toUiModel(): UiHabit {
+fun LocalHabit.toCardModel(daily: HabitDailyState?): UiHabit {
     val icon = when (type) {
         HabitType.BUILD -> Icons.Default.Build
         HabitType.QUIT -> Icons.Default.CheckCircle
         HabitType.TASK -> Icons.Default.AddCircle
     }
-    return UiHabit(
+
+    return HabitCardModel(
         id = this.id,
         name = this.name,
         type = this.type,
-        iconEmoji = this.iconCode,
         icon = icon,
-        isChecked = mutableStateOf(this.isCompleted),
+        iconEmoji = this.iconCode,
+        isChecked = mutableStateOf(daily?.isCompleted ?: this.isCompleted),
         isTimeChecked = mutableStateOf(false),
         accentColorHex = accentColorHex,
         durationInMinutes = this.durationInMinutes,
-        timerStartTime = this.timerStartTime,
-        timerPauseTime = this.timerPauseTime,
-        isCompleted = this.isCompleted
+        timerStartTime = daily?.timerStartTime,
+        timerPauseTime = daily?.timerPauseTime,
+        isCompleted = daily?.isCompleted ?: false
     )
 }

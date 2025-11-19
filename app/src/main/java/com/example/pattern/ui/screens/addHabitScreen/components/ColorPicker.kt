@@ -38,15 +38,6 @@ fun ColorSelector(
     onColorSelected: (String) -> Unit
 ) {
     val colors = listOf(
-        "#A8D8EA",
-        "#AA96DA",
-        "#FCBAD3",
-        "#FFFFD2",
-        "#B5EAD7",
-        "#FFDAC1",
-        "#C7CEEA",
-        "#FFD5CD",
-
         "#264653", // Deep teal
         "#2A9D8F", // Jade green
         "#E9C46A", // Soft gold
@@ -54,7 +45,16 @@ fun ColorSelector(
         "#E76F51", // Terracotta red
         "#6D597A", // Muted plum
         "#4A4E69", // Slate indigo
-        "#1D3557"  // Deep navy
+        "#1D3557" , // Deep navy
+
+        "#5A7D9A", // Slate Blue-Gray
+        "#6A8E7F", // Muted Teal
+        "#A67F5B", // Warm Brown-Gold
+        "#8C5E7A", // Dusty Purple
+        "#4F6F52", // Deep Forest Green
+        "#8A8F9E", // Elegant Gray-Blue
+        "#B06C5B", // Terracotta
+        "#7C8C4C"  // Olive Green
     )
 
     LazyRow(

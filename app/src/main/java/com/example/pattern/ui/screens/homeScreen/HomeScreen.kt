@@ -42,7 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.pattern.R
 import com.example.pattern.data.local.HabitViewModel
-import com.example.pattern.data.local.toUiModel
+import com.example.pattern.data.local.toCardModel
 import com.example.pattern.ui.components.ConfettiView
 import com.example.pattern.ui.navigation.Screens
 import com.example.pattern.ui.screens.homeScreen.components.HabitCards
@@ -58,41 +58,56 @@ fun HomeScreen(
     habitViewModel: HabitViewModel = hiltViewModel(),
     navController: NavHostController,
 ) {
-    // collecting real time state from viewmodel
+    //Base Habit List
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
+
+    // For Confetti
     var explodeConfetti by remember { mutableStateOf(false) }
     var triggerConfetti by remember { mutableStateOf(false) }
+
+    // Date Selector Logic
     val listState = rememberLazyListState()
     val selectedDay = remember { mutableIntStateOf(180) }
     val dayList = remember { generateNext365Days() }
+
     LaunchedEffect(Unit) {
         listState.scrollToItem(selectedDay.intValue)
     }
+
     LaunchedEffect(triggerConfetti) {
         if (triggerConfetti) {
             delay(300)
             explodeConfetti = true
-            triggerConfetti = false
         }
     }
+
     val today = LocalDate.now(ZoneId.systemDefault())
     val selectedDate = remember(selectedDay.intValue) {
-        today
-            .minusDays(180)
-            .plusDays(selectedDay.intValue.toLong())
+        today.minusDays(180).plusDays(selectedDay.intValue.toLong())
     }
+
     val selectedDbIndex = selectedDate.dayOfWeek.value - 1
+    val selectedDateKey = selectedDate.toString()
 
 
+    // Daily States for Selected Date
+    val dailyStates by habitViewModel
+        .getDailyStatesForDate(selectedDateKey)
+        .collectAsStateWithLifecycle(initialValue = emptyList())
+
+    // Combine Habit + DailyState
     val habits = uiState.habitList
         .filter { habit ->
             habit.selectedDays.getOrNull(selectedDbIndex) == true
         }
-        .map { it.toUiModel() }
+        .map { habit ->
+            val daily = dailyStates.firstOrNull { it.habitId == habit.id }
+            habit.toCardModel(daily)
+        }
 
+    // Confetti
     ConfettiView(
-        explodeConfetti = explodeConfetti,
-        explodeConfettiCallback = { explodeConfetti = false }
+        explodeConfetti = explodeConfetti
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -132,9 +147,10 @@ fun HomeScreen(
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Calendar/Date Selector Row
+                    //Calendar section
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -174,31 +190,46 @@ fun HomeScreen(
                 }
             }
         ) { paddingValues ->
-            // Passing the filtered list
+            val isToday = selectedDate == today
+            //Habit List on Homescreen
             HabitCards(
                 habits = habits,
                 paddingValues = paddingValues,
-                onHabitChecked = {
-                    // triggerConfetti = true   // optional
-                },
+                onHabitChecked = {},
+                isToday = isToday,
+
+                // passing date to viewModel
                 onTimerFinished = { habitCard ->
-                    habitViewModel.finishTimer(habitCard.id)
+                    habitViewModel.finishTimer(
+                        habitId = habitCard.id,
+                        date = selectedDateKey
+                    )
                     triggerConfetti = true
                 },
                 onStartTimer = { habitCard ->
-                    habitViewModel.startTimer(habitCard.id)
+                    habitViewModel.startTimer(
+                        habitId = habitCard.id,
+                        date = selectedDateKey
+                    )
                 },
                 onPauseTimer = { habitCard ->
-                    habitViewModel.pauseTimer(habitCard.id)
+                    habitViewModel.pauseTimer(
+                        habitId = habitCard.id,
+                        date = selectedDateKey
+                    )
                 },
                 onResumeTimer = { habitCard ->
-                    habitViewModel.resumeTimer(habitCard.id)
+                    habitViewModel.resumeTimer(
+                        habitId = habitCard.id,
+                        date = selectedDateKey
+                    )
                 },
                 onHabitCardClick = { habitId ->
                     navController.navigate(Screens.HabitDetail.createRoute(habitId))
                 }
             )
 
+            // Empty States
             if (habits.isEmpty() && uiState.habitList.isNotEmpty() && !uiState.isLoading) {
                 Box(
                     modifier = Modifier
@@ -212,7 +243,6 @@ fun HomeScreen(
                     )
                 }
             } else if (uiState.habitList.isEmpty() && !uiState.isLoading) {
-                // Initial empty state when no habits exist in the database
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -228,5 +258,6 @@ fun HomeScreen(
         }
     }
 }
+
 
 

@@ -26,3 +26,19 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         )
     }
 }
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS habit_daily_state (
+                habitId INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                timerStartTime INTEGER,
+                timerPauseTime INTEGER,
+                isCompleted INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(habitId, date)
+            )
+            """.trimIndent()
+        )
+    }
+}

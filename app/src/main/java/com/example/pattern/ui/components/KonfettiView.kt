@@ -15,7 +15,6 @@ import nl.dionsegijn.konfetti.core.Position
 @Composable
 fun ConfettiView(
     explodeConfetti: Boolean,
-    explodeConfettiCallback: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     Box {
@@ -24,7 +23,6 @@ fun ConfettiView(
         if (explodeConfetti) {
             LaunchedEffect(Unit) {
                 delay(2_000) // Gives the confetti some time to animate
-                explodeConfettiCallback()
             }
             val party = Party(
                 speed = 0f,

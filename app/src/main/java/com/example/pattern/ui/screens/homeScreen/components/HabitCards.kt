@@ -18,6 +18,7 @@ import com.example.pattern.data.model.HabitCardModel
 fun HabitCards(
     habits: List<HabitCardModel>,
     paddingValues: PaddingValues,
+    isToday: Boolean,
     onHabitChecked: () -> Unit,
     onTimerFinished: (HabitCardModel) -> Unit,
     onHabitCardClick: (Int) -> Unit,
@@ -40,6 +41,7 @@ fun HabitCards(
             when (habit.type) {
                 HabitType.BUILD -> HabitBuildCard(
                     habit = habit,
+                    isToday = isToday,
                     onTimerFinished = onTimerFinished,
                     onCardClick = onHabitCardClick,
                     onStartTimer = onStartTimer,
