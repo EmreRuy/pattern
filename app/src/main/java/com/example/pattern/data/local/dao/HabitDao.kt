@@ -1,4 +1,4 @@
-package com.example.pattern.data.local
+package com.example.pattern.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,11 +6,13 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.pattern.data.local.entity.Habit
+import com.example.pattern.data.local.entity.HabitDailyState
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HabitDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insert(habit: Habit): Long
 
     @Update
@@ -26,7 +28,7 @@ interface HabitDao {
     fun getAllHabits(): Flow<List<Habit>>
 
     //Daily State
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun upsertDailyState(state: HabitDailyState)
 
     @Query(

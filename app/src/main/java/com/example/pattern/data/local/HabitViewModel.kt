@@ -2,6 +2,9 @@ package com.example.pattern.data.local
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pattern.data.local.entity.Habit
+import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject

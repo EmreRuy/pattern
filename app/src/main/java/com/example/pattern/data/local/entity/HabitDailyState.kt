@@ -1,4 +1,4 @@
-package com.example.pattern.data.local
+package com.example.pattern.data.local.entity
 
 import androidx.room.Entity
 

@@ -19,7 +19,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.pattern.data.local.HabitViewModel
-import com.example.pattern.data.local.toCardModel
+import com.example.pattern.data.mapper.toCardModel
 import com.example.pattern.ui.components.ConfettiView
 import com.example.pattern.ui.navigation.Screens
 import com.example.pattern.ui.screens.homeScreen.components.EmptyStateMessage

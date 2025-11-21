@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.pattern.data.local.HabitDao
-import com.example.pattern.data.local.HabitDatabase
+import com.example.pattern.data.local.dao.HabitDao
+import com.example.pattern.data.local.db.HabitDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

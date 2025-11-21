@@ -1,12 +1,14 @@
-package com.example.pattern.data.local
+package com.example.pattern.data.mapper
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.mutableStateOf
+import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.model.HabitCardModel
-import com.example.pattern.data.local.Habit as LocalHabit
+import com.example.pattern.data.local.entity.Habit as LocalHabit
 import com.example.pattern.data.model.HabitCardModel as UiHabit
 
 fun LocalHabit.toCardModel(daily: HabitDailyState?): UiHabit {

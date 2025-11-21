@@ -3,7 +3,7 @@ package com.example.pattern.data.model
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.pattern.data.local.HabitType
+import com.example.pattern.data.local.entity.HabitType
 
 data class HabitCardModel(
     val id: Int,

@@ -1,8 +1,12 @@
-package com.example.pattern.data.local
+package com.example.pattern.data.local.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.pattern.data.local.converter.Converters
+import com.example.pattern.data.local.dao.HabitDao
+import com.example.pattern.data.local.entity.Habit
+import com.example.pattern.data.local.entity.HabitDailyState
 
 @Database(
     entities = [Habit::class, HabitDailyState::class],

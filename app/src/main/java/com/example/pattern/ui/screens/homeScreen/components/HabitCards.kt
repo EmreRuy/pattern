@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.pattern.data.local.HabitType
+import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.model.HabitCardModel
 
 @Composable

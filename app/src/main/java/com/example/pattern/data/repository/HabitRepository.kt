@@ -1,8 +1,8 @@
 package com.example.pattern.data.repository
 
-import com.example.pattern.data.local.Habit
-import com.example.pattern.data.local.HabitDailyState
-import com.example.pattern.data.local.HabitDao
+import com.example.pattern.data.local.entity.Habit
+import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.data.local.dao.HabitDao
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
