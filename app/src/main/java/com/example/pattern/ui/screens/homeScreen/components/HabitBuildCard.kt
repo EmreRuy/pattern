@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.data.model.HabitCardModel
@@ -132,7 +133,7 @@ fun HabitBuildCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             //Left side
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
 
                 Text(
                     text = habit.iconEmoji.orEmpty(),
@@ -142,10 +143,12 @@ fun HabitBuildCard(
 
                 Column {
                     Text(
-                        text = habit.name,
+                        text = habit.name.replaceFirstChar { it.uppercase() },
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = accentColor,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 19.sp,
                             letterSpacing = (-0.3).sp
                         )
@@ -156,7 +159,7 @@ fun HabitBuildCard(
                         Text(
                             text = formattedTime,
                             style = MaterialTheme.typography.labelMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = accentColor,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
