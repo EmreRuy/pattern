@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -83,8 +83,8 @@ fun TimerRing(
         } else {
             val icon = when {
                 isRunning -> Icons.Filled.Pause
-                isPaused -> Icons.Outlined.PlayArrow
-                else -> Icons.Outlined.PlayArrow
+                isPaused -> Icons.Filled.PlayArrow
+                else -> Icons.Filled.PlayArrow
             }
             val tint = Color.Gray
             Icon(
