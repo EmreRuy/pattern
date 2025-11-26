@@ -1,15 +1,19 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -112,7 +116,7 @@ fun HabitBuildCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp, horizontal = 6.dp)
+            .padding(vertical = 8.dp, horizontal = 6.dp)
             .clip(RoundedCornerShape(28.dp))
             .clickable(
                 indication = null,
@@ -124,7 +128,6 @@ fun HabitBuildCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-
         Row(
             modifier = Modifier
                 .padding(horizontal = 22.dp, vertical = 20.dp)
@@ -140,7 +143,6 @@ fun HabitBuildCard(
                     fontSize = 30.sp,
                     modifier = Modifier.padding(end = 14.dp)
                 )
-
                 Column {
                     Text(
                         text = habit.name.replaceFirstChar { it.uppercase() },
@@ -153,17 +155,25 @@ fun HabitBuildCard(
                             letterSpacing = (-0.3).sp
                         )
                     )
-
-                    if ((habit.durationInMinutes ?: 0) > 0) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = formattedTime,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                color = accentColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(CircleShape)
+                                .background(accentColor)
                         )
+                        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                        if ((habit.durationInMinutes ?: 0) > 0) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = formattedTime,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = accentColor,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            )
+                        }
                     }
                 }
             }

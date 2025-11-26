@@ -86,7 +86,7 @@ fun TimerRing(
                 isPaused -> Icons.Outlined.PlayArrow
                 else -> Icons.Outlined.PlayArrow
             }
-            val tint = MaterialTheme.colorScheme.scrim
+            val tint = Color.Gray
             Icon(
                 imageVector = icon,
                 contentDescription = null,

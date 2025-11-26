@@ -42,7 +42,7 @@ fun HabitNameCard(
     onNameChange: (String) -> Unit
 ) {
     val softLimit = 20       // warning after this
-    val hardLimit = 50       // Max allowed text length
+    val hardLimit = 30       // Max allowed text length
 
     val isSoftLimitExceeded = habitName.length > softLimit
 
