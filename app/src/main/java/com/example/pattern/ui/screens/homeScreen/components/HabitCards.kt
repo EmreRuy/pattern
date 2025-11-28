@@ -33,7 +33,7 @@ fun HabitCards(
             .fillMaxWidth()
             .verticalScroll(scrollUi)
             .padding(paddingValues)
-            .padding(12.dp),
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
