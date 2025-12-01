@@ -1,13 +1,7 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.WaterDrop
+
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -70,14 +64,6 @@ class HabitDetailsViewModel @Inject constructor(
     }
 }
 
-
-fun iconFromCode(code: String): ImageVector = when (code) {
-    "fitness" -> Icons.Default.FitnessCenter
-    "book" -> Icons.AutoMirrored.Filled.MenuBook
-    "water" -> Icons.Default.WaterDrop
-    "sleep" -> Icons.Default.Bedtime
-    else -> Icons.Default.Star
-}
 fun goalLabel(type: HabitType, minutes: Int?): String {
     if (type != HabitType.BUILD || minutes == null) return ""
 
@@ -91,6 +77,7 @@ fun goalLabel(type: HabitType, minutes: Int?): String {
         else -> ""
     }
 }
+
 fun Long.toUiDate(): String {
     val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
     return Instant.ofEpochMilli(this)
@@ -100,13 +87,22 @@ fun Long.toUiDate(): String {
 }
 
 fun frequencyLabel(selectedDays: List<Boolean>): String {
-    val days = listOf("Mon","Tue","Wed","Thu","Fri","Sat","Sun")
+    val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
     val active = days.zip(selectedDays).filter { it.second }.map { it.first }
 
     return when {
         active.size == 7 -> "Everyday"
-        active.size == 5 && active.containsAll(listOf("Mon","Tue","Wed","Thu","Fri")) -> "Weekdays"
-        active.size == 2 && active.containsAll(listOf("Sat","Sun")) -> "Weekends"
+        active.size == 5 && active.containsAll(
+            listOf(
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+            )
+        ) -> "Weekdays"
+
+        active.size == 2 && active.containsAll(listOf("Sat", "Sun")) -> "Weekends"
         active.isEmpty() -> "No schedule"
         else -> active.joinToString(", ")
     }

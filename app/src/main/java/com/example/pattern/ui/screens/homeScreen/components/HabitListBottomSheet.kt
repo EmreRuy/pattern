@@ -34,7 +34,8 @@ fun HabitListBottomSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Your Habits",
@@ -42,13 +43,16 @@ fun HabitListBottomSheet(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-
-        LazyColumn(
-            contentPadding = PaddingValues(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(habits) { habit ->
-                HabitListItem(habit = habit, onHabitClick = onHabitClick)
+        if (habits.isEmpty()) {
+            EmptyHabitMessage()
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(habits) { habit ->
+                    HabitListItem(habit = habit, onHabitClick = onHabitClick)
+                }
             }
         }
     }
@@ -109,3 +113,4 @@ fun HabitListItem(
         }
     }
 }
+

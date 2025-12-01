@@ -1,7 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 
 data class HabitDetailsUi(
     val id: Int,
