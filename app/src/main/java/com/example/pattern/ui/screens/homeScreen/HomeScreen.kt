@@ -37,6 +37,7 @@ import java.time.ZoneId
 fun HomeScreen(
     habitViewModel: HabitViewModel = hiltViewModel(),
     navController: NavHostController,
+    onOpenMenuSheet: () -> Unit
 ) {
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
 
@@ -79,7 +80,7 @@ fun HomeScreen(
         Scaffold(
             topBar = {
                 Column {
-                    HomeTopBar()
+                    HomeTopBar(onMenuClick = onOpenMenuSheet)
                     Spacer(modifier = Modifier.height(16.dp))
                     HomeCalendarSelector(
                         listState = listState,

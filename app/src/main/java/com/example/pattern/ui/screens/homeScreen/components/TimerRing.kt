@@ -76,7 +76,7 @@ fun TimerRing(
             },
         contentAlignment = Alignment.Center
     ) {
-        val backgroundColor = MaterialTheme.colorScheme.surfaceContainer
+        val backgroundColor = MaterialTheme.colorScheme.surface
         val strokeWidth = 4.dp
 
         // ProgressIndicator

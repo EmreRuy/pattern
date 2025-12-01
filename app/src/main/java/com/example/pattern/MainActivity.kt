@@ -25,8 +25,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.screens.homeScreen.components.HabitListBottomSheet
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,6 +51,10 @@ class MainActivity : ComponentActivity() {
                     confirmValueChange = { it != SheetValue.PartiallyExpanded }
                 )
                 var showSheet by remember { mutableStateOf(false) }
+                //For HabitList Sheet control
+                var showMenuSheet by remember { mutableStateOf(false) }
+                val habitViewModel: HabitViewModel = hiltViewModel()
+                val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
                 LaunchedEffect(showSheet) {
                     if (showSheet) {
                         sheetState.expand()
@@ -58,6 +66,20 @@ class MainActivity : ComponentActivity() {
                         sheetState = sheetState,
                     ) {
                         AddHabitScreen(onSaveSuccess = { showSheet = false })
+                    }
+                }
+                if (showMenuSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showMenuSheet = false },
+                        sheetState = sheetState
+                    ) {
+                        HabitListBottomSheet(
+                            habits = uiState.habitList,
+                            onHabitClick = { id ->
+                                showMenuSheet = false
+                                navController.navigate(Screens.HabitDetail.createRoute(id))
+                            }
+                        )
                     }
                 }
                 Scaffold(
@@ -87,10 +109,13 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(paddingValues)
                     ) {
                         composable(Screens.Home.route) {
-                            HomeScreen(navController = navController)
+                            HomeScreen(
+                                navController = navController,
+                                onOpenMenuSheet = { showMenuSheet = true }
+                            )
                         }
                         composable(Screens.Profile.route) {
-                            ProfileScreen()
+                            ProfileScreen(onOpenMenuSheet = { showMenuSheet = true })
                         }
                         composable(
                             route = Screens.HabitDetail.route,

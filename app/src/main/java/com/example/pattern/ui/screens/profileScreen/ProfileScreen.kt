@@ -17,11 +17,11 @@ import com.example.pattern.ui.screens.profileScreen.components.ProfileStatCard
 @Preview
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen()
+    //ProfileScreen()
 }
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(onOpenMenuSheet: () -> Unit) {
     val scroll = rememberScrollState()
     Column(
         modifier = Modifier
@@ -29,7 +29,7 @@ fun ProfileScreen() {
             .verticalScroll(scroll)
             .background(MaterialTheme.colorScheme.background)
     ) {
-        HomeTopBar()
+       HomeTopBar(onMenuClick = onOpenMenuSheet)
         ExperienceLevelCard(
             title = "Your Progress Score",
             percentage = 0.75f,

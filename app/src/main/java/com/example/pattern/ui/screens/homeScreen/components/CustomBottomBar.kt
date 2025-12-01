@@ -33,7 +33,7 @@ fun CustomBottomBar(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             tonalElevation = 6.dp
         ) {
-            items.forEachIndexed { index, item ->
+            items.forEachIndexed { _, item ->
                 if (item.route == Screens.Add.route) {
                     Spacer(modifier = Modifier.weight(0.5f))
                 } else {

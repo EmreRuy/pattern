@@ -14,6 +14,7 @@ sealed class Screens(val route: String) {
         // Helper function to dynamically construct the route when navigating
         fun createRoute(habitId: Int) = "habit_detail_route/$habitId"
     }
+    object List : Screens("list_route")
 }
 
 data class BottomNavigationItem(
