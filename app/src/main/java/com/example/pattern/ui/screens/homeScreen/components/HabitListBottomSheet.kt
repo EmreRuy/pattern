@@ -66,7 +66,7 @@ fun HabitListItem(
             .clickable { onHabitClick(habit.id) },
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(accentColor.toColorInt()).copy(alpha = 0.5f)
+            containerColor = Color(accentColor.toColorInt()).copy(alpha = 0.4f)
         )
     ) {
         Row(
@@ -80,7 +80,8 @@ fun HabitListItem(
                 Text(
                     text = habit.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "${habit.durationInMinutes} min",
@@ -88,12 +89,23 @@ fun HabitListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "12312 XP", // For now, till I add the Xp
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.ExtraBold,
+                )
 
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
