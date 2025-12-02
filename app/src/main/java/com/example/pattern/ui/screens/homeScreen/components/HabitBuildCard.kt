@@ -116,7 +116,7 @@ fun HabitBuildCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 6.dp)
+            .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(28.dp))
             .clickable(
                 indication = null,
@@ -124,9 +124,9 @@ fun HabitBuildCard(
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+     //   elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier

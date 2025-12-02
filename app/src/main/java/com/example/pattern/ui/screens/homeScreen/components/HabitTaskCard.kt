@@ -10,12 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,7 +36,7 @@ fun HabitTaskCard(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onCardClick(habit.id) }
-            .padding(vertical = 6.dp, horizontal = 2.dp),
+            .padding(vertical = 6.dp, horizontal = 4.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -67,18 +63,13 @@ fun HabitTaskCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Icon(
-                imageVector = if (habit.isChecked.value) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                contentDescription = null,
-                tint = if (habit.isChecked.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                modifier = Modifier
-                    .size(28.dp)
-                    .clickable {
-                        habit.isChecked.value = !habit.isChecked.value
-                        if (habit.isChecked.value) {
-                            onHabitChecked()
-                        }
-                    }
+            TaskRing(
+                checked = habit.isChecked.value,
+                accentColor = MaterialTheme.colorScheme.primary,
+                onToggle = {
+                    habit.isChecked.value = !habit.isChecked.value
+                    if (habit.isChecked.value) onHabitChecked()
+                }
             )
         }
     }
