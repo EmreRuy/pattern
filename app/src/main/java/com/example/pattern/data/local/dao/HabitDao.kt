@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HabitDao {
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(habit: Habit): Long
 
     @Update
@@ -27,29 +28,38 @@ interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY createdAt DESC")
     fun getAllHabits(): Flow<List<Habit>>
 
-    //Daily State
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    // Daily State
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertDailyState(state: HabitDailyState)
 
-    @Query(
-        """
+    @Query("""
         SELECT * FROM habit_daily_state
         WHERE habitId = :habitId AND date = :date
         LIMIT 1
-        """
-    )
+    """)
     suspend fun getDailyStateOnce(
         habitId: Int,
         date: String
     ): HabitDailyState?
 
-    @Query(
-        """
+    @Query("""
         SELECT * FROM habit_daily_state
         WHERE date = :date
-        """
-    )
+    """)
     fun getDailyStatesForDate(
         date: String
     ): Flow<List<HabitDailyState>>
+
+    // Task Completion
+    @Query("""
+        UPDATE habit_daily_state
+        SET isTaskCompleted = :completed
+        WHERE habitId = :habitId AND date = :date
+    """)
+    suspend fun setTaskCompleted(
+        habitId: Int,
+        date: String,
+        completed: Boolean
+    )
 }

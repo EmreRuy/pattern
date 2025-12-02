@@ -58,4 +58,10 @@ class HabitRepository @Inject constructor(
 
     suspend fun getDailyStateOnce(habitId: Int, date: String): HabitDailyState? =
         habitDao.getDailyStateOnce(habitId, date)
+
+    // For task type of habit completion
+    suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
+        habitDao.setTaskCompleted(habitId, date, completed)
+    }
+
 }

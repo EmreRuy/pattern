@@ -17,5 +17,5 @@ data class HabitCardModel(
     val durationInMinutes: Int?,
     val timerStartTime: Long? = null,
     val timerPauseTime: Long? = null,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
 )

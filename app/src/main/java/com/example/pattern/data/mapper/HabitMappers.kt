@@ -9,9 +9,8 @@ import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.model.HabitCardModel
 import com.example.pattern.data.local.entity.Habit as LocalHabit
-import com.example.pattern.data.model.HabitCardModel as UiHabit
 
-fun LocalHabit.toCardModel(daily: HabitDailyState?): UiHabit {
+fun LocalHabit.toCardModel(daily: HabitDailyState?): HabitCardModel {
     val icon = when (type) {
         HabitType.BUILD -> Icons.Default.Build
         HabitType.QUIT -> Icons.Default.CheckCircle
@@ -24,12 +23,17 @@ fun LocalHabit.toCardModel(daily: HabitDailyState?): UiHabit {
         type = this.type,
         icon = icon,
         iconEmoji = this.iconCode,
-        isChecked = mutableStateOf(daily?.isCompleted ?: this.isCompleted),
+        // for task completion
+        isChecked = mutableStateOf(daily?.isTaskCompleted ?: false),
+
         isTimeChecked = mutableStateOf(false),
         accentColorHex = accentColorHex,
         durationInMinutes = this.durationInMinutes,
         timerStartTime = daily?.timerStartTime,
         timerPauseTime = daily?.timerPauseTime,
+
+        // for the timer completion
         isCompleted = daily?.isCompleted ?: false
     )
 }
+

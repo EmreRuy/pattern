@@ -40,7 +40,7 @@ import java.time.ZoneId
 fun HomeScreen(
     habitViewModel: HabitViewModel = hiltViewModel(),
     navController: NavHostController,
-    onOpenMenuSheet: () -> Unit
+    onOpenMenuSheet: () -> Unit,
 ) {
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
 
@@ -102,7 +102,7 @@ fun HomeScreen(
                 habits = habits,
                 paddingValues = paddingValues,
                 isToday = selectedDate == today,
-                onHabitChecked = {},
+                //onHabitChecked = {},
                 onTimerFinished = { habitCard ->
                     habitViewModel.finishTimer(habitCard.id, selectedDateKey)
                     triggerConfetti = true
@@ -110,6 +110,14 @@ fun HomeScreen(
                 onStartTimer = { habitViewModel.startTimer(it.id, selectedDateKey) },
                 onPauseTimer = { habitViewModel.pauseTimer(it.id, selectedDateKey) },
                 onResumeTimer = { habitViewModel.resumeTimer(it.id, selectedDateKey) },
+                selectedDateKey = selectedDateKey,
+                onTaskCompleted = { habitId, completed ->
+                    habitViewModel.setTaskCompleted(
+                        habitId = habitId,
+                        date = selectedDateKey,
+                        completed = completed
+                    )
+                },
                 onHabitCardClick = { id ->
                     navController.navigate(Screens.HabitDetail.createRoute(id))
                 }

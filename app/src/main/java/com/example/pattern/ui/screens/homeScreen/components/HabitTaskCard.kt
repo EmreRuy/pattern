@@ -26,8 +26,10 @@ import com.example.pattern.data.model.HabitCardModel
 @Composable
 fun HabitTaskCard(
     habit: HabitCardModel,
-    onHabitChecked: () -> Unit,
-    onCardClick: (Int) -> Unit
+    //onHabitChecked: () -> Unit,
+    onCardClick: (Int) -> Unit,
+    selectedDateKey: String,
+    onTaskCompleted: (habitId: Int, completed: Boolean) -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -67,8 +69,9 @@ fun HabitTaskCard(
                 checked = habit.isChecked.value,
                 accentColor = MaterialTheme.colorScheme.primary,
                 onToggle = {
-                    habit.isChecked.value = !habit.isChecked.value
-                    if (habit.isChecked.value) onHabitChecked()
+                    val newValue = !habit.isChecked.value
+                    habit.isChecked.value = newValue
+                    onTaskCompleted(habit.id, newValue)
                 }
             )
         }

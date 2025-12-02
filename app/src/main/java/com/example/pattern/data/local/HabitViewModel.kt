@@ -140,4 +140,11 @@ class HabitViewModel @Inject constructor(
             repository.upsertDailyState(updated)
         }
     }
+
+    //For the task type of habit completion
+    fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
+        viewModelScope.launch {
+            repository.setTaskCompleted(habitId, date, completed)
+        }
+    }
 }

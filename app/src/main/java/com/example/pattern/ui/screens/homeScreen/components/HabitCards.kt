@@ -19,7 +19,9 @@ fun HabitCards(
     habits: List<HabitCardModel>,
     paddingValues: PaddingValues,
     isToday: Boolean,
-    onHabitChecked: () -> Unit,
+    selectedDateKey: String,
+    onTaskCompleted: (Int, Boolean) -> Unit,
+   // onHabitChecked: () -> Unit,
     onTimerFinished: (HabitCardModel) -> Unit,
     onHabitCardClick: (Int) -> Unit,
     onStartTimer: (HabitCardModel) -> Unit,
@@ -51,7 +53,10 @@ fun HabitCards(
 
                 HabitType.QUIT, HabitType.TASK -> HabitTaskCard(
                     habit = habit,
-                    onHabitChecked = onHabitChecked,
+                    selectedDateKey = selectedDateKey,
+                    onTaskCompleted = { habitId, completed ->
+                        onTaskCompleted(habitId, completed)
+                    },
                     onCardClick = onHabitCardClick
                 )
             }

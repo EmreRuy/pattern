@@ -13,16 +13,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Singleton
 
-@Module // Module is like hey build it like this, its a recipe book
+@Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-    private val MIGRATION_1_2 = object : Migration(1, 2) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL(
-                "ALTER TABLE habits ADD COLUMN accentColorHex TEXT NOT NULL DEFAULT '#1E88E5'"
-            )
-        }
-    }
+
     @Provides
     @Singleton
     fun provideDatabase(
@@ -33,13 +27,7 @@ object DatabaseModule {
             HabitDatabase::class.java,
             "habit_database"
         )
-            .addMigrations(
-                MIGRATION_1_2,
-                MIGRATION_2_3,
-                MIGRATION_3_4,
-                MIGRATION_4_5
-            )
-            .fallbackToDestructiveMigration(false)
+            .fallbackToDestructiveMigration(false) // Using this for only while developing the app
             .build()
     }
 
@@ -48,6 +36,7 @@ object DatabaseModule {
         return database.habitDao()
     }
 }
+
 //Hilt is like super smart delivery service, instead of creating everything manually
 // hilt create it once and deliver it everywhere when we need it
 /* So we say:

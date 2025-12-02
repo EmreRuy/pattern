@@ -11,5 +11,6 @@ data class HabitDailyState(
     val date: String,              // e.g. "2025-11-19" (LocalDate.toString())
     val timerStartTime: Long? = null,
     val timerPauseTime: Long? = null,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val isTaskCompleted: Boolean = false
 )
