@@ -1,10 +1,13 @@
 package com.example.pattern.ui.screens.homeScreen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,7 +82,11 @@ fun HomeScreen(
     ConfettiView(explodeConfetti = explodeConfetti) {
         Scaffold(
             topBar = {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .fillMaxWidth()
+                ) {
                     HomeTopBar(onMenuClick = onOpenMenuSheet)
                     Spacer(modifier = Modifier.height(16.dp))
                     HomeCalendarSelector(
