@@ -28,8 +28,8 @@ fun TaskRing(
     accentColor: Color,
     onToggle: () -> Unit
 ) {
-    val ringSize = 44.dp
-    val iconSize = 26.dp
+    val ringSize = 42.dp
+    val iconSize = 24.dp
     val strokeWidth = 4.dp
 
     val progress by animateFloatAsState(
@@ -62,14 +62,11 @@ fun TaskRing(
             ) { onToggle() },
         contentAlignment = Alignment.Center
     ) {
-
         Canvas(Modifier.matchParentSize()) {
             val stroke = Stroke(
                 width = strokeWidth.toPx(),
                 cap = StrokeCap.Round
             )
-
-            // Background ring
             drawArc(
                 color = backgroundRingColor,
                 startAngle = 270f,
@@ -77,8 +74,6 @@ fun TaskRing(
                 useCenter = false,
                 style = stroke
             )
-
-            // Foreground animated ring
             drawArc(
                 color = accentColor,
                 startAngle = 270f,
@@ -87,8 +82,6 @@ fun TaskRing(
                 style = stroke
             )
         }
-
-        // CHECK ICON
         Icon(
             imageVector = Icons.Default.Check,
             contentDescription = null,

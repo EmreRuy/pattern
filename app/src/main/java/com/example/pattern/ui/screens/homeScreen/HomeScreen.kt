@@ -78,6 +78,14 @@ fun HomeScreen(
             val daily = dailyStates.firstOrNull { it.habitId == habit.id }
             habit.toCardModel(daily)
         }
+    LaunchedEffect(habits, selectedDateKey) {
+        habits.forEach { habit ->
+            val exists = dailyStates.any { it.habitId == habit.id }
+            if (!exists) {
+                habitViewModel.ensureDailyStateExists(habit.id, selectedDateKey)
+            }
+        }
+    }
 
     ConfettiView(explodeConfetti = explodeConfetti) {
         Scaffold(
@@ -110,7 +118,6 @@ fun HomeScreen(
                 onStartTimer = { habitViewModel.startTimer(it.id, selectedDateKey) },
                 onPauseTimer = { habitViewModel.pauseTimer(it.id, selectedDateKey) },
                 onResumeTimer = { habitViewModel.resumeTimer(it.id, selectedDateKey) },
-                selectedDateKey = selectedDateKey,
                 onTaskCompleted = { habitId, completed ->
                     habitViewModel.setTaskCompleted(
                         habitId = habitId,

@@ -147,4 +147,20 @@ class HabitViewModel @Inject constructor(
             repository.setTaskCompleted(habitId, date, completed)
         }
     }
+    fun ensureDailyStateExists(habitId: Int, date: String) {
+        viewModelScope.launch {
+            val current = repository.getDailyStateOnce(habitId, date)
+            if (current == null) {
+                repository.upsertDailyState(
+                    HabitDailyState(
+                        habitId = habitId,
+                        date = date,
+                        isCompleted = false,
+                        isTaskCompleted = false
+                    )
+                )
+            }
+        }
+    }
+
 }

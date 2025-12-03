@@ -3,6 +3,7 @@ package com.example.pattern.ui.screens.homeScreen.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,9 +27,7 @@ import com.example.pattern.data.model.HabitCardModel
 @Composable
 fun HabitTaskCard(
     habit: HabitCardModel,
-    //onHabitChecked: () -> Unit,
     onCardClick: (Int) -> Unit,
-    selectedDateKey: String,
     onTaskCompleted: (habitId: Int, completed: Boolean) -> Unit,
 ) {
     Card(
@@ -66,11 +65,11 @@ fun HabitTaskCard(
                 )
             }
             TaskRing(
-                checked = habit.isChecked.value,
+                checked = habit.isTaskChecked.value,
                 accentColor = MaterialTheme.colorScheme.primary,
                 onToggle = {
-                    val newValue = !habit.isChecked.value
-                    habit.isChecked.value = newValue
+                    val newValue = !habit.isTaskChecked.value
+                    habit.isTaskChecked.value = newValue
                     onTaskCompleted(habit.id, newValue)
                 }
             )

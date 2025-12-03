@@ -24,7 +24,7 @@ fun LocalHabit.toCardModel(daily: HabitDailyState?): HabitCardModel {
         icon = icon,
         iconEmoji = this.iconCode,
         // for task completion
-        isChecked = mutableStateOf(daily?.isTaskCompleted ?: false),
+        isTaskChecked = mutableStateOf(daily?.isTaskCompleted ?: false),
 
         isTimeChecked = mutableStateOf(false),
         accentColorHex = accentColorHex,
