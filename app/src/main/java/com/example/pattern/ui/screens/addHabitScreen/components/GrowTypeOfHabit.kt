@@ -51,8 +51,6 @@ fun GrowTypeOfHabit(
     durationMinutes: Int,
     onDurationChange: (Int, Int) -> Unit
 ) {
-    val selectedHours = durationHours
-    val selectedMinutes = durationMinutes
     var showDurationPicker by remember { mutableStateOf(false) }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     Column(
@@ -115,7 +113,7 @@ fun GrowTypeOfHabit(
                 }
                 // Display Current Duration
                 Text(
-                    text = "${selectedHours}h ${selectedMinutes}m",
+                    text = "${durationHours}h ${durationMinutes}m",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -132,8 +130,8 @@ fun GrowTypeOfHabit(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             tonalElevation = 6.dp
         ) {
-            var tempHours by remember { mutableIntStateOf(selectedHours) }
-            var tempMinutes by remember { mutableIntStateOf(selectedMinutes) }
+            var tempHours by remember { mutableIntStateOf(durationHours) }
+            var tempMinutes by remember { mutableIntStateOf(durationMinutes) }
 
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
