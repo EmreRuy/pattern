@@ -28,8 +28,8 @@ fun TaskRing(
     accentColor: Color,
     onToggle: () -> Unit
 ) {
-    val ringSize = 42.dp
-    val iconSize = 24.dp
+    val ringSize = 36.dp
+    val iconSize = 22.dp
     val strokeWidth = 4.dp
 
     val progress by animateFloatAsState(

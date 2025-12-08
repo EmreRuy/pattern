@@ -41,8 +41,8 @@ fun TimerRing(
     showSuccess: Boolean,
     onClick: () -> Unit
 ) {
-    val ringSize = 50.dp
-    val iconSize = 32.dp
+    val ringSize = 40.dp
+    val iconSize = 26.dp
 
     // animation for the progress fill
     val animatedProgress = animateFloatAsState(
