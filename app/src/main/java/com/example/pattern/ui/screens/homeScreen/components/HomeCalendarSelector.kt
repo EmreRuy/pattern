@@ -36,7 +36,6 @@ fun HomeCalendarSelector(
     ) {
         items(dayList.size) { index ->
             CalendarItem(
-                index = index,
                 isSelected = selectedDay == index,
                 dayText = dayList[index],
                 onClick = { onDaySelected(index) }
@@ -47,7 +46,6 @@ fun HomeCalendarSelector(
 
 @Composable
 private fun CalendarItem(
-    index: Int,
     isSelected: Boolean,
     dayText: String,
     onClick: () -> Unit

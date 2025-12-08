@@ -44,46 +44,57 @@ fun HomeScreen(
 ) {
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
 
-    val today = LocalDate.now(ZoneId.systemDefault())
+    val today = remember { LocalDate.now(ZoneId.systemDefault()) }
     val listState = rememberLazyListState()
     val selectedDay = remember { mutableIntStateOf(180) }
     val dayList = remember { generateNext365Days() }
 
-    // Confetti
+    // Confetti State
     var explodeConfetti by remember { mutableStateOf(false) }
     var triggerConfetti by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { listState.scrollToItem(selectedDay.intValue) }
-    LaunchedEffect(triggerConfetti) {
-        if (triggerConfetti) {
-            delay(300)
-            explodeConfetti = true
-        }
+    // Scroll to current day on first composition
+    LaunchedEffect(Unit) {
+        listState.scrollToItem(selectedDay.intValue)
     }
 
+    // Selected date logic
     val selectedDate = remember(selectedDay.intValue) {
         today.minusDays(180).plusDays(selectedDay.intValue.toLong())
     }
-
     val selectedDbIndex = selectedDate.dayOfWeek.value - 1
     val selectedDateKey = selectedDate.toString()
 
+    // Daily states for this day
     val dailyStates by habitViewModel
         .getDailyStatesForDate(selectedDateKey)
         .collectAsStateWithLifecycle(initialValue = emptyList())
 
-    val habits = uiState.habitList
-        .filter { it.selectedDays.getOrNull(selectedDbIndex) == true }
-        .map { habit ->
-            val daily = dailyStates.firstOrNull { it.habitId == habit.id }
-            habit.toCardModel(daily)
-        }
-    LaunchedEffect(habits, selectedDateKey) {
+    // Build mapped habit list
+    val habits = remember(selectedDateKey, uiState.habitList, dailyStates) {
+        uiState.habitList
+            .filter { it.selectedDays.getOrNull(selectedDbIndex) == true }
+            .map { habit ->
+                val daily = dailyStates.firstOrNull { it.habitId == habit.id }
+                habit.toCardModel(daily)
+            }
+    }
+
+    // Ensure daily states exist for mapped habits
+    LaunchedEffect(habits, selectedDateKey, dailyStates) {
         habits.forEach { habit ->
             val exists = dailyStates.any { it.habitId == habit.id }
             if (!exists) {
                 habitViewModel.ensureDailyStateExists(habit.id, selectedDateKey)
             }
+        }
+    }
+
+    // Confetti Triggering
+    LaunchedEffect(triggerConfetti) {
+        if (triggerConfetti) {
+            delay(300)
+            explodeConfetti = true
         }
     }
 
@@ -106,11 +117,12 @@ fun HomeScreen(
                 }
             }
         ) { paddingValues ->
+
             HabitCards(
                 habits = habits,
                 paddingValues = paddingValues,
                 isToday = selectedDate == today,
-                //onHabitChecked = {},
+
                 onTimerFinished = { habitCard ->
                     habitViewModel.finishTimer(habitCard.id, selectedDateKey)
                     triggerConfetti = true
@@ -129,19 +141,26 @@ fun HomeScreen(
                     navController.navigate(Screens.HabitDetail.createRoute(id))
                 }
             )
+
+            // Empty states
             if (!uiState.isLoading) {
                 when {
-                    habits.isEmpty() && uiState.habitList.isNotEmpty() -> {
-                        EmptyStateMessage(paddingValues, "No habits scheduled for this day!")
-                    }
+                    habits.isEmpty() && uiState.habitList.isNotEmpty() ->
+                        EmptyStateMessage(
+                            paddingValues,
+                            "No habits scheduled for this day!"
+                        )
 
-                    uiState.habitList.isEmpty() -> {
-                        EmptyStateMessage(paddingValues, "Start by adding your first habit!")
-                    }
+                    uiState.habitList.isEmpty() ->
+                        EmptyStateMessage(
+                            paddingValues,
+                            "Start by adding your first habit!"
+                        )
                 }
             }
         }
     }
 }
+
 
 
