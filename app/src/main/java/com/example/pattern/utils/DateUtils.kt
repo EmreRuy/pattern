@@ -2,12 +2,17 @@ package com.example.pattern.utils
 
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
-fun generateNext365Days(): List<String> {
+fun generateNext365Days(): List<Pair<String, String>> {
     val today = LocalDate.now()
-    val formatter = DateTimeFormatter.ofPattern("MMM d")
+    val startDate = today.minusDays(180)
+
+    val dayLetters = listOf("M", "T", "W", "T", "F", "S", "S")
+
     return List(365) { i ->
-        today.minusDays(180).plusDays(i.toLong()).format(formatter)
+        val date = startDate.plusDays(i.toLong())
+        val letter = dayLetters[date.dayOfWeek.value - 1]
+        val number = date.dayOfMonth.toString()
+        letter to number
     }
 }
