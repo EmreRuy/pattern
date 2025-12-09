@@ -80,7 +80,7 @@ fun HomeScreen(
             }
     }
 
-    // Ensure daily states exist for mapped habits
+    // daily states exist for mapped habits
     LaunchedEffect(habits, selectedDateKey, dailyStates) {
         habits.forEach { habit ->
             val exists = dailyStates.any { it.habitId == habit.id }
@@ -117,7 +117,6 @@ fun HomeScreen(
                 }
             }
         ) { paddingValues ->
-
             HabitCards(
                 habits = habits,
                 paddingValues = paddingValues,
