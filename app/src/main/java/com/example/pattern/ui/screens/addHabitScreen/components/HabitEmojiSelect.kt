@@ -7,10 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -61,39 +65,37 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
                 DividerDefaults.Thickness,
                 DividerDefaults.color
             )
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+            val emojis = listOf(
+                "🔥", "🏃", "📚", "💧", "🌿", "😴", "🧘", "🍎", "💪", "📝",
+                "🎨", "🎧", "🚴", "🏊", "🏋️‍♂️", "🥗", "🛌", "🎯", "📖",
+                "🧩", "💡", "🎹", "🎤", "🖌️", "🎬", "🎲", "🕹️", "🌞", "🌙"
+            )
+            LazyVerticalGrid(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 320.dp),
+                columns = GridCells.Fixed(6),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                userScrollEnabled = false
             ) {
-                FlowRow(
-                    modifier = Modifier.wrapContentWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val emojis = listOf(
-                        "🔥", "🏃", "📚", "💧", "🌿", "😴", "🧘", "🍎", "💪", "📝",
-                        "🎨", "🎧", "🚴", "🏊", "🏋️‍♂️", "🥗", "🛌", "🎯", "📖", "🧩",
-                        "💡", "🎹", "🎤", "🖌️", "🎬", "🎲", "🕹️", "🌞", "🌙", "🕊️"
-                    )
-                    emojis.forEach { icon ->
-                        val interactionSource = remember { MutableInteractionSource() }
-                        Surface(
-                            shape = CircleShape,
-                            color = if (selectedEmoji == icon)
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                            else MaterialTheme.colorScheme.surfaceContainerLowest,
-                            tonalElevation = if (selectedEmoji == icon) 4.dp else 0.dp,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null,
-                                    onClick = { onEmojiChange(icon) }
-                                )
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(icon, fontSize = 24.sp)
-                            }
+                items(emojis.size) { index ->
+                    val icon = emojis[index]
+                    val isSelected = selectedEmoji == icon
+
+                    Surface(
+                        shape = CircleShape,
+                        color = if (isSelected)
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        else MaterialTheme.colorScheme.surfaceContainerLowest,
+                        tonalElevation = if (isSelected) 4.dp else 0.dp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clickable { onEmojiChange(icon) }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(icon, fontSize = 24.sp)
                         }
                     }
                 }
@@ -101,3 +103,4 @@ fun EmojiSelector(selectedEmoji: String, onEmojiChange: (String) -> Unit) {
         }
     }
 }
+

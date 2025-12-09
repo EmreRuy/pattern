@@ -27,7 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun HomeCalendarSelector(
@@ -66,6 +68,7 @@ fun HomeCalendarSelector(
         }
     }
 }
+
 @Composable
 fun CalendarItem(
     isSelected: Boolean,
@@ -92,7 +95,7 @@ fun CalendarItem(
                         color = primary.copy(alpha = 0.3f),
                         shape = RoundedCornerShape(26.dp)
                     )
-                    .padding(vertical = 8.dp, horizontal = 6.dp),
+                    .padding(vertical = 6.dp, horizontal = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -103,7 +106,10 @@ fun CalendarItem(
                     // Top letter inside capsule
                     Text(
                         text = dayLetter,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        ),
                         color = onPrimary
                     )
 
@@ -119,7 +125,7 @@ fun CalendarItem(
                     ) {
                         Text(
                             text = dayNumber,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = Color.Black
                         )
                     }
@@ -132,7 +138,10 @@ fun CalendarItem(
             ) {
                 Text(
                     text = dayLetter,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
