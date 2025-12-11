@@ -17,6 +17,9 @@ import com.example.pattern.ui.screens.addHabitScreen.components.ColorSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.EmojiSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitNameCard
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitTypeSelectorModern
+import com.example.pattern.ui.screens.addHabitScreen.components.HandleColorSheet
+import com.example.pattern.ui.screens.addHabitScreen.components.HandleEmojiSheet
+import com.example.pattern.ui.screens.addHabitScreen.components.HandleHabitNameSheet
 import com.example.pattern.ui.screens.addHabitScreen.components.SaveHabitButton
 import java.time.DayOfWeek
 
@@ -35,6 +38,9 @@ fun AddHabitScreen(
     var durationHours by remember { mutableIntStateOf(0) }
     var durationMinutes by remember { mutableIntStateOf(30) }
     var selectedColor by remember { mutableStateOf("#77DD77") }
+    var showEmojiSheet by remember { mutableStateOf(false) }
+    var showColorSheet by remember { mutableStateOf(false) }
+    var showNameSheet by remember { mutableStateOf(false) }
     Scaffold { padding ->
         Box(
             modifier = Modifier
@@ -52,10 +58,25 @@ fun AddHabitScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                HabitNameCard(habitName) { habitName = it }
+                HabitNameCard(
+                    habitName = habitName,
+                    onOpen = { showNameSheet = true }
+                )
+                HandleHabitNameSheet(
+                    showSheet = showNameSheet,
+                    habitName = habitName,
+                    onNameChange = { habitName = it },
+                    onDismiss = { showNameSheet = false }
+                )
                 ColorSelector(
                     selectedColor = selectedColor,
-                    onColorSelected = { selectedColor = it }
+                    onOpen = { showColorSheet = true }
+                )
+                HandleColorSheet(
+                    showColorSheet = showColorSheet,
+                    selectedColor = selectedColor,
+                    onColorChange = { selectedColor = it },
+                    onDismiss = { showColorSheet = false }
                 )
                 HabitTypeSelectorModern(
                     selectedType = habitType,
@@ -70,7 +91,16 @@ fun AddHabitScreen(
                     }
                 )
                 //  ReminderCard(reminderEnabled, reminderTime, onToggle = { reminderEnabled = it })
-                EmojiSelector(emoji) { emoji = it }
+                EmojiSelector(
+                    selectedEmoji = emoji,
+                    onOpen = { showEmojiSheet = true }
+                )
+                HandleEmojiSheet(
+                    showEmojiSheet = showEmojiSheet,
+                    selectedEmoji = emoji,
+                    onEmojiChange = { emoji = it },
+                    onDismiss = { showEmojiSheet = false }
+                )
                 SaveHabitButton(
                     habitName = habitName,
                     habitType = habitType,

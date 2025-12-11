@@ -76,8 +76,6 @@ fun CalendarItem(
     dayNumber: String,
     onClick: () -> Unit
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
     Box(
         modifier = Modifier
             .clickable(
@@ -92,7 +90,7 @@ fun CalendarItem(
                     .width(40.dp)
                     .height(72.dp)
                     .background(
-                        color = primary.copy(alpha = 0.3f),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                         shape = RoundedCornerShape(26.dp)
                     )
                     .padding(vertical = 6.dp, horizontal = 6.dp),
@@ -110,7 +108,7 @@ fun CalendarItem(
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         ),
-                        color = onPrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     // Bottom white circle with number
