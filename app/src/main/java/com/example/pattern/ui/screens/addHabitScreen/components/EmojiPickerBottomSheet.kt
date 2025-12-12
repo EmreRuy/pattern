@@ -16,16 +16,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,9 +46,7 @@ fun EmojiPickerBottomSheet(
         "🎨","🎧","🚴","🏊","🏋️‍♂️","🥗","🛌","🎯","📖","🧩",
         "💡","🎹","🎤","🖌️","🎬","🎲","🕹️","🌞","🌙"
     )
-
     var query by remember { mutableStateOf("") }
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         dragHandle = { BottomSheetDefaults.DragHandle() }
@@ -71,19 +64,11 @@ fun EmojiPickerBottomSheet(
                 )
             )
         }
-        TextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = { Text("Search emojis…") },
-            singleLine = true,
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            modifier = Modifier
-                .padding(horizontal = 20.dp)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp)
+        EmojiSearchBar(
+            query = query,
+            onQueryChange = { query = it }
         )
         Spacer(Modifier.height(16.dp))
-
         val filtered = remember(query) {
             if (query.isBlank()) allEmojis
             else allEmojis.filter { it.contains(query) }
@@ -100,7 +85,6 @@ fun EmojiPickerBottomSheet(
         ) {
             items(filtered) { icon ->
                 val isSelected = icon == selectedEmoji
-
                 Box(
                     modifier = Modifier
                         .aspectRatio(1f)
