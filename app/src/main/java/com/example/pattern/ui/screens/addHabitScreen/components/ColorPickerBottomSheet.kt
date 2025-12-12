@@ -44,7 +44,6 @@ fun ColorPickerBottomSheet(
         "#5A7D9A", "#6A8E7F", "#A67F5B", "#8C5E7A",
         "#4F6F52", "#8A8F9E", "#B06C5B", "#7C8C4C"
     )
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         dragHandle = { BottomSheetDefaults.DragHandle() }
@@ -74,7 +73,6 @@ fun ColorPickerBottomSheet(
             items(colors) { colorHex ->
                 val color = Color(colorHex.toColorInt())
                 val isSelected = selectedColor == colorHex
-
                 Box(
                     modifier = Modifier
                         .aspectRatio(1f)

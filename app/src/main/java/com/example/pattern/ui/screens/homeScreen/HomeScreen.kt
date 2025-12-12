@@ -43,33 +43,27 @@ fun HomeScreen(
     onOpenMenuSheet: () -> Unit,
 ) {
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
-
     val today = remember { LocalDate.now(ZoneId.systemDefault()) }
     val listState = rememberLazyListState()
     val selectedDay = remember { mutableIntStateOf(180) }
     val dayList = remember { generateNext365Days() }
-
     // Confetti State
     var explodeConfetti by remember { mutableStateOf(false) }
     var triggerConfetti by remember { mutableStateOf(false) }
-
     // Scroll to current day on first composition
     LaunchedEffect(Unit) {
         listState.scrollToItem(selectedDay.intValue)
     }
-
     // Selected date logic
     val selectedDate = remember(selectedDay.intValue) {
         today.minusDays(180).plusDays(selectedDay.intValue.toLong())
     }
     val selectedDbIndex = selectedDate.dayOfWeek.value - 1
     val selectedDateKey = selectedDate.toString()
-
     // Daily states for this day
     val dailyStates by habitViewModel
         .getDailyStatesForDate(selectedDateKey)
         .collectAsStateWithLifecycle(initialValue = emptyList())
-
     // Build mapped habit list
     val habits = remember(selectedDateKey, uiState.habitList, dailyStates) {
         uiState.habitList
@@ -79,7 +73,6 @@ fun HomeScreen(
                 habit.toCardModel(daily)
             }
     }
-
     // daily states exist for mapped habits
     LaunchedEffect(habits, selectedDateKey, dailyStates) {
         habits.forEach { habit ->
@@ -89,7 +82,6 @@ fun HomeScreen(
             }
         }
     }
-
     // Confetti Triggering
     LaunchedEffect(triggerConfetti) {
         if (triggerConfetti) {
@@ -97,7 +89,6 @@ fun HomeScreen(
             explodeConfetti = true
         }
     }
-
     ConfettiView(explodeConfetti = explodeConfetti) {
         Scaffold(
             topBar = {
@@ -140,7 +131,6 @@ fun HomeScreen(
                     navController.navigate(Screens.HabitDetail.createRoute(id))
                 }
             )
-
             // Empty states
             if (!uiState.isLoading) {
                 when {
@@ -149,7 +139,6 @@ fun HomeScreen(
                             paddingValues,
                             "No habits scheduled for this day!"
                         )
-
                     uiState.habitList.isEmpty() ->
                         EmptyStateMessage(
                             paddingValues,

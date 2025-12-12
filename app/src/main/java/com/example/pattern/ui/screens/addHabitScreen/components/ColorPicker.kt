@@ -2,7 +2,6 @@ package com.example.pattern.ui.screens.addHabitScreen.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -41,21 +40,14 @@ fun ColorSelector(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-
     val scale by animateFloatAsState(
         if (isPressed) 0.97f else 1f,
         label = "pressScale"
     )
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant,
-                RoundedCornerShape(24.dp)
-            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
