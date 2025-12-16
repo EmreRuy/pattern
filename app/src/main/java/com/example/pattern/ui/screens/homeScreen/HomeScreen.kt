@@ -139,6 +139,7 @@ fun HomeScreen(
                             paddingValues,
                             "No habits scheduled for this day!"
                         )
+
                     uiState.habitList.isEmpty() ->
                         EmptyStateMessage(
                             paddingValues,

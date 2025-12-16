@@ -76,7 +76,7 @@ fun HabitNameCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
