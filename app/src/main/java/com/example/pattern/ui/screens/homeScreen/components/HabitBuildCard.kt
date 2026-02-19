@@ -125,8 +125,7 @@ fun HabitBuildCard(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-     //   elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -162,7 +161,7 @@ fun HabitBuildCard(
                                 .clip(CircleShape)
                                 .background(accentColor)
                         )
-                        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                        Spacer(modifier = Modifier.padding(horizontal = 3.dp))
                         if ((habit.durationInMinutes ?: 0) > 0) {
                             Spacer(Modifier.height(4.dp))
                             Text(

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.0.1"
 kotlin = "2.2.20"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -13,7 +13,7 @@ hilt = "2.57.2"
 hilt-navigation-compose = "1.3.0"
 materialIconsExtended = "1.7.8"
 room = "2.8.2"
-ksp = "2.2.20-2.0.3"
+ksp = "2.3.2"
 gson = "2.13.2"
 uiText = "1.9.4"
 

@@ -67,7 +67,7 @@ fun ColorSelector(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
                         .background(Color(selectedColor.toColorInt()))
                 )

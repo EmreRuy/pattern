@@ -48,7 +48,6 @@ fun HabitCards(
                     onPauseTimer = onPauseTimer,
                     onResumeTimer = onResumeTimer
                 )
-
                 HabitType.QUIT, HabitType.TASK -> HabitTaskCard(
                     habit = habit,
                     onTaskCompleted = { habitId, completed ->
