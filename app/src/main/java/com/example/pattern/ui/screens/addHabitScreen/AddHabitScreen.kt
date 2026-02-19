@@ -16,10 +16,11 @@ import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.screens.addHabitScreen.components.ColorSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.EmojiSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitNameCard
-import com.example.pattern.ui.screens.addHabitScreen.components.HabitTypeSelectorModern
+import com.example.pattern.ui.screens.addHabitScreen.components.HabitTypeSelectorCard
 import com.example.pattern.ui.screens.addHabitScreen.components.HandleColorSheet
 import com.example.pattern.ui.screens.addHabitScreen.components.HandleEmojiSheet
 import com.example.pattern.ui.screens.addHabitScreen.components.HandleHabitNameSheet
+import com.example.pattern.ui.screens.addHabitScreen.components.HandleHabitTypeSheet
 import com.example.pattern.ui.screens.addHabitScreen.components.SaveHabitButton
 import java.time.DayOfWeek
 
@@ -41,6 +42,8 @@ fun AddHabitScreen(
     var showEmojiSheet by remember { mutableStateOf(false) }
     var showColorSheet by remember { mutableStateOf(false) }
     var showNameSheet by remember { mutableStateOf(false) }
+
+    var showHabitTypeSheet by remember { mutableStateOf(false) }
     Scaffold { padding ->
         Box(
             modifier = Modifier
@@ -78,17 +81,24 @@ fun AddHabitScreen(
                     onColorChange = { selectedColor = it },
                     onDismiss = { showColorSheet = false }
                 )
-                HabitTypeSelectorModern(
+                HabitTypeSelectorCard(
                     selectedType = habitType,
-                    onTypeChange = { habitType = it },
+                    onOpen = { showHabitTypeSheet = true }
+                )
+
+                HandleHabitTypeSheet(
+                    showSheet = showHabitTypeSheet,
+                    selectedType = habitType,
                     selectedDays = buildHabitDays,
-                    onDaysChange = { buildHabitDays = it },
                     durationHours = durationHours,
                     durationMinutes = durationMinutes,
+                    onTypeChange = { habitType = it },
+                    onDaysChange = { buildHabitDays = it },
                     onDurationChange = { h, m ->
                         durationHours = h
                         durationMinutes = m
-                    }
+                    },
+                    onDismiss = { showHabitTypeSheet = false }
                 )
                 //  ReminderCard(reminderEnabled, reminderTime, onToggle = { reminderEnabled = it })
                 EmojiSelector(

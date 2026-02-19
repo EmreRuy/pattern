@@ -1,6 +1,10 @@
 package com.example.pattern.ui.screens.addHabitScreen.components
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -20,126 +25,78 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.time.DayOfWeek
 
 @Composable
-fun HabitTypeSelectorModern(
+fun HabitTypeSelectorCard(
     selectedType: String,
-    onTypeChange: (String) -> Unit,
-    selectedDays: List<DayOfWeek>,
-    onDaysChange: (List<DayOfWeek>) -> Unit,
-    durationHours: Int,
-    durationMinutes: Int,
-    onDurationChange: (Int, Int) -> Unit
+    onOpen: () -> Unit
 ) {
-    val habitTypes = listOf(
-        "Grow" to "🚀",
-        "Drop" to "🛑",
-        "Task" to "🔁"
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        if (isPressed) 0.97f else 1f,
+        label = "pressScale"
     )
+
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onOpen() },
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 4.dp
+        tonalElevation = 1.dp
     ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.AddCircle,
-                    contentDescription = "Habit Icon",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+                Text(
+                    text = when (selectedType) {
+                        "Grow" -> "🚀"
+                        "Drop" -> "🛑"
+                        else -> "🔁"
+                    },
+                    fontSize = 22.sp
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Customize Your Habit",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column {
+                    Text(
+                        "Habit Type",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Text(
+                        selectedType,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            HorizontalDivider(
-                Modifier.padding(vertical = 4.dp),
-                DividerDefaults.Thickness,
-                DividerDefaults.color
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
-            FlowRow(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                habitTypes.forEach { (type, emoji) ->
-                    val isSelected = selectedType == type
-
-                    Surface(
-                        onClick = { onTypeChange(type) },
-                        shape = RoundedCornerShape(50),
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            MaterialTheme.colorScheme.surfaceContainerLowest,
-                        tonalElevation = if (isSelected) 2.dp else 0.dp,
-                        border = if (!isSelected) BorderStroke(
-                            0.7.dp,
-                            MaterialTheme.colorScheme.outline
-                        ) else null
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = emoji,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(
-                                text = type,
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                            )
-                        }
-                    }
-                }
-            }
-            when (selectedType) {
-                "Grow" -> {
-                    GrowTypeOfHabit(
-                        selectedDays = selectedDays,
-                        onDaysChange = onDaysChange,
-                        durationHours = durationHours,
-                        durationMinutes = durationMinutes,
-                        onDurationChange = onDurationChange
-                    )
-                }
-
-                "Drop" -> {
-                    DropTypeOfHabit(
-                        selectedDays = selectedDays,
-                        onDaysChange = onDaysChange
-                    )
-                }
-
-                "Task" -> {
-                    TaskTypeOfHabits(
-                        selectedDays = selectedDays,
-                        onDaysChange = onDaysChange
-                    )
-                }
-            }
         }
     }
 }
+
 
 
