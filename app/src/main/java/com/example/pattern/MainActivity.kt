@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 if (showSheet) {
                     ModalBottomSheet(
                         onDismissRequest = { showSheet = false },
-                        sheetState = sheetState,
+                        sheetState = sheetState
                     ) {
                         AddHabitScreen(onSaveSuccess = { showSheet = false })
                     }

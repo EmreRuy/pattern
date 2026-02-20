@@ -64,6 +64,11 @@ fun HabitListItem(
     onHabitClick: (Int) -> Unit
 ) {
     val accentColor = habit.accentColorHex
+    val titleText = if ((habit.durationInMinutes ?: 0) > 0) {
+        "${habit.durationInMinutes} min"
+    } else {
+        "Task"
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -88,7 +93,7 @@ fun HabitListItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${habit.durationInMinutes} min",
+                    text = titleText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
