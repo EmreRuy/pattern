@@ -41,6 +41,7 @@ fun HomeScreen(
     habitViewModel: HabitViewModel = hiltViewModel(),
     navController: NavHostController,
     onOpenMenuSheet: () -> Unit,
+    onOpenSettingsSheet: () -> Unit
 ) {
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
     val today = remember { LocalDate.now(ZoneId.systemDefault()) }
@@ -97,7 +98,9 @@ fun HomeScreen(
                         .background(MaterialTheme.colorScheme.surface)
                         .fillMaxWidth()
                 ) {
-                    HomeTopBar(onMenuClick = onOpenMenuSheet)
+                    HomeTopBar(onMenuClick = onOpenMenuSheet,
+                        onSettingsClick = onOpenSettingsSheet
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     HomeCalendarSelector(
                         listState = listState,

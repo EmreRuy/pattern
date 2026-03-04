@@ -12,14 +12,11 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.navigation.Screens
 import com.example.pattern.ui.screens.addHabitScreen.AddHabitScreen
-import com.example.pattern.ui.screens.homeScreen.HomeScreen
 import com.example.pattern.ui.theme.AppTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,12 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.navigation.NavHost
+import com.example.pattern.ui.screens.settings.SettingsBottomSheetContent
 import com.example.pattern.ui.screens.homeScreen.components.HabitListBottomSheet
-import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
-import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -45,33 +40,54 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
-                //for Bottom Sheet Control
-                val sheetState = rememberModalBottomSheetState(
+
+                // Separate sheet states for each bottom sheet
+                val addHabitSheetState = rememberModalBottomSheetState(
                     skipPartiallyExpanded = true,
                     confirmValueChange = { it != SheetValue.PartiallyExpanded }
                 )
-                var showSheet by remember { mutableStateOf(false) }
-                //For HabitList Sheet control
+                val menuSheetState = rememberModalBottomSheetState(
+                    skipPartiallyExpanded = true,
+                    confirmValueChange = { it != SheetValue.PartiallyExpanded }
+                )
+                val settingsSheetState = rememberModalBottomSheetState(
+                    skipPartiallyExpanded = true,
+                    confirmValueChange = { it != SheetValue.PartiallyExpanded }
+                )
+
+                var showAddHabitSheet by remember { mutableStateOf(false) }
                 var showMenuSheet by remember { mutableStateOf(false) }
+                var showSettingsSheet by remember { mutableStateOf(false) }
+
                 val habitViewModel: HabitViewModel = hiltViewModel()
                 val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
-                LaunchedEffect(showSheet) {
-                    if (showSheet) {
-                        sheetState.expand()
-                    }
+
+                // Expand sheets when triggered
+                LaunchedEffect(showAddHabitSheet) {
+                    if (showAddHabitSheet) addHabitSheetState.expand()
                 }
-                if (showSheet) {
+                LaunchedEffect(showMenuSheet) {
+                    if (showMenuSheet) menuSheetState.expand()
+                }
+                LaunchedEffect(showSettingsSheet) {
+                    if (showSettingsSheet) settingsSheetState.expand()
+                }
+
+                // Add Habit Bottom Sheet
+                if (showAddHabitSheet) {
                     ModalBottomSheet(
-                        onDismissRequest = { showSheet = false },
-                        sheetState = sheetState
+                        onDismissRequest = { showAddHabitSheet = false },
+                        sheetState = addHabitSheetState
                     ) {
-                        AddHabitScreen(onSaveSuccess = { showSheet = false })
+                        AddHabitScreen(onSaveSuccess = { showAddHabitSheet = false })
                     }
                 }
+
+                // Habit List Bottom Sheet
                 if (showMenuSheet) {
                     ModalBottomSheet(
                         onDismissRequest = { showMenuSheet = false },
-                        sheetState = sheetState
+                        sheetState = menuSheetState
                     ) {
                         HabitListBottomSheet(
                             habits = uiState.habitList,
@@ -82,21 +98,37 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+
+                // Settings Bottom Sheet
+                if (showSettingsSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showSettingsSheet = false },
+                        sheetState = settingsSheetState
+                    ) {
+                        SettingsBottomSheetContent(
+                            onClose = { showSettingsSheet = false }
+                        )
+                    }
+                }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
                         CustomBottomBar(
                             currentRoute = currentRoute,
                             onItemClick = { item ->
-                                if (item.route == Screens.Add.route) {
-                                    showSheet = true
-                                } else if (currentRoute != item.route) {
-                                    navController.navigate(item.route) {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
+                                when (item.route) {
+                                    Screens.Add.route -> showAddHabitSheet = true
+                                    else -> {
+                                        if (currentRoute != item.route) {
+                                            navController.navigate(item.route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
                                 }
                             }
@@ -105,31 +137,10 @@ class MainActivity : ComponentActivity() {
                 ) { paddingValues ->
                     NavHost(
                         navController = navController,
-                        startDestination = Screens.Home.route,
+                        showMenuSheet = { showMenuSheet = true },
+                        showSettingsSheet = { showSettingsSheet = true },
                         modifier = Modifier.padding(paddingValues)
-                    ) {
-                        composable(Screens.Home.route) {
-                            HomeScreen(
-                                navController = navController,
-                                onOpenMenuSheet = { showMenuSheet = true }
-                            )
-                        }
-                        composable(Screens.Profile.route) {
-                            ProfileScreen(onOpenMenuSheet = { showMenuSheet = true })
-                        }
-                        composable(
-                            route = Screens.HabitDetail.route,
-                            arguments = listOf(
-                                navArgument("habitId") {
-                                    type = NavType.IntType
-                                }
-                            )
-                        ) {
-                            HabitDetailsRoute(
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
-                    }
+                    )
                 }
             }
         }

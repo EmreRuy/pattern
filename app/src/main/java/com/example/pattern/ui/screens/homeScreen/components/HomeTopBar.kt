@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.example.pattern.R
 
 @Composable
-fun HomeTopBar(onMenuClick: () -> Unit) {
+fun HomeTopBar(onMenuClick: () -> Unit, onSettingsClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,7 +60,10 @@ fun HomeTopBar(onMenuClick: () -> Unit) {
             Icon(
                 painter = painterResource(id = R.drawable.settings),
                 contentDescription = "Settings Icon",
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(32.dp).clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onSettingsClick() },
                 tint = MaterialTheme.colorScheme.onBackground
             )
         }
