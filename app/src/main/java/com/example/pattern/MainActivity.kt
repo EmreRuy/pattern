@@ -98,7 +98,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-
                 // Settings Bottom Sheet
                 if (showSettingsSheet) {
                     ModalBottomSheet(
@@ -110,7 +109,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
