@@ -42,7 +42,7 @@ fun NavHost(
                 navArgument("habitId") { type = NavType.IntType }
             )
         ) {
-            HabitDetailsRoute(onBack = { navController.popBackStack() })
+           HabitDetailsRoute(onBack = { navController.popBackStack() })
         }
     }
 }
