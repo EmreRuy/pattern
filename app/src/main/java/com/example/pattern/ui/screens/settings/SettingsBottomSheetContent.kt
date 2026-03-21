@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,12 +24,12 @@ import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -43,111 +45,72 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+
 @Composable
-fun SettingsBottomSheetContent(
-    onClose: () -> Unit
-) {
+fun SettingsBottomSheetContent() {
+    // These would ideally be hoisted to a ViewModel
     var dailyReminder by remember { mutableStateOf(true) }
     var smartReminder by remember { mutableStateOf(true) }
-    var streakAlerts by remember { mutableStateOf(true) }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(28.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 24.dp)
     ) {
         item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp)
-            ) {
-                Text(
-                    text = "Settings",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-                IconButton(
-                    onClick = onClose,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close"
-                    )
-                }
-            }
+            SettingsHeader()
         }
+
         item {
             SettingsSection(title = "App Preferences") {
-
-                SettingsNavigationItem(
-                    icon = Icons.Default.Palette,
-                    title = "Theme",
-                    subtitle = "System"
-                )
-
-                SettingsNavigationItem(
-                    icon = Icons.Default.ColorLens,
-                    title = "Accent Color"
-                )
-
-                SettingsNavigationItem(
-                    icon = Icons.Default.Language,
-                    title = "Language"
-                )
+                SettingsNavigationItem(Icons.Default.Palette, "Theme", "System")
+                SettingsNavigationItem(Icons.Default.ColorLens, "Accent Color")
+                SettingsNavigationItem(Icons.Default.Language, "Language")
             }
         }
+
         item {
-
             SettingsSection(title = "Notifications") {
-
                 SettingsSwitchItem(
                     icon = Icons.Default.Notifications,
                     title = "Daily reminders",
                     checked = dailyReminder,
                     onCheckedChange = { dailyReminder = it }
                 )
-
                 SettingsSwitchItem(
                     icon = Icons.Default.Alarm,
                     title = "Smart reminders",
                     checked = smartReminder,
                     onCheckedChange = { smartReminder = it }
                 )
-
-                SettingsSwitchItem(
-                    icon = Icons.Default.LocalFireDepartment,
-                    title = "Streak alerts",
-                    checked = streakAlerts,
-                    onCheckedChange = { streakAlerts = it }
-                )
             }
         }
+
         item {
-
             SettingsSection(title = "About") {
-
-                SettingsNavigationItem(
-                    icon = Icons.Default.Info,
-                    title = "App version",
-                    subtitle = "1.0.0"
-                )
-
-                SettingsNavigationItem(
-                    icon = Icons.Default.Star,
-                    title = "Rate the app"
-                )
-
-                SettingsNavigationItem(
-                    icon = Icons.Default.Email,
-                    title = "Contact support"
-                )
+                SettingsNavigationItem(Icons.Default.Info, "App version", "1.0.0")
+                SettingsNavigationItem(Icons.Default.Star, "Rate the app")
+                SettingsNavigationItem(Icons.Default.Email, "Contact support")
             }
         }
+    }
+}
 
-        item { Spacer(modifier = Modifier.height(24.dp)) }
+@Composable
+private fun SettingsHeader() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = "Settings",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.Center)
+        )
     }
 }
 
@@ -156,22 +119,18 @@ fun SettingsSection(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-
-    Column {
-
+    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             text = title.uppercase(),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 4.dp, bottom = 10.dp)
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
         )
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
-                .padding(vertical = 4.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
         ) {
             content()
         }
@@ -189,40 +148,22 @@ fun SettingsNavigationItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(16.dp))
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge
-            )
-
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
             subtitle?.let {
                 Text(
-                    text = subtitle,
+                    it,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline)
     }
 }
 
@@ -233,31 +174,15 @@ fun SettingsSwitchItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(16.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f)
-        )
-
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
+        Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

@@ -57,7 +57,6 @@ fun HabitListBottomSheet(
         }
     }
 }
-
 @Composable
 fun HabitListItem(
     habit: Habit,

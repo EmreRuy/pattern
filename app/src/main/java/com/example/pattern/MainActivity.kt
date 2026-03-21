@@ -104,9 +104,7 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { showSettingsSheet = false },
                         sheetState = settingsSheetState
                     ) {
-                        SettingsBottomSheetContent(
-                            onClose = { showSettingsSheet = false }
-                        )
+                        SettingsBottomSheetContent()
                     }
                 }
                 Scaffold(
