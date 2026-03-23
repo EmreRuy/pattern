@@ -22,29 +22,31 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.sp
 
 
-//Main HabitDetailsScreen here
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCardDetailsScreen(
@@ -54,50 +56,49 @@ fun HabitCardDetailsScreen(
 ) {
     val accentColor = habit.accentColor
     val scrollState = rememberScrollState()
-    // Dynamic background based on accent color
+    var showDeleteSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val haptic = LocalHapticFeedback.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        accentColor.copy(alpha = 0.12f),
-                        MaterialTheme.colorScheme.surface
-                    )
+                    0f to accentColor.copy(alpha = 0.15f),
+                    0.4f to MaterialTheme.colorScheme.surface
                 )
             )
     ) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                LargeTopAppBar(
+                CenterAlignedTopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
-                        scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                         navigationIconContentColor = Color.Unspecified,
                         titleContentColor = Color.Unspecified,
                         actionIconContentColor = Color.Unspecified
                     ),
                     title = {
                         Text(
-                            text = habit.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Black,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                            letterSpacing = (-0.5).sp
+                            text = habit.name.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold
                         )
                     },
                     navigationIcon = {
-                        //back icon
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null)
                         }
                     },
                     actions = {
-                        // Delete icon
-                        IconButton(onClick = onDelete) {
-                            Icon(Icons.Rounded.Delete, contentDescription = null)
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showDeleteSheet = true
+                        }) {
+                            Icon(Icons.Rounded.DeleteOutline, null, tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 )
@@ -108,138 +109,128 @@ fun HabitCardDetailsScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(scrollState)
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                //  Icon Section
+                // Feature Header
                 Surface(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .padding(top = 16.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    color = accentColor.copy(alpha = 0.2f),
-                    border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
+                    modifier = Modifier.size(120.dp),
+                    shape = RoundedCornerShape(38.dp),
+                    color = accentColor.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, accentColor.copy(alpha = 0.2f))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(text = habit.icon ?: "⭐", fontSize = 56.sp)
+                        Text(text = habit.icon ?: "⭐", fontSize = 64.sp)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                //  Stats
+                // Stats Grid
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    StatCard(
-                        label = "Streak",
-                        value = habit.currentStreak.toString(),
-                        unit = "Days",
-                        accentColor = accentColor
-                    )
-                    StatCard(
-                        label = "Total",
-                        value = habit.totalCompletions.toString(),
-                        unit = "Done",
-                        accentColor = accentColor
-                    )
+                    StatCard("Current Streak", habit.currentStreak.toString(), "Days", accentColor)
+                    StatCard("Total Work", habit.totalCompletions.toString(), "Done", accentColor)
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // "Heatmap" Section
-                SectionHeader("Progress Pulse")
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .height(200.dp)
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
+                // Progress Section
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SectionHeader("Progress Pulse")
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().height(220.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow
                     ) {
-                        Text("Interactive Heatmap Visualizer", style = MaterialTheme.typography.bodyMedium)
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("Heatmap Visualization", style = MaterialTheme.typography.labelLarge)
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // 4. Clean Info List
-                SectionHeader("Habit Details")
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        DetailRow(Icons.Default.Star, "Goal", habit.goal)
-                        DetailRow(Icons.Default.DateRange, "Frequency", habit.frequency)
-                        DetailRow(Icons.Default.Info, "Since", habit.createdOn, isLast = true)
+                // Details Section
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SectionHeader("Habit Configuration")
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow
+                    ) {
+                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                            DetailRow(Icons.Rounded.AutoAwesome, "Goal", habit.goal)
+                            DetailRow(Icons.Rounded.Repeat, "Frequency", habit.frequency)
+                            DetailRow(Icons.Rounded.CalendarToday, "Started", habit.createdOn, isLast = true)
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.navigationBarsPadding())
+            }
+        }
+
+        if (showDeleteSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showDeleteSheet = false },
+                sheetState = sheetState,
+                dragHandle = { BottomSheetDefaults.DragHandle() },
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+            ) {
+                DeleteHabitSheetContent(
+                    onCancel = { showDeleteSheet = false },
+                    onConfirm = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showDeleteSheet = false
+                        onDelete()
+                    }
+                )
             }
         }
     }
 }
+
 @Composable
-fun RowScope.StatCard(label: String, value: String, unit: String, accentColor: Color) {
+private fun RowScope.StatCard(label: String, value: String, unit: String, accentColor: Color) {
     Surface(
         modifier = Modifier.weight(1f),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(value, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = accentColor)
-                Spacer(Modifier.width(4.dp))
-                Text(unit, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 6.dp))
+                Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = accentColor)
+                Text(unit, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 4.dp, bottom = 4.dp))
             }
         }
     }
 }
 
 @Composable
-fun DetailRow(icon: ImageVector, label: String, value: String, isLast: Boolean = false) {
+private fun DetailRow(icon: ImageVector, label: String, value: String, isLast: Boolean = false) {
     Row(
-        modifier = Modifier.padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-        Spacer(Modifier.width(12.dp))
+        Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(16.dp))
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+        Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
     }
-    if (!isLast) HorizontalDivider()
+    if (!isLast) HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 20.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+    )
 }
 
 @Composable
-fun SectionHeader(title: String) {
+private fun SectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleSmall,
+        style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 8.dp, bottom = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-}
-@Preview(showBackground = true)
-@Composable
-fun HabitCardDetailsScreenPreview() {
-    MaterialTheme(
-        colorScheme = lightColorScheme(
-            primary = Color(0xFF673AB7),
-            surfaceContainerHigh = Color(0xFFEFEFEF),
-            surfaceContainerLow = Color(0xFFFFFFFF)
-        )
-    ) {
-    }
 }
