@@ -67,7 +67,7 @@ fun DeleteHabitSheetContent(
 
             Text(
                 text = "Deleting is permanent. Your progress data and streaks will be lost forever.",
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )

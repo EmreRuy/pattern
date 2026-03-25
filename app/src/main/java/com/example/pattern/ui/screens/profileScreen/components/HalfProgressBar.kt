@@ -1,39 +1,43 @@
 package com.example.pattern.ui.screens.profileScreen.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -43,47 +47,100 @@ fun ProfileExtraCard(
     title: String = "Extra Score",
     percentage: Float,
     number: Int,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp)
-            .wrapContentHeight(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor
-        )
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp),
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = title.uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 1.2.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            HalfCircularProgressBar(
-                percentage = percentage,
-                number = number
-            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Box(contentAlignment = Alignment.Center) {
+                HalfCircularProgressBar(
+                    percentage = percentage,
+                    number = number
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                InfoSquare(label = "Done", number = 176, color = MaterialTheme.colorScheme.primary)
-                InfoSquare(label = "Skip", number = 75, color = MaterialTheme.colorScheme.secondary)
-                InfoSquare(
-                    label = "Total XP",
-                    number = 1286,
+                StatItem(
+                    label = "Done",
+                    value = "176",
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                VerticalDivider(
+                    modifier = Modifier.height(24.dp),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+
+                StatItem(
+                    label = "Skip",
+                    value = "75",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                VerticalDivider(
+                    modifier = Modifier.height(24.dp),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+
+                StatItem(
+                    label = "XP",
+                    value = "1.2k",
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
+    }
+}
+
+@Composable
+fun StatItem(
+    label: String,
+    value: String,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        )
     }
 }
 
@@ -92,63 +149,77 @@ fun ProfileExtraCard(
 fun HalfCircularProgressBar(
     percentage: Float,
     number: Int,
-    fontSize: TextUnit = 32.sp,
-    width: Dp = 170.dp,
-    height: Dp = 150.dp,
-    color: Color = MaterialTheme.colorScheme.primary,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    modifier: Modifier = Modifier,
+    width: Dp = 180.dp,
     strokeWidth: Dp = 12.dp,
-    animDuration: Int = 3000,
-    animDelay: Int = 0,
+    // Using your established Sage Green color
+    color: Color = Color(0xFF588157),
+    animDuration: Int = 2000,
 ) {
-    var animationPlayed by remember { mutableStateOf(false) }
+    val height = width / 2
+    var animationTarget by remember { mutableFloatStateOf(0f) }
+
     val curPercentage = animateFloatAsState(
-        targetValue = if (animationPlayed) percentage else 0f,
+        targetValue = animationTarget,
         animationSpec = tween(
             durationMillis = animDuration,
-            delayMillis = animDelay
-        ), label = ""
+            easing = FastOutSlowInEasing
+        ),
+        label = "ProgressAnimation"
     )
 
-    LaunchedEffect(Unit) {
-        animationPlayed = true
+    LaunchedEffect(percentage) {
+        animationTarget = percentage.coerceIn(0f, 1f)
     }
-
+    val polishedBrush = Brush.linearGradient(
+        colors = listOf(
+            color.copy(alpha = 0.6f),
+            MaterialTheme.colorScheme.primary,
+            color
+        )
+    )
     Box(
-        contentAlignment = Alignment.Center,
+        modifier = modifier.size(width = width, height = height),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Canvas(modifier = Modifier.size(width = width, height = height)) {
-            val arcSize = Size(size.width, size.height)
-            // Draw background arc
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokePx = strokeWidth.toPx()
+            val arcSize = Size(
+                width = size.width - strokePx,
+                height = (size.height * 2) - strokePx
+            )
+
+            // Background Track
             drawArc(
-                color = backgroundColor,
+                color = color.copy(alpha = 0.12f),
                 startAngle = 180f,
                 sweepAngle = 180f,
                 useCenter = false,
-                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round),
+                style = Stroke(strokePx, cap = StrokeCap.Round),
                 size = arcSize,
-                topLeft = Offset.Zero
+                topLeft = Offset(strokePx / 2, strokePx / 2)
             )
+
+            // Active Progress Track
             drawArc(
-                color = color,
+                brush = polishedBrush,
                 startAngle = 180f,
                 sweepAngle = 180f * curPercentage.value,
                 useCenter = false,
-                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round),
+                style = Stroke(strokePx, cap = StrokeCap.Round),
                 size = arcSize,
-                topLeft = Offset.Zero
+                topLeft = Offset(strokePx / 2, strokePx / 2)
             )
         }
-        Box(
-            modifier = Modifier.offset(y = (-height / 12))
-        ) {
-            Text(
-                text = (curPercentage.value * number).toInt().toString(),
-                fontSize = fontSize,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
-            )
-        }
+        Text(
+            text = (curPercentage.value * number).toInt().toString(),
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = (-1).sp
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
     }
 }
 /*

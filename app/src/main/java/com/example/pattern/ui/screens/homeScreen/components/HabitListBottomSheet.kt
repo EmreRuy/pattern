@@ -1,28 +1,32 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.example.pattern.data.local.entity.Habit
 
@@ -57,63 +61,77 @@ fun HabitListBottomSheet(
         }
     }
 }
+
 @Composable
 fun HabitListItem(
     habit: Habit,
     onHabitClick: (Int) -> Unit
 ) {
-    val accentColor = habit.accentColorHex
-    val titleText = if ((habit.durationInMinutes ?: 0) > 0) {
-        "${habit.durationInMinutes} min"
-    } else {
-        "Task"
-    }
-    Card(
+    val accentColor = Color(habit.accentColorHex.toColorInt())
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onHabitClick(habit.id) },
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(accentColor.toColorInt()).copy(alpha = 0.4f)
-        )
+            .clip(RoundedCornerShape(28.dp))
+            .background(containerColor)
+            .clickable {
+                onHabitClick(habit.id)
+            }
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .size(width = 6.dp, height = 42.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            accentColor,
+                            accentColor.copy(alpha = 0.6f)
+                        )
+                    )
+                )
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(
+            modifier = Modifier.weight(1f)
         ) {
-            Column {
-                Text(
-                    text = habit.name,
-                    style = MaterialTheme.typography.titleMedium,
+            Text(
+                text = habit.name,
+                style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = titleText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "12312 XP", // For now, till I add the Xp
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.ExtraBold,
-                )
-
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+                    letterSpacing = (-0.2).sp
+                ),
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = if ((habit.durationInMinutes ?: 0) > 0)
+                    "${habit.durationInMinutes} min session"
+                else "Quick task",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "12,312",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "XP",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.4.sp
+                ),
+                color = Color.Gray
+            )
         }
     }
 }

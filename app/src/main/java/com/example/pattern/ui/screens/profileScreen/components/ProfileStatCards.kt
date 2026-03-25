@@ -14,7 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun ProfileStatCard(
@@ -30,7 +32,7 @@ fun ProfileStatCard(
             .height(260.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor =  MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.25f),
         )
     ) {
         Column(
@@ -41,9 +43,11 @@ fun ProfileStatCard(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = title.uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 1.2.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
             CircularProgressBar(

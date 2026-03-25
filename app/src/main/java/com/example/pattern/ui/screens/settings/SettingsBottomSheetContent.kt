@@ -18,13 +18,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsBottomSheetContent() {
     // These would ideally be hoisted to a ViewModel
-    var dailyReminder by remember { mutableStateOf(true) }
+    var dailyReminder by remember { mutableStateOf(false) }
     var smartReminder by remember { mutableStateOf(true) }
 
     LazyColumn(
@@ -62,7 +62,7 @@ fun SettingsBottomSheetContent() {
         item {
             SettingsSection(title = "App Preferences") {
                 SettingsNavigationItem(Icons.Default.Palette, "Theme", "System")
-                SettingsNavigationItem(Icons.Default.ColorLens, "Accent Color")
+                SettingsNavigationItem(Icons.Default.Vibration, "Haptic Feedback")
                 SettingsNavigationItem(Icons.Default.Language, "Language")
             }
         }
@@ -119,7 +119,7 @@ fun SettingsSection(
         Text(
             text = title.uppercase(),
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
         )
         Column(

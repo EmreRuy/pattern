@@ -16,7 +16,8 @@ fun NavHost(
     navController: NavHostController,
     showMenuSheet: () -> Unit,
     showSettingsSheet: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isPro: Boolean = false,
 ) {
     NavHost(
         navController = navController,
@@ -31,9 +32,11 @@ fun NavHost(
             )
         }
         composable(Screens.Profile.route) {
+            // Pass the state and the click action here
             ProfileScreen(
+                isPro = isPro,
                 onOpenMenuSheet = showMenuSheet,
-                onOpenSettingsSheet = showSettingsSheet
+                onOpenSettingsSheet = showSettingsSheet,
             )
         }
         composable(
@@ -42,7 +45,7 @@ fun NavHost(
                 navArgument("habitId") { type = NavType.IntType }
             )
         ) {
-           HabitDetailsRoute(onBack = { navController.popBackStack() })
+            HabitDetailsRoute(onBack = { navController.popBackStack() })
         }
     }
 }
