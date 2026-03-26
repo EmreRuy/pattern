@@ -86,7 +86,7 @@ fun ExperienceLevelCard(
                     text = levelTitle,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 // Uses the master animatedProgress
                 Text(
@@ -116,7 +116,7 @@ fun ExperienceLevelCard(
                     text = "$level Lvl",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
+                    color = Color.Gray
                 )
             }
         }

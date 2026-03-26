@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -21,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -29,10 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.ColorUtils
 import com.example.pattern.data.model.HabitCardModel
 import androidx.core.graphics.toColorInt
 import com.example.pattern.ui.screens.addHabitScreen.components.blendColors
@@ -51,67 +55,61 @@ fun HabitBuildCard(
     val isDark = isSystemInDarkTheme()
     val surface = MaterialTheme.colorScheme.surface
     val fallbackColor = MaterialTheme.colorScheme.surfaceContainerHigh
-
     val accentColor = remember(habit.accentColorHex, isDark) {
         runCatching { Color(habit.accentColorHex.toColorInt()) }
             .getOrDefault(fallbackColor)
-            .let { if (isDark) blendColors(it, surface, 0.35f) else it }
+            .let {
+                if (isDark) ColorUtils.blendARGB(it.toArgb(), surface.toArgb(), 0.35f)
+                    .let(::Color) else it
+            }
     }
-    // Timer state
     val showSuccess = remember { mutableStateOf(false) }
-    val totalMillis = (habit.durationInMinutes ?: 0) * 60_000L
-
-    val isRunning = habit.timerStartTime != null && habit.timerPauseTime == null
-    val isPaused = habit.timerStartTime != null && habit.timerPauseTime != null
-    val isCompleted = habit.isCompleted
-
+    val totalMillis = remember(habit.durationInMinutes) { (habit.durationInMinutes ?: 0) * 60_000L }
     val currentTime by produceState(System.currentTimeMillis()) {
         while (true) {
-            value = System.currentTimeMillis()
             delay(1000)
+            value = System.currentTimeMillis()
         }
     }
-
-    val remainingTime = remember(
+    val timerData by remember(
         currentTime,
         habit.timerStartTime,
         habit.timerPauseTime,
         habit.isCompleted
     ) {
-        when {
-            isCompleted -> 0L
-            habit.timerStartTime == null -> totalMillis
-            isPaused -> (totalMillis - (habit.timerPauseTime - habit.timerStartTime))
-                .coerceAtLeast(0L)
+        derivedStateOf {
+            val remaining = when {
+                habit.isCompleted -> 0L
+                habit.timerStartTime == null -> totalMillis
+                habit.timerPauseTime != null -> (totalMillis - (habit.timerPauseTime - habit.timerStartTime)).coerceAtLeast(
+                    0L
+                )
 
-            else -> (totalMillis - (currentTime - habit.timerStartTime))
-                .coerceAtLeast(0L)
+                else -> (totalMillis - (currentTime - habit.timerStartTime)).coerceAtLeast(0L)
+            }
+            val sec = (remaining / 1000).coerceAtLeast(0)
+            val h = sec / 3600
+            val m = (sec % 3600) / 60
+            val s = sec % 60
+
+            val formatted = if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%02d:%02d".format(m, s)
+            val prog =
+                if (totalMillis == 0L) 0f else 1f - (remaining.toFloat() / totalMillis.toFloat()).coerceIn(
+                    0f,
+                    1f
+                )
+
+            Triple(remaining, formatted, prog)
         }
     }
-
+    val (remainingTime, formattedTime, progress) = timerData
     LaunchedEffect(remainingTime) {
-        if (!isCompleted && remainingTime <= 0) {
+        if (!habit.isCompleted && remainingTime <= 0 && habit.timerStartTime != null) {
             showSuccess.value = true
             onTimerFinished(habit)
             delay(1200)
             showSuccess.value = false
         }
-    }
-
-    val formattedTime = remember(remainingTime) {
-        val sec = (remainingTime / 1000).coerceAtLeast(0)
-        val h = sec / 3600
-        val m = (sec % 3600) / 60
-        val s = sec % 60
-
-        if (h > 0) "%d:%02d:%02d".format(h, m, s)
-        else "%02d:%02d".format(m, s)
-    }
-
-    val progress = remember(remainingTime, totalMillis) {
-        if (totalMillis == 0L) 0f
-        else 1f - (remainingTime.toFloat() / totalMillis.toFloat())
-            .coerceIn(0f, 1f)
     }
     Card(
         modifier = Modifier
@@ -123,53 +121,47 @@ fun HabitBuildCard(
                 interactionSource = remember { MutableInteractionSource() }
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Row(
             modifier = Modifier
                 .padding(horizontal = 22.dp, vertical = 20.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            //Left side
+            // Left Side: Icon and Title
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-
                 Text(
                     text = habit.iconEmoji.orEmpty(),
                     fontSize = 30.sp,
                     modifier = Modifier.padding(end = 14.dp)
                 )
+
                 Column {
                     Text(
                         text = habit.name.replaceFirstChar { it.uppercase() },
-                        overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 19.sp,
-                            letterSpacing = (-0.3).sp
+                            fontSize = 19.sp
                         )
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .clip(CircleShape)
-                                .background(accentColor)
-                        )
-                        Spacer(modifier = Modifier.padding(horizontal = 3.dp))
-                        if ((habit.durationInMinutes ?: 0) > 0) {
-                            Spacer(Modifier.height(4.dp))
+                    if (totalMillis > 0) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(accentColor)
+                            )
+                            Spacer(Modifier.width(6.dp))
                             Text(
                                 text = formattedTime,
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     color = accentColor,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
+                                    fontWeight = FontWeight.Bold
                                 )
                             )
                         }
@@ -179,14 +171,17 @@ fun HabitBuildCard(
             TimerRing(
                 progress = progress,
                 accentColor = accentColor,
-                isCompleted = isCompleted,
-                isRunning = isRunning,
-                isPaused = isPaused,
+                isCompleted = habit.isCompleted,
+                isRunning = habit.timerStartTime != null && habit.timerPauseTime == null,
+                isPaused = habit.timerStartTime != null && habit.timerPauseTime != null,
                 showSuccess = showSuccess.value,
                 onClick = {
                     if (!isToday) return@TimerRing
+                    val isRunning = habit.timerStartTime != null && habit.timerPauseTime == null
+                    val isPaused = habit.timerStartTime != null && habit.timerPauseTime != null
+
                     when {
-                        isCompleted -> Unit
+                        habit.isCompleted -> Unit
                         isRunning -> onPauseTimer(habit)
                         isPaused -> onResumeTimer(habit)
                         else -> onStartTimer(habit)

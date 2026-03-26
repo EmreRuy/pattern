@@ -1,6 +1,7 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun DeleteHabitSheetContent(
@@ -35,67 +36,85 @@ fun DeleteHabitSheetContent(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp)
-            .padding(top = 8.dp, bottom = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 28.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f),
-            modifier = Modifier.padding(top = 12.dp)
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.08f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Rounded.DeleteOutline,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .padding(20.dp)
-                    .size(32.dp)
+                modifier = Modifier.size(30.dp)
             )
         }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Remove Habit?",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold
-            )
-
-            Text(
-                text = "Deleting is permanent. Your progress data and streaks will be lost forever.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
+        Spacer(Modifier.height(24.dp))
+        Text(
+            text = "Delete habit?",
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.5).sp
+            ),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "This will remove your streak, progress, and history permanently.",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                lineHeight = 22.sp,
+                letterSpacing = 0.2.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Spacer(modifier = Modifier.height(40.dp))
         Button(
             onClick = onCancel,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
+                .height(58.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                containerColor = MaterialTheme.colorScheme.onSurface,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 0.dp,
+                pressedElevation = 2.dp
             )
         ) {
-            Text("Keep Habit", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Keep habit",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.1.sp
+                )
+            )
         }
+        Spacer(Modifier.height(12.dp))
         TextButton(
             onClick = onConfirm,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                .height(54.dp),
+            shape = RoundedCornerShape(24.dp)
         ) {
-            Text("Yes, delete permanently", fontWeight = FontWeight.Bold)
+            Text(
+                text = "Delete permanently",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp
+                )
+            )
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,10 +27,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Repeat
+import androidx.compose.material.icons.rounded.StarOutline
+import androidx.compose.material.icons.twotone.DeleteSweep
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.getValue
@@ -41,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.pattern.ui.screens.proLocked.LockedProWrapper
 
@@ -59,6 +61,7 @@ fun HabitCardDetailsScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val haptic = LocalHapticFeedback.current
     val isUserPro = false
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
@@ -72,23 +75,33 @@ fun HabitCardDetailsScreen(
                 ),
                 title = {
                     Text(
-                        text = habit.name.lowercase(),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
+                        text = habit.name.uppercase(),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBackIos, null, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBackIos, null, modifier = Modifier.size(18.dp))
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        showDeleteSheet = true
-                    }) {
-                        Icon(Icons.Rounded.DeleteOutline, null, tint = MaterialTheme.colorScheme.error)
+                    IconButton({ /* no-op for now */ }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Edit,
+                            contentDescription = "Edit",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
+
+                    IconButton(onClick = { showDeleteSheet = true }) {
+                        Icon(
+                            imageVector = Icons.TwoTone.DeleteSweep,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                     }
                 }
             )
@@ -99,90 +112,110 @@ fun HabitCardDetailsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(28.dp)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(vertical = 12.dp)
+            // Header
+            Spacer(Modifier.height(16.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+              //  tonalElevation = 2.dp
             ) {
-                Text(text = habit.icon ?: "⭐", fontSize = 80.sp)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = habit.currentStreak.toString(),
-                    style = MaterialTheme.typography.displayLarge,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = "DAY STREAK",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = accentColor,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 2.sp
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().height(110.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    label = "Total Work",
-                    value = habit.totalCompletions.toString(),
-                    accentColor = accentColor
-                )
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    label = "Goal",
-                    value = habit.goal,
-                    accentColor = accentColor
-                )
-            }
-
-            // --- PROGRESS SECTION ---
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SectionHeader("PULSE")
-                LockedProWrapper(isLocked = !isUserPro) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth().height(200.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 28.dp, horizontal = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("Heatmap Component", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .background(
+                                color = accentColor.copy(alpha = 0.12f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = habit.icon ?: "⭐",
+                            fontSize = 28.sp
+                        )
+                    }
+                    Spacer(Modifier.height(20.dp))
+                    Text(
+                        text = habit.currentStreak.toString(),
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-1.5).sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = accentColor.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(50)
+                            )
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "DAY STREAK",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = accentColor,
+                            letterSpacing = 1.2.sp
+                        )
                     }
                 }
             }
-            }
-
-            // --- DETAILS SECTION ---
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SectionHeader("CONFIGURATION")
+            Spacer(Modifier.height(48.dp))
+            SectionHeader(
+                title = "ACTIVITY PULSE",
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(Modifier.height(12.dp))
+            LockedProWrapper(isLocked = !isUserPro) {
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(32.dp),
+                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                    shape = RoundedCornerShape(24.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        DetailRow(Icons.Rounded.Repeat, "Frequency", habit.frequency)
-                        DetailRow(Icons.Rounded.CalendarToday, "Started", habit.createdOn, isLast = true)
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("Heatmap Visualization", style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
+            Spacer(Modifier.height(32.dp))
+            SectionHeader(
+                title = "MANAGEMENT",
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(Modifier.height(12.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                Column {
+                    DetailRow(Icons.Rounded.StarOutline, "Personal Goal", habit.goal)
+                    DetailRow(Icons.Rounded.Repeat, "Frequency", habit.frequency)
+                    DetailRow(Icons.Rounded.BarChart, "Total Completions", habit.totalCompletions.toString())
+                    DetailRow(Icons.Rounded.CalendarToday, "Member Since", habit.createdOn, isLast = true)
+                }
+            }
 
-            Spacer(modifier = Modifier.navigationBarsPadding().height(24.dp))
+            Spacer(modifier = Modifier.navigationBarsPadding().height(40.dp))
         }
 
-        // --- ORIGINAL DELETING MODAL ---
         if (showDeleteSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showDeleteSheet = false },
                 sheetState = sheetState,
-                dragHandle = { BottomSheetDefaults.DragHandle() },
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 DeleteHabitSheetContent(
                     onCancel = { showDeleteSheet = false },
@@ -196,77 +229,69 @@ fun HabitCardDetailsScreen(
         }
     }
 }
-
 @Composable
-private fun StatCard(
-    modifier: Modifier,
+private fun DetailRow(
+    icon: ImageVector,
     label: String,
     value: String,
-    accentColor: Color
+    isLast: Boolean = false
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-                textAlign = TextAlign.Center
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Black,
-                    color = accentColor,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(icon: ImageVector, label: String, value: String, isLast: Boolean = false) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(
+                    color = (MaterialTheme.colorScheme.primary).copy(alpha = 0.1f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
         Spacer(Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-            Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+
+        Column {
+            Text(
+                text = label.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
-    if (!isLast) HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 20.dp),
-        thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-    )
+    if (!isLast) {
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+        )
+    }
 }
-
 @Composable
-private fun SectionHeader(title: String) {
+private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
         style = MaterialTheme.typography.labelSmall,
         fontWeight = FontWeight.Black,
         color = MaterialTheme.colorScheme.outline,
         letterSpacing = 1.5.sp,
-        modifier = Modifier.padding(horizontal = 8.dp)
+        modifier = modifier.padding(horizontal = 8.dp)
     )
 }
