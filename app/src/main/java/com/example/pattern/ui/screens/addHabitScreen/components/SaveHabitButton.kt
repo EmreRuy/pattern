@@ -31,24 +31,21 @@ fun SaveHabitButton(
         Button(
             onClick = {
                 val habitTypeEnum = when (habitType) {
-                    "Build" -> HabitType.BUILD
-                    "Quit" -> HabitType.QUIT
+                    "Grow" -> HabitType.BUILD
+                    "Drop" -> HabitType.QUIT
                     "Task" -> HabitType.TASK
                     else -> HabitType.BUILD
                 }
-
                 val dayListBooleans = DayOfWeek.entries.map { it in buildHabitDays }
-
                 habitViewModel.saveNewHabit(
                     name = habitName,
                     type = habitTypeEnum,
-                    durationHours = durationHours,
-                    durationMinutes = durationMinutes,
+                    durationHours = if (habitTypeEnum == HabitType.BUILD) durationHours else 0,
+                    durationMinutes = if (habitTypeEnum == HabitType.BUILD) durationMinutes else 0,
                     selectedDays = dayListBooleans,
                     iconCode = emoji,
                     accentColorHex = accentColorHex
                 )
-
                 onSaveSuccess()
             },
             modifier = Modifier

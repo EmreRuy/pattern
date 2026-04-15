@@ -19,11 +19,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,72 +30,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
-import com.example.pattern.data.model.HabitCardModel
 import androidx.core.graphics.toColorInt
-import kotlinx.coroutines.delay
+import com.example.pattern.data.model.HabitCardModel
 
 @Composable
-fun HabitBuildCard(
+fun HabitQuitCard(
     habit: HabitCardModel,
-    isToday: Boolean,
-    onStartTimer: (HabitCardModel) -> Unit,
-    onPauseTimer: (HabitCardModel) -> Unit,
-    onResumeTimer: (HabitCardModel) -> Unit,
-    onTimerFinished: (HabitCardModel) -> Unit,
     onCardClick: (Int) -> Unit,
+    onTaskCompleted: (habitId: Int, completed: Boolean) -> Unit,
 ) {
     val isDark = isSystemInDarkTheme()
     val surface = MaterialTheme.colorScheme.surface
     val fallbackColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val onSurface = MaterialTheme.colorScheme.onSurface
-
     val accentColor = remember(habit.accentColorHex, isDark, surface, fallbackColor) {
         runCatching { Color(habit.accentColorHex.toColorInt()) }
             .getOrDefault(fallbackColor)
             .let {
-                if (isDark) Color(ColorUtils.blendARGB(it.toArgb(), surface.toArgb(), 0.30f)) else it
+                if (isDark) Color(ColorUtils.blendARGB(it.toArgb(), surface.toArgb(), 0.30f))
+                else it
             }
-    }
-
-    val totalMillis = remember(habit.durationInMinutes) { (habit.durationInMinutes ?: 0) * 60_000L }
-    val currentTime by produceState(System.currentTimeMillis()) {
-        while (true) {
-            delay(1000)
-            value = System.currentTimeMillis()
-        }
-    }
-
-    val timerData by remember(currentTime, habit.timerStartTime, habit.timerPauseTime, habit.isCompleted) {
-        derivedStateOf {
-            val remaining = when {
-                habit.isCompleted -> 0L
-                habit.timerStartTime == null -> totalMillis
-                habit.timerPauseTime != null -> (totalMillis - (habit.timerPauseTime - habit.timerStartTime))
-                else -> (totalMillis - (currentTime - habit.timerStartTime))
-            }.coerceAtLeast(0L)
-
-            val sec = (remaining / 1000).coerceAtLeast(0)
-            val h = sec / 3600
-            val m = (sec % 3600) / 60
-            val s = sec % 60
-
-            val formatted = if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%02d:%02d".format(m, s)
-            val prog = if (totalMillis == 0L) 0f else 1f - (remaining.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
-
-            Triple(remaining, formatted, prog)
-        }
-    }
-
-    val (remainingTime, formattedTime, progress) = timerData
-    val showSuccess = remember { mutableStateOf(false) }
-
-    LaunchedEffect(remainingTime) {
-        if (!habit.isCompleted && remainingTime <= 0 && habit.timerStartTime != null) {
-            showSuccess.value = true
-            onTimerFinished(habit)
-            delay(1200)
-            showSuccess.value = false
-        }
     }
 
     Card(
@@ -114,7 +63,7 @@ fun HabitBuildCard(
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else Color.White
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
@@ -124,6 +73,7 @@ fun HabitBuildCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Icon Section
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -154,39 +104,24 @@ fun HabitBuildCard(
                         letterSpacing = (-0.5).sp
                     )
                 )
-
-                if (totalMillis > 0) {
-                    Text(
-                        text = if (habit.isCompleted) "Goal Reached" else formattedTime,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                Text(
+                    text = "Quit",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = accentColor,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
                     )
-                }
+                )
             }
-            TimerRing(
-                progress = progress,
+            TaskRing(
+                checked = habit.isTaskChecked.value,
                 accentColor = accentColor,
-                isCompleted = habit.isCompleted,
-                isRunning = habit.timerStartTime != null && habit.timerPauseTime == null,
-                isPaused = habit.timerStartTime != null && habit.timerPauseTime != null,
-                showSuccess = showSuccess.value,
-                onClick = {
-                    if (!isToday || habit.isCompleted) return@TimerRing
-
-                    val isRunning = habit.timerStartTime != null && habit.timerPauseTime == null
-                    val isPaused = habit.timerStartTime != null && habit.timerPauseTime != null
-
-                    when {
-                        isRunning -> onPauseTimer(habit)
-                        isPaused -> onResumeTimer(habit)
-                        else -> onStartTimer(habit)
-                    }
+                onToggle = {
+                    val newValue = !habit.isTaskChecked.value
+                    habit.isTaskChecked.value = newValue
+                    onTaskCompleted(habit.id, newValue)
                 }
             )
         }
     }
 }
-
-

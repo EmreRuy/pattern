@@ -43,6 +43,10 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
+fun SettingsSheetContent() {
+    SettingsBottomSheetContent()
+}
+@Composable
 fun SettingsBottomSheetContent() {
     // These would ideally be hoisted to a ViewModel
     var dailyReminder by remember { mutableStateOf(false) }
@@ -126,7 +130,7 @@ fun SettingsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
         ) {
             content()
         }

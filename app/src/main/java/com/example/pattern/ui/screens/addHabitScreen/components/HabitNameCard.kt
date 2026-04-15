@@ -59,8 +59,8 @@ fun HabitNameCard(
                 interactionSource = interaction,
                 indication = null
             ) { onOpen() },
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
         tonalElevation = 1.dp
     ) {
         Row(
@@ -92,7 +92,7 @@ fun HabitNameCard(
 
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        "Habit Name",
+                        "Name",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         )

@@ -83,7 +83,7 @@ fun DeleteHabitSheetContent(
                 .height(58.dp),
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.onSurface,
+                containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             elevation = ButtonDefaults.buttonElevation(

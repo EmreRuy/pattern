@@ -6,17 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.navigation.Screens
-import com.example.pattern.ui.screens.addHabitScreen.AddHabitScreen
 import com.example.pattern.ui.theme.AppTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,87 +24,37 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.navigation.NavHost
-import com.example.pattern.ui.screens.settings.SettingsBottomSheetContent
-import com.example.pattern.ui.screens.homeScreen.components.HabitListBottomSheet
+import com.example.pattern.ui.screens.addHabitScreen.AddHabitSheetContent
+import com.example.pattern.ui.screens.homeScreen.components.HabitListSheetContent
+import com.example.pattern.ui.screens.settings.SettingsSheetContent
 import dagger.hilt.android.AndroidEntryPoint
+
+sealed class AppSheet {
+    data object None : AppSheet()
+    data object AddHabit : AppSheet()
+    data object Menu : AppSheet()
+    data object Settings : AppSheet()
+}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             AppTheme {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
-
-                // Separate sheet states for each bottom sheet
-                val addHabitSheetState = rememberModalBottomSheetState(
-                    skipPartiallyExpanded = true,
-                    confirmValueChange = { it != SheetValue.PartiallyExpanded }
-                )
-                val menuSheetState = rememberModalBottomSheetState(
-                    skipPartiallyExpanded = true,
-                    confirmValueChange = { it != SheetValue.PartiallyExpanded }
-                )
-                val settingsSheetState = rememberModalBottomSheetState(
-                    skipPartiallyExpanded = true,
-                    confirmValueChange = { it != SheetValue.PartiallyExpanded }
-                )
-
-                var showAddHabitSheet by remember { mutableStateOf(false) }
-                var showMenuSheet by remember { mutableStateOf(false) }
-                var showSettingsSheet by remember { mutableStateOf(false) }
-
+                val currentRoute =
+                    navBackStackEntry?.destination?.route ?: Screens.Home.route
                 val habitViewModel: HabitViewModel = hiltViewModel()
                 val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
-
-                // Expand sheets when triggered
-                LaunchedEffect(showAddHabitSheet) {
-                    if (showAddHabitSheet) addHabitSheetState.expand()
-                }
-                LaunchedEffect(showMenuSheet) {
-                    if (showMenuSheet) menuSheetState.expand()
-                }
-                LaunchedEffect(showSettingsSheet) {
-                    if (showSettingsSheet) settingsSheetState.expand()
-                }
-
-                // Add Habit Bottom Sheet
-                if (showAddHabitSheet) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showAddHabitSheet = false },
-                        sheetState = addHabitSheetState
-                    ) {
-                        AddHabitScreen(onSaveSuccess = { showAddHabitSheet = false })
-                    }
-                }
-
-                // Habit List Bottom Sheet
-                if (showMenuSheet) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showMenuSheet = false },
-                        sheetState = menuSheetState
-                    ) {
-                        HabitListBottomSheet(
-                            habits = uiState.habitList,
-                            onHabitClick = { id ->
-                                showMenuSheet = false
-                                navController.navigate(Screens.HabitDetail.createRoute(id))
-                            }
-                        )
-                    }
-                }
-                // Settings Bottom Sheet
-                if (showSettingsSheet) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showSettingsSheet = false },
-                        sheetState = settingsSheetState
-                    ) {
-                        SettingsBottomSheetContent()
-                    }
-                }
+                var activeSheet by remember { mutableStateOf<AppSheet>(AppSheet.None) }
+                val sheetState = rememberModalBottomSheetState(
+                    skipPartiallyExpanded = true
+                )
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -114,7 +62,10 @@ class MainActivity : ComponentActivity() {
                             currentRoute = currentRoute,
                             onItemClick = { item ->
                                 when (item.route) {
-                                    Screens.Add.route -> showAddHabitSheet = true
+                                    Screens.Add.route -> {
+                                        activeSheet = AppSheet.AddHabit
+                                    }
+
                                     else -> {
                                         if (currentRoute != item.route) {
                                             navController.navigate(item.route) {
@@ -133,10 +84,35 @@ class MainActivity : ComponentActivity() {
                 ) { paddingValues ->
                     NavHost(
                         navController = navController,
-                        showMenuSheet = { showMenuSheet = true },
-                        showSettingsSheet = { showSettingsSheet = true },
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.padding(paddingValues),
+                        showMenuSheet = { activeSheet = AppSheet.Menu },
+                        showSettingsSheet = { activeSheet = AppSheet.Settings }
                     )
+                }
+                if (activeSheet != AppSheet.None) {
+                    ModalBottomSheet(
+                        onDismissRequest = { activeSheet = AppSheet.None },
+                        sheetState = sheetState,
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ) {
+                        when (activeSheet) {
+                            AppSheet.AddHabit -> AddHabitSheetContent(
+                                onClose = { activeSheet = AppSheet.None }
+                            )
+
+                            AppSheet.Menu -> HabitListSheetContent(
+                                habits = uiState.habitList,
+                                onHabitClick = { id ->
+                                    activeSheet = AppSheet.None
+                                    navController.navigate(
+                                        Screens.HabitDetail.createRoute(id)
+                                    )
+                                }
+                            )
+                            AppSheet.Settings -> SettingsSheetContent()
+                            AppSheet.None -> Unit
+                        }
+                    }
                 }
             }
         }

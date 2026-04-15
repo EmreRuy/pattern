@@ -35,8 +35,8 @@ fun EmojiSelector(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onOpen() },
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
         tonalElevation = 1.dp
     ) {
         Row(
@@ -56,7 +56,7 @@ fun EmojiSelector(
                 )
                 Column {
                     Text(
-                        "Choose Icon",
+                        "Icon",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         )

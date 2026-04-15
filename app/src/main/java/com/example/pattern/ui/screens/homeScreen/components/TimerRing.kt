@@ -1,19 +1,18 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -24,11 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -41,32 +40,39 @@ fun TimerRing(
     showSuccess: Boolean,
     onClick: () -> Unit
 ) {
-    val ringSize = 40.dp
-    val iconSize = 26.dp
+    val ringSize = 36.dp
+    val iconSize = 22.dp
+    val strokeWidthDp = 4.dp
+    // Theme color capture
+    val backgroundRingColor = MaterialTheme.colorScheme.surfaceVariant
+    val completedColor = MaterialTheme.colorScheme.primary
 
-    // animation for the progress fill
-    val animatedProgress = animateFloatAsState(
+    //Progress Animation
+    val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
-        label = "progressAnimation"
-    ).value
-
-    // Animation for Ring/Icon Color based on state
-    val targetColor = when {
-        isCompleted -> MaterialTheme.colorScheme.primary
-        isRunning -> accentColor
-        isPaused -> accentColor.copy(alpha = 0.6f) // Dimmer when paused
-        else -> accentColor
-    }
-
-    val animatedRingColor by animateColorAsState(
-        targetValue = targetColor,
-        animationSpec = tween(300),
-        label = "ringColorAnimation"
+        animationSpec = tween(500, easing = FastOutSlowInEasing),
+        label = "timerProgress"
+    )
+    val iconAlpha by animateFloatAsState(
+        targetValue = if (isCompleted) 1f else 0f,
+        animationSpec = tween(350),
+        label = "timerIconAlpha"
+    )
+    val successScale by animateFloatAsState(
+        targetValue = if (showSuccess) 1.15f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "successScale"
     )
     Box(
         modifier = Modifier
             .size(ringSize)
+            .graphicsLayer {
+                scaleX = successScale
+                scaleY = successScale
+            }
             .clip(CircleShape)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -76,70 +82,53 @@ fun TimerRing(
             },
         contentAlignment = Alignment.Center
     ) {
-        val backgroundColor = MaterialTheme.colorScheme.surface
-        val strokeWidth = 4.dp
-
-        // ProgressIndicator
-        Canvas(Modifier.matchParentSize()) {
-            val strokeStyle = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
-
-            // Background
-            drawArc(
-                color = backgroundColor,
-                startAngle = 270f, // Start at 12 o'clock
-                sweepAngle = 360f,
-                useCenter = false,
-                style = strokeStyle
-            )
-
-            // Foreground
-            drawArc(
-                color = animatedRingColor,
-                startAngle = 270f,
-                sweepAngle = 360f * animatedProgress,
-                useCenter = false,
-                style = strokeStyle
-            )
-        }
-
-        // ICON LAYER
-        val (icon, tint) = when {
-            isCompleted -> Icons.Default.CheckCircle to MaterialTheme.colorScheme.primary
-            isRunning -> Icons.Filled.Pause to MaterialTheme.colorScheme.onSurfaceVariant
-            isPaused -> Icons.Filled.PlayArrow to MaterialTheme.colorScheme.onSurface
-            else -> Icons.Filled.PlayArrow to MaterialTheme.colorScheme.onSurface
-        }
-
-        //Success Animation
-        val successScale by animateFloatAsState(
-            targetValue = if (showSuccess) 1.2f else 1.0f, // Pop effect
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            ),
-            label = "successScale"
-        )
-
-        Icon(
-            imageVector = icon,
-            contentDescription = when {
-                isCompleted -> "Done"
-                isRunning -> "Pause timer"
-                else -> "Start timer"
-            },
-            tint = tint,
+        Spacer(
             modifier = Modifier
-                .size(iconSize * successScale)
-                .drawBehind {
-                    if (!isCompleted) {
-                        drawCircle(
-                            color = Color.Black.copy(alpha = 0.05f),
-                            radius = iconSize.toPx() / 2f,
-                            center = center,
-                            blendMode = BlendMode.Overlay
+                .matchParentSize()
+                .drawWithCache {
+                    val stroke = Stroke(
+                        width = strokeWidthDp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                    onDrawBehind {
+                        // Background Track
+                        drawArc(
+                            color = backgroundRingColor,
+                            startAngle = 270f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            style = stroke
+                        )
+                        val arcColor = when {
+                            isCompleted -> completedColor
+                            isPaused -> accentColor.copy(alpha = 0.6f)
+                            else -> accentColor
+                        }
+                        drawArc(
+                            color = arcColor,
+                            startAngle = 270f,
+                            sweepAngle = animatedProgress * 360f,
+                            useCenter = false,
+                            style = stroke
                         )
                     }
                 }
+        )
+        // ICON LAYER
+        val icon = when {
+            isCompleted -> Icons.Default.Check
+            isRunning -> Icons.Filled.Pause
+            else -> Icons.Filled.PlayArrow
+        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isCompleted) {
+                completedColor.copy(alpha = iconAlpha)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+            modifier = Modifier.size(iconSize)
         )
     }
 }

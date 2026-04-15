@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.addHabitScreen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +25,16 @@ import com.example.pattern.ui.screens.addHabitScreen.components.HandleHabitTypeS
 import com.example.pattern.ui.screens.addHabitScreen.components.SaveHabitButton
 import java.time.DayOfWeek
 
+@Composable
+fun AddHabitSheetContent(
+    onClose: () -> Unit,
+    viewModel: HabitViewModel = hiltViewModel()
+) {
+    AddHabitScreen(
+        onSaveSuccess = onClose,
+        habitViewModel = viewModel
+    )
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitScreen(
@@ -34,82 +45,51 @@ fun AddHabitScreen(
     var habitType by remember { mutableStateOf("Grow") }
     var emoji by remember { mutableStateOf("🔥") }
     var buildHabitDays by remember { mutableStateOf(listOf<DayOfWeek>()) }
-    val focusManager = LocalFocusManager.current
-    //For the missing hours and minutes yet
+
     var durationHours by remember { mutableIntStateOf(0) }
     var durationMinutes by remember { mutableIntStateOf(30) }
     var selectedColor by remember { mutableStateOf("#77DD77") }
     var showEmojiSheet by remember { mutableStateOf(false) }
     var showColorSheet by remember { mutableStateOf(false) }
     var showNameSheet by remember { mutableStateOf(false) }
-
     var showHabitTypeSheet by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     Scaffold { padding ->
         Box(
             modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
                 .fillMaxSize()
                 .padding(padding)
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        focusManager.clearFocus()
-                    })
+                    detectTapGestures { focusManager.clearFocus() }
                 }
         ) {
+
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                SectionHeader("Identity")
                 HabitNameCard(
                     habitName = habitName,
                     onOpen = { showNameSheet = true }
                 )
-                HandleHabitNameSheet(
-                    showSheet = showNameSheet,
-                    habitName = habitName,
-                    onNameChange = { habitName = it },
-                    onDismiss = { showNameSheet = false }
-                )
+                SectionHeader("Appearance")
                 ColorSelector(
                     selectedColor = selectedColor,
                     onOpen = { showColorSheet = true }
                 )
-                HandleColorSheet(
-                    showColorSheet = showColorSheet,
-                    selectedColor = selectedColor,
-                    onColorChange = { selectedColor = it },
-                    onDismiss = { showColorSheet = false }
-                )
-                HabitTypeSelectorCard(
-                    selectedType = habitType,
-                    onOpen = { showHabitTypeSheet = true }
-                )
-
-                HandleHabitTypeSheet(
-                    showSheet = showHabitTypeSheet,
-                    selectedType = habitType,
-                    selectedDays = buildHabitDays,
-                    durationHours = durationHours,
-                    durationMinutes = durationMinutes,
-                    onTypeChange = { habitType = it },
-                    onDaysChange = { buildHabitDays = it },
-                    onDurationChange = { h, m ->
-                        durationHours = h
-                        durationMinutes = m
-                    },
-                    onDismiss = { showHabitTypeSheet = false }
-                )
-                //  ReminderCard(reminderEnabled, reminderTime, onToggle = { reminderEnabled = it })
                 EmojiSelector(
                     selectedEmoji = emoji,
                     onOpen = { showEmojiSheet = true }
                 )
-                HandleEmojiSheet(
-                    showEmojiSheet = showEmojiSheet,
-                    selectedEmoji = emoji,
-                    onEmojiChange = { emoji = it },
-                    onDismiss = { showEmojiSheet = false }
+                SectionHeader("Pattern")
+                HabitTypeSelectorCard(
+                    selectedType = habitType,
+                    onOpen = { showHabitTypeSheet = true }
                 )
                 SaveHabitButton(
                     habitName = habitName,
@@ -122,9 +102,52 @@ fun AddHabitScreen(
                     onSaveSuccess = onSaveSuccess,
                     accentColorHex = selectedColor
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
+            HandleHabitNameSheet(
+                showSheet = showNameSheet,
+                habitName = habitName,
+                onNameChange = { habitName = it },
+                onDismiss = { showNameSheet = false }
+            )
+            HandleColorSheet(
+                showColorSheet = showColorSheet,
+                selectedColor = selectedColor,
+                onColorChange = { selectedColor = it },
+                onDismiss = { showColorSheet = false }
+            )
+            HandleHabitTypeSheet(
+                showSheet = showHabitTypeSheet,
+                selectedType = habitType,
+                selectedDays = buildHabitDays,
+                durationHours = durationHours,
+                durationMinutes = durationMinutes,
+                onTypeChange = { habitType = it },
+                onDaysChange = { buildHabitDays = it },
+                onDurationChange = { h, m ->
+                    durationHours = h
+                    durationMinutes = m
+                },
+                onDismiss = { showHabitTypeSheet = false }
+            )
+            HandleEmojiSheet(
+                showEmojiSheet = showEmojiSheet,
+                selectedEmoji = emoji,
+                onEmojiChange = { emoji = it },
+                onDismiss = { showEmojiSheet = false }
+            )
         }
     }
+}
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 4.dp)
+    )
 }
 
 

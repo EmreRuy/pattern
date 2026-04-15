@@ -32,10 +32,9 @@ fun HabitCards(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(scrollUi)
-            .padding(paddingValues)
-            .padding(8.dp),
+            .padding(paddingValues),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         habits.forEach { habit ->
             when (habit.type) {
@@ -48,7 +47,14 @@ fun HabitCards(
                     onPauseTimer = onPauseTimer,
                     onResumeTimer = onResumeTimer
                 )
-                HabitType.QUIT, HabitType.TASK -> HabitTaskCard(
+                 HabitType.TASK -> HabitTaskCard(
+                    habit = habit,
+                    onTaskCompleted = { habitId, completed ->
+                        onTaskCompleted(habitId, completed)
+                    },
+                    onCardClick = onHabitCardClick
+                )
+                HabitType.QUIT -> HabitQuitCard(
                     habit = habit,
                     onTaskCompleted = { habitId, completed ->
                         onTaskCompleted(habitId, completed)

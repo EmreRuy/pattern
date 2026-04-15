@@ -48,8 +48,8 @@ fun HabitTypeSelectorCard(
                 interactionSource = interactionSource,
                 indication = null
             ) { onOpen() },
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
         tonalElevation = 1.dp
     ) {
         Row(
