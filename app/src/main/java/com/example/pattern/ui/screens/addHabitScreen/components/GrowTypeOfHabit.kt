@@ -15,9 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTimeFilled
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pattern.ui.screens.profileScreen.components.WheelDurationPicker
 import java.time.DayOfWeek
 
@@ -53,36 +53,35 @@ fun GrowTypeOfHabit(
 ) {
     var showDurationPicker by remember { mutableStateOf(false) }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Pattern Section
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Select Habit Schedule",
+                text = "Set Your Pattern",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 0.4.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            DaySelector(
-                selectedDays = selectedDays,
-                onDaysChange = onDaysChange
-            )
+            DaySelector(selectedDays = selectedDays, onDaysChange = onDaysChange)
         }
+
         // Duration Section
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Set Daily Duration Goal",
+                text = "Set Duration Goal",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 0.4.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            // Clickable row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,32 +95,26 @@ fun GrowTypeOfHabit(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.AccessTimeFilled,
-                        contentDescription = "Duration Icon",
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         text = "Daily Goal",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.6f
-                        )
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
-                // Display Current Duration
                 Text(
                     text = "${durationHours}h ${durationMinutes}m",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
     }
+
     if (showDurationPicker) {
         ModalBottomSheet(
             onDismissRequest = { showDurationPicker = false },
@@ -137,60 +130,45 @@ fun GrowTypeOfHabit(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
-                title = { Text("Select Duration") }
+                title = {Text(
+                    text = "Set Duration".uppercase(),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp, // Dramatic spacing for a "high-fashion" feel
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                ) }
             )
-            HorizontalDivider(
-                thickness = DividerDefaults.Thickness,
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-            // this is gonna be changed to a new modern design on the new updates, now it has flaws
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
             WheelDurationPicker(
                 durationHours = tempHours,
                 durationMinutes = tempMinutes,
-                onDurationChange = { hours, minutes ->
-                    tempHours = hours
-                    tempMinutes = minutes
-                }
+                onDurationChange = { h, m -> tempHours = h; tempMinutes = m }
             )
 
-            // Confirmation Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedButton(
                     onClick = { showDurationPicker = false },
+                    modifier = Modifier.weight(1f).height(48.dp),
                     shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier
-                        .height(48.dp)
-                        .weight(1f)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Text("Cancel")
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                OutlinedButton(
+                Button(
                     onClick = {
                         onDurationChange(tempHours, tempMinutes)
                         showDurationPicker = false
                     },
-                    shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier
-                        .height(48.dp)
-                        .weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
                     Text("Confirm", fontWeight = FontWeight.SemiBold)
                 }

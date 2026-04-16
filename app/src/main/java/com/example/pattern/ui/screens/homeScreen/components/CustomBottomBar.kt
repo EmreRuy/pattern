@@ -30,7 +30,7 @@ fun CustomBottomBar(
 
     Box {
         NavigationBar(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             tonalElevation = 6.dp
         ) {
 

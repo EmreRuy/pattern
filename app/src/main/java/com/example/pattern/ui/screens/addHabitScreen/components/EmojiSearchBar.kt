@@ -35,7 +35,7 @@ fun EmojiSearchBar(
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
         tonalElevation = 1.dp
     ) {
         Row(
@@ -63,7 +63,7 @@ fun EmojiSearchBar(
                     Box {
                         if (query.isEmpty()) {
                             Text(
-                                text = "Search emojis",
+                                text = "Search icons",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                     .copy(alpha = 0.65f)

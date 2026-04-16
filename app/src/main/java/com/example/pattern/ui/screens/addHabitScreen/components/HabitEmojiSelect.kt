@@ -2,6 +2,7 @@ package com.example.pattern.ui.screens.addHabitScreen.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,9 @@ fun EmojiSelector(
     selectedEmoji: String,
     onOpen: () -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
+    val containerColor =  if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -36,13 +40,13 @@ fun EmojiSelector(
                 indication = null
             ) { onOpen() },
         shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        color = containerColor,
         tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -62,7 +66,7 @@ fun EmojiSelector(
                         )
                     )
                     Text(
-                        "Tap to open emoji picker",
+                        "Add a touch",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

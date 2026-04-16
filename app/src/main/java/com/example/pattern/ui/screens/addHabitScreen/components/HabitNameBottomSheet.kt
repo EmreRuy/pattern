@@ -23,9 +23,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,15 +47,18 @@ fun HabitNameBottomSheet(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Text(
-                text = "Name your habit",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                text = "What will you build?".uppercase(),
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.5.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                ),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                tonalElevation = 1.dp,
+                color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                tonalElevation = 0.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -64,7 +69,7 @@ fun HabitNameBottomSheet(
                 ) {
                     BasicTextField(
                         value = habitName,
-                        onValueChange = { onNameChange(it.take(30)) },
+                        onValueChange = { onNameChange(it.take(15)) },
                         singleLine = true,
                         textStyle = MaterialTheme.typography.titleMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface
@@ -82,10 +87,9 @@ fun HabitNameBottomSheet(
                             Box {
                                 if (habitName.isEmpty()) {
                                     Text(
-                                        text = "Habit name",
+                                        text = "Untitled habit",
                                         style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            .copy(alpha = 0.65f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                     )
                                 }
                                 innerTextField()
@@ -95,13 +99,14 @@ fun HabitNameBottomSheet(
                     if (habitName.isNotEmpty()) {
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "${habitName.length}/30",
+                            text = "${habitName.length}/15",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                     }
                 }
             }
+
             Spacer(Modifier.height(8.dp))
         }
     }

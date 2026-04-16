@@ -19,8 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-//This is gonna be fixed or new design on the next updates
 @Composable
 fun WheelDurationPicker(
     durationHours: Int,
@@ -37,7 +35,7 @@ fun WheelDurationPicker(
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(horizontal = 24.dp, vertical = 10.dp),

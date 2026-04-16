@@ -29,9 +29,7 @@ fun DaySelector(
     val days = DayOfWeek.entries
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -44,37 +42,26 @@ fun DaySelector(
                     .padding(4.dp)
                     .clip(CircleShape)
                     .background(
-                        if (isSelected)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            MaterialTheme.colorScheme.surfaceContainerLowest
+                        if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceContainerLowest
                     )
                     .border(
                         width = 1.dp,
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.outlineVariant,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outlineVariant,
                         shape = CircleShape
                     )
                     .clickable {
-                        val updated = if (isSelected)
-                            selectedDays - day
-                        else
-                            selectedDays + day
+                        val updated = if (isSelected) selectedDays - day else selectedDays + day
                         onDaysChange(updated)
                     },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = day.name.first().uppercase(),
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = if (isSelected)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

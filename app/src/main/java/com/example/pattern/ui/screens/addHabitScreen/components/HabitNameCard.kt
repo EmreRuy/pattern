@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +53,9 @@ fun HabitNameCard(
         label = "pressScale"
     )
     val initial = habitName.trim().take(1).uppercase().ifBlank { "P" }
+    val isDark = isSystemInDarkTheme()
+    val containerColor =  if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,13 +65,13 @@ fun HabitNameCard(
                 indication = null
             ) { onOpen() },
         shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        color = containerColor,
         tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -78,7 +83,7 @@ fun HabitNameCard(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                        .background(Color(0xFF1B3022)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -99,8 +104,8 @@ fun HabitNameCard(
                     )
 
                     Text(
-                        text = habitName.ifBlank { "Tap to enter a name" },
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = habitName.ifBlank { "What habit are you starting?" },
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

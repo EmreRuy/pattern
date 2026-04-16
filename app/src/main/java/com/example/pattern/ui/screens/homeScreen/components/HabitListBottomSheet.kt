@@ -2,6 +2,7 @@ package com.example.pattern.ui.screens.homeScreen.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.ui.screens.addHabitScreen.CardHeader
 
 @Composable
 fun HabitListSheetContent(
@@ -55,12 +57,7 @@ fun HabitListBottomSheet(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text(
-            text = "Your Habits",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+       CardHeader("Your Habits")
 
         if (habits.isEmpty()) {
             EmptyHabitMessage()
@@ -92,8 +89,8 @@ fun HabitListItem(
     val accentColor = remember(habit.accentColorHex) {
         Color(habit.accentColorHex.toColorInt())
     }
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-
+    val isDark = isSystemInDarkTheme()
+    val containerColor =  if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
     Row(
         modifier = Modifier
             .fillMaxWidth()

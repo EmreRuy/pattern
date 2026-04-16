@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,9 @@ fun ColorSelector(
         if (isPressed) 0.97f else 1f,
         label = "pressScale"
     )
+    val isDark = isSystemInDarkTheme()
+    val containerColor =  if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -53,11 +57,11 @@ fun ColorSelector(
                 indication = null
             ) { onOpen() },
         shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        color = containerColor,
         tonalElevation = 1.dp
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -67,7 +71,7 @@ fun ColorSelector(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(34.dp)
                         .clip(CircleShape)
                         .background(Color(selectedColor.toColorInt()))
                 )
@@ -79,7 +83,7 @@ fun ColorSelector(
                         )
                     )
                     Text(
-                        "Tap to pick a color",
+                        "Set the vibe",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -13,7 +13,7 @@ fun HandleHabitNameSheet(
         HabitNameBottomSheet(
             habitName = habitName,
             onNameChange = onNameChange,
-            onDismiss = onDismiss
+            onDismiss = onDismiss,
         )
     }
 }
