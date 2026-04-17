@@ -2,9 +2,7 @@ package com.example.pattern.ui.screens.homeScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -45,16 +42,15 @@ fun HomeScreen(
 ) {
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
     val today = remember { LocalDate.now(ZoneId.systemDefault()) }
-    val listState = rememberLazyListState()
     val selectedDay = remember { mutableIntStateOf(180) }
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = selectedDay.intValue
+    )
     val dayList = remember { generateNext365Days() }
     // Confetti State
     var explodeConfetti by remember { mutableStateOf(false) }
     var triggerConfetti by remember { mutableStateOf(false) }
-    // Scroll to current day on first composition
-    LaunchedEffect(Unit) {
-        listState.scrollToItem(selectedDay.intValue)
-    }
+
     // Selected date logic
     val selectedDate = remember(selectedDay.intValue) {
         today.minusDays(180).plusDays(selectedDay.intValue.toLong())
@@ -101,7 +97,6 @@ fun HomeScreen(
                     HomeTopBar(onMenuClick = onOpenMenuSheet,
                         onSettingsClick = onOpenSettingsSheet
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
                     HomeCalendarSelector(
                         listState = listState,
                         selectedDay = selectedDay.intValue,

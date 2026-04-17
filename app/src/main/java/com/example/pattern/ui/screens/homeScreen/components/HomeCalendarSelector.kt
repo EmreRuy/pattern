@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pattern.ui.screens.settings.MossGreen
 
 @Composable
 fun HomeCalendarSelector(
@@ -71,7 +72,7 @@ fun CalendarItem(
 ) {
     val backgroundColor by animateColorAsState(
         if (isSelected)
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            MossGreen.copy(alpha = 0.3f)
         else
             Color.Transparent,
         label = "calendar_bg"
@@ -80,7 +81,7 @@ fun CalendarItem(
     Box(
         modifier = Modifier
             .width(46.dp)
-            .heightIn(min = 72.dp)
+            .heightIn(72.dp)
             .background(backgroundColor, RoundedCornerShape(26.dp))
             .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center
@@ -88,11 +89,12 @@ fun CalendarItem(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Text(
                 text = dayLetter,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    letterSpacing = 0.6.sp
                 ),
                 color = if (isSelected)
                     MaterialTheme.colorScheme.primary
@@ -114,9 +116,14 @@ fun CalendarItem(
             ) {
                 Text(
                     text = dayNumber,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = if (isSelected) Color.Black
-                    else MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.2.sp
+                    ),
+                    color = if (isSelected)
+                        Color.Black
+                    else
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
         }

@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.ui.screens.addHabitScreen.CardHeader
+import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
 
 @Composable
 fun HabitListSheetContent(
@@ -56,9 +56,8 @@ fun HabitListBottomSheet(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
        CardHeader("Your Habits")
-
+        Spacer(modifier = Modifier.height(16.dp))
         if (habits.isEmpty()) {
             EmptyHabitMessage()
         } else {

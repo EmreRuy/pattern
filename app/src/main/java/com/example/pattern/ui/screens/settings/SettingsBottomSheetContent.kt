@@ -3,42 +3,72 @@ package com.example.pattern.ui.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.WbTwilight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.pattern.ui.screens.addHabitScreen.CardHeader
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
+import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
+import com.example.pattern.utils.ReviewUtils
+import com.example.pattern.utils.SupportUtils
 
 
 @Composable
@@ -46,10 +76,15 @@ fun SettingsSheetContent() {
     SettingsBottomSheetContent()
 }
 @Composable
-fun SettingsBottomSheetContent() {
-    // These would ideally be hoisted to a ViewModel
-    var dailyReminder by remember { mutableStateOf(false) }
-    var smartReminder by remember { mutableStateOf(true) }
+fun SettingsBottomSheetContent(
+    viewModel: HabitViewModel = hiltViewModel()
+) {
+    val settings by viewModel.settingsState.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier
@@ -58,57 +93,190 @@ fun SettingsBottomSheetContent() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
+        item { CardHeader("Settings") }
         item {
-            CardHeader("Settings")
-        }
-
-        item {
-            SettingsSection(title = "App Preferences") {
-                SettingsNavigationItem(Icons.Default.Palette, "Theme", "System")
-                SettingsNavigationItem(Icons.Default.Vibration, "Haptic Feedback")
+            SettingsSection(title = "App preferences") {
+                SettingsNavigationItem(Icons.Default.Palette, "Theme")
                 SettingsNavigationItem(Icons.Default.Language, "Language")
             }
         }
-
         item {
             SettingsSection(title = "Notifications") {
                 SettingsSwitchItem(
-                    icon = Icons.Default.Notifications,
-                    title = "Daily reminders",
-                    checked = dailyReminder,
-                    onCheckedChange = { dailyReminder = it }
+                    icon = Icons.Default.Bedtime,
+                    title = "Quiet Hours",
+                    checked = settings.quietHoursEnabled,
+                    iconTint = MossGreen,
+                    onCheckedChange = { isEnabled ->
+                        viewModel.updateQuietHoursSettings(isEnabled, settings.startTime, settings.endTime)
+                    }
                 )
-                SettingsSwitchItem(
+                //alpha value to "gray out" the items when disabled
+                val contentAlpha = if (settings.quietHoursEnabled) 1f else 0.38f
+
+                Column(modifier = Modifier.alpha(contentAlpha)) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 24.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+
+                    SettingsNavigationItem(
+                        icon = Icons.Default.WbTwilight,
+                        title = "Starts at",
+                        subtitle = settings.startTime,
+                        // Only clickable if quietHoursEnabled is true
+                        onClick = { if (settings.quietHoursEnabled) showStartTimePicker = true }
+                    )
+                    SettingsNavigationItem(
+                        Icons.Default.WbSunny,
+                        title = "Ends at",
+                        subtitle = settings.endTime,
+                        // Only clickable if quietHoursEnabled is true
+                        onClick = { if (settings.quietHoursEnabled) showEndTimePicker = true }
+                    )
+                }
+
+             /*   SettingsSwitchItem(
                     icon = Icons.Default.Alarm,
                     title = "Smart reminders",
-                    checked = smartReminder,
-                    onCheckedChange = { smartReminder = it }
-                )
+                    iconTint = MossGreen,
+                    checked = true,
+                    onCheckedChange = { /* ... */ }
+                ) */
             }
         }
 
         item {
             SettingsSection(title = "About") {
                 SettingsNavigationItem(Icons.Default.Info, "App version", "1.0.0")
-                SettingsNavigationItem(Icons.Default.Star, "Rate the app")
-                SettingsNavigationItem(Icons.Default.Email, "Contact support")
+                SettingsNavigationItem(
+                    Icons.Default.Star, "Rate the app",
+                    onClick = { ReviewUtils.launchInAppReview(context, scope) }
+                )
+                SettingsNavigationItem(
+                    Icons.Default.Email, "Contact support",
+                    onClick = { SupportUtils.sendSupportEmail(context) }
+                )
+            }
+        }
+    }
+    // Helper function to satisfy the compiler
+    val dismissAllPickers = {
+        showStartTimePicker = false
+        showEndTimePicker = false
+    }
+    //Time Picker Dialog
+    if (showStartTimePicker) {
+        PatternTimePickerDialog(
+            initialTime = settings.startTime,
+            onTimeSelected = { newTime ->
+                dismissAllPickers()
+                viewModel.updateQuietHoursSettings(true, newTime, settings.endTime)
+            },
+            onDismiss = dismissAllPickers
+        )
+    }
+
+    if (showEndTimePicker) {
+        PatternTimePickerDialog(
+            initialTime = settings.endTime,
+            onTimeSelected = { newTime ->
+                dismissAllPickers()
+                viewModel.updateQuietHoursSettings(true, settings.startTime, newTime)
+            },
+            onDismiss = dismissAllPickers
+        )
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PatternTimePickerDialog(
+    initialTime: String,
+    onTimeSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val parts = initialTime.split(":")
+    val timePickerState = rememberTimePickerState(
+        initialHour = parts.getOrNull(0)?.toInt() ?: 22,
+        initialMinute = parts.getOrNull(1)?.toInt() ?: 0,
+        is24Hour = true
+    )
+
+    val haptic = LocalHapticFeedback.current
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .padding(24.dp)
+                .wrapContentSize()
+                .clip(RoundedCornerShape(32.dp)),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Header
+                Text(
+                    text = "Select Time",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+                // The Picker
+                TimePicker(
+                    state = timePickerState,
+                    colors = TimePickerDefaults.colors(
+                        clockDialColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        selectorColor = MossGreen,
+                        periodSelectorSelectedContainerColor = MossGreen.copy(alpha = 0.2f),
+                        timeSelectorSelectedContainerColor = MossGreen.copy(alpha = 0.15f),
+                        timeSelectorSelectedContentColor = MossGreen
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Action Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            // Import java.util.Locale
+                            val formatted = String.format(java.util.Locale.ROOT, "%02d:%02d", timePickerState.hour, timePickerState.minute)
+                            onTimeSelected(formatted)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MossGreen),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Confirm", color = Color.White)
+                    }
+                }
             }
         }
     }
 }
-
 @Composable
 fun SettingsSection(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-        Text(
-            text = title.uppercase(),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-        )
+       SectionHeader(title, modifier =  Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -119,34 +287,53 @@ fun SettingsSection(
         }
     }
 }
-
+val MossGreen = Color(0xFF3E5C47)
 @Composable
 fun SettingsNavigationItem(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
+    iconTint: Color = MossGreen,
     onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.secondary)
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray.copy(alpha = 0.2f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.width(16.dp))
+
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                letterSpacing = 0.5.sp
+            )
             subtitle?.let {
                 Text(
-                    it,
+                    text = it,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline)
     }
 }
 
@@ -155,17 +342,51 @@ fun SettingsSwitchItem(
     icon: ImageVector,
     title: String,
     checked: Boolean,
+    iconTint: Color,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.secondary)
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray.copy(alpha = 0.2f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(16.dp))
-        Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                letterSpacing = 0.5.sp
+            ),
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = iconTint,
+                checkedBorderColor = iconTint,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f),
+                uncheckedBorderColor = Color.Transparent
+            )
+        )
     }
 }

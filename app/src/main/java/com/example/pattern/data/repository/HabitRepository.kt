@@ -3,6 +3,8 @@ package com.example.pattern.data.repository
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.dao.HabitDao
+import com.example.pattern.data.local.dao.SettingsDao
+import com.example.pattern.data.local.entity.SettingsEntity
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +18,8 @@ It is responsible for:
  */
 @Singleton
 class HabitRepository @Inject constructor(
-    private val habitDao: HabitDao
+    private val habitDao: HabitDao,
+    private val settingsDao: SettingsDao
 ) {
 
     /**
@@ -62,6 +65,21 @@ class HabitRepository @Inject constructor(
     // For task type of habit completion
     suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
         habitDao.setTaskCompleted(habitId, date, completed)
+    }
+
+    //Settings (for Notifications)
+    fun getSettingsStream() = settingsDao.getSettingsFlow()
+
+    suspend fun getSettingsOnce() = settingsDao.getSettingsOnce()
+
+    suspend fun updateQuietHours(enabled: Boolean, start: String, end: String) {
+        settingsDao.upsertSettings(
+            SettingsEntity(
+                quietHoursEnabled = enabled,
+                startTime = start,
+                endTime = end
+            )
+        )
     }
 
 }

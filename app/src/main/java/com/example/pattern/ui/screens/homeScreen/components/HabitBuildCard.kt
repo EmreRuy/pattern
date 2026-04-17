@@ -61,22 +61,30 @@ fun HabitBuildCard(
                 if (isDark) Color(ColorUtils.blendARGB(it.toArgb(), surface.toArgb(), 0.30f)) else it
             }
     }
+    val totalMillis = remember(habit.durationInMinutes) {
+        (habit.durationInMinutes ?: 0) * 60_000L
+    }
 
-    val totalMillis = remember(habit.durationInMinutes) { (habit.durationInMinutes ?: 0) * 60_000L }
     val currentTime by produceState(System.currentTimeMillis()) {
         while (true) {
             delay(1000)
             value = System.currentTimeMillis()
         }
     }
-
-    val timerData by remember(currentTime, habit.timerStartTime, habit.timerPauseTime, habit.isCompleted) {
+    val timerData by remember(
+        currentTime,
+        habit.timerStartTime,
+        habit.timerPauseTime,
+        habit.isCompleted
+    ) {
         derivedStateOf {
             val remaining = when {
                 habit.isCompleted -> 0L
                 habit.timerStartTime == null -> totalMillis
-                habit.timerPauseTime != null -> (totalMillis - (habit.timerPauseTime - habit.timerStartTime))
-                else -> (totalMillis - (currentTime - habit.timerStartTime))
+                habit.timerPauseTime != null ->
+                    (totalMillis - (habit.timerPauseTime - habit.timerStartTime))
+                else ->
+                    (totalMillis - (currentTime - habit.timerStartTime))
             }.coerceAtLeast(0L)
 
             val sec = (remaining / 1000).coerceAtLeast(0)
@@ -84,13 +92,17 @@ fun HabitBuildCard(
             val m = (sec % 3600) / 60
             val s = sec % 60
 
-            val formatted = if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%02d:%02d".format(m, s)
-            val prog = if (totalMillis == 0L) 0f else 1f - (remaining.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
+            val formatted = if (h > 0)
+                "%d:%02d:%02d".format(h, m, s)
+            else
+                "%02d:%02d".format(m, s)
+
+            val prog = if (totalMillis == 0L) 0f
+            else 1f - (remaining.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
 
             Triple(remaining, formatted, prog)
         }
     }
-
     val (remainingTime, formattedTime, progress) = timerData
     val showSuccess = remember { mutableStateOf(false) }
 
@@ -102,7 +114,6 @@ fun HabitBuildCard(
             showSuccess.value = false
         }
     }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -114,7 +125,10 @@ fun HabitBuildCard(
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = if (isDark)
+                MaterialTheme.colorScheme.surfaceContainerLow
+            else
+                MaterialTheme.colorScheme.surfaceContainerLowest
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
@@ -138,28 +152,30 @@ fun HabitBuildCard(
                     fontSize = 28.sp,
                 )
             }
-
             Spacer(Modifier.width(16.dp))
-
-            // Info Section
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
                 Text(
                     text = habit.name.replaceFirstChar { it.uppercase() },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = onSurface,
-                        fontSize = 18.sp,
-                        letterSpacing = (-0.5).sp
+                        color = onSurface.copy(alpha = 0.9f),
+                        fontSize = 17.sp,
+                        letterSpacing = 0.sp
                     )
                 )
-
                 if (totalMillis > 0) {
                     Text(
                         text = if (habit.isCompleted) "Goal Reached" else formattedTime,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFeatureSettings = "num"
+                        ),
+                        color = accentColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -174,10 +190,8 @@ fun HabitBuildCard(
                 showSuccess = showSuccess.value,
                 onClick = {
                     if (!isToday || habit.isCompleted) return@TimerRing
-
                     val isRunning = habit.timerStartTime != null && habit.timerPauseTime == null
                     val isPaused = habit.timerStartTime != null && habit.timerPauseTime != null
-
                     when {
                         isRunning -> onPauseTimer(habit)
                         isPaused -> onResumeTimer(habit)

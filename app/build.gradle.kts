@@ -86,4 +86,13 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    //Google Play Review
+    implementation(libs.google.play.review)
+
+    // WorkManager & Hilt Integration (Notifications)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+
+    ksp(libs.androidx.hilt.compiler)
 }

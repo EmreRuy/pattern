@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.pattern.data.local.dao.HabitDao
+import com.example.pattern.data.local.dao.SettingsDao
 import com.example.pattern.data.local.db.HabitDatabase
 import dagger.Module
 import dagger.Provides
@@ -35,6 +36,11 @@ object DatabaseModule {
     fun provideHabitDao(database: HabitDatabase): HabitDao {
         return database.habitDao()
     }
+
+    @Provides
+    fun provideSettingsDao(db: HabitDatabase): SettingsDao {
+        return db.settingsDao() // This must match the abstract fun in HabitDatabase.kt
+    }
 }
 
 //Hilt is like super smart delivery service, instead of creating everything manually
@@ -42,7 +48,7 @@ object DatabaseModule {
 /* So we say:
 “Hilt, please create one HabitDatabase when the app starts
 and reuse that same instance everywhere (ViewModels, Repositories, etc.).” */
-// This concept is called singleton ( we don't create many databases for everything  but just once.
+// This concept is called singleton, we don't create many databases for everything  but just once.
 
 /*
 The DatabaseModule is your app’s brain that teaches Hilt how to build
