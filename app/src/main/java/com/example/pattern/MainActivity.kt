@@ -2,7 +2,9 @@ package com.example.pattern
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +30,7 @@ import com.example.pattern.ui.navigation.NavHost
 import com.example.pattern.ui.screens.addHabitScreen.AddHabitSheetContent
 import com.example.pattern.ui.screens.homeScreen.components.HabitListSheetContent
 import com.example.pattern.ui.screens.settings.SettingsSheetContent
+import com.example.pattern.utils.PremiumPlanScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 sealed class AppSheet {
@@ -35,6 +38,8 @@ sealed class AppSheet {
     data object AddHabit : AppSheet()
     data object Menu : AppSheet()
     data object Settings : AppSheet()
+
+    data object Premium: AppSheet()
 }
 
 @AndroidEntryPoint
@@ -43,7 +48,12 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
+        )
         setContent {
             AppTheme {
                 val navController = rememberNavController()
@@ -87,7 +97,8 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         modifier = Modifier.padding(paddingValues),
                         showMenuSheet = { activeSheet = AppSheet.Menu },
-                        showSettingsSheet = { activeSheet = AppSheet.Settings }
+                        showSettingsSheet = { activeSheet = AppSheet.Settings },
+                        onPremiumClick = {activeSheet = AppSheet.Premium}
                     )
                 }
                 if (activeSheet != AppSheet.None) {
@@ -112,6 +123,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                             AppSheet.Settings -> SettingsSheetContent()
+                            AppSheet.Premium -> PremiumPlanScreen(
+                                onPurchase = {
+                                    // Handle the Billing Logic here later
+                                    activeSheet = AppSheet.None
+                                }
+                            )
                             AppSheet.None -> Unit
                         }
                     }

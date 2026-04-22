@@ -22,9 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WbTwilight
@@ -68,6 +68,7 @@ import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.utils.ReviewUtils
+import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils
 
 
@@ -104,7 +105,7 @@ fun SettingsBottomSheetContent(
             SettingsSection(title = "Notifications") {
                 SettingsSwitchItem(
                     icon = Icons.Default.Bedtime,
-                    title = "Quiet Hours",
+                    title = "Quiet hours",
                     checked = settings.quietHoursEnabled,
                     iconTint = MossGreen,
                     onCheckedChange = { isEnabled ->
@@ -149,9 +150,13 @@ fun SettingsBottomSheetContent(
 
         item {
             SettingsSection(title = "About") {
-                SettingsNavigationItem(Icons.Default.Info, "App version", "1.0.0")
                 SettingsNavigationItem(
-                    Icons.Default.Star, "Rate the app",
+                    icon = Icons.Default.Share,
+                    title = "Share with your friends ",
+                    onClick = { ShareUtils.shareApp(context)}
+                    )
+                SettingsNavigationItem(
+                    Icons.Default.Star, "Support our journey",
                     onClick = { ReviewUtils.launchInAppReview(context, scope) }
                 )
                 SettingsNavigationItem(

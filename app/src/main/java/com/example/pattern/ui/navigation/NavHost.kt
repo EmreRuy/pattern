@@ -18,6 +18,7 @@ fun NavHost(
     showSettingsSheet: () -> Unit,
     modifier: Modifier = Modifier,
     isPro: Boolean = false,
+    onPremiumClick: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -28,7 +29,8 @@ fun NavHost(
             HomeScreen(
                 navController = navController,
                 onOpenMenuSheet = showMenuSheet,
-                onOpenSettingsSheet = showSettingsSheet
+                onOpenSettingsSheet = showSettingsSheet,
+                onPremiumClick = onPremiumClick
             )
         }
         composable(Screens.Profile.route) {
@@ -37,6 +39,7 @@ fun NavHost(
                 isPro = isPro,
                 onOpenMenuSheet = showMenuSheet,
                 onOpenSettingsSheet = showSettingsSheet,
+                onPremiumClick = onPremiumClick
             )
         }
         composable(

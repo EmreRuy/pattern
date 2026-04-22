@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.sp
+import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.ui.screens.proLocked.LockedProWrapper
 
 
@@ -276,16 +277,4 @@ private fun DetailRow(
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f)
         )
     }
-}
-
-@Composable
-private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.Black,
-        color = MaterialTheme.colorScheme.outline,
-        letterSpacing = 1.5.sp,
-        modifier = modifier.padding(horizontal = 8.dp)
-    )
 }

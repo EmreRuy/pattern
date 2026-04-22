@@ -1,9 +1,10 @@
 package com.example.pattern.ui.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.outlined.LensBlur
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screens(val route: String) {
@@ -27,7 +28,7 @@ data class BottomNavigationItem(
         return listOf(
             BottomNavigationItem(
                 label = "Home",
-                icon = Icons.Filled.Home,
+                icon =   Icons.Outlined.LensBlur,
                 route = Screens.Home.route
             ),
             BottomNavigationItem(
@@ -36,8 +37,8 @@ data class BottomNavigationItem(
                 route = Screens.Add.route
             ),
             BottomNavigationItem(
-                label = "Profile",
-                icon = Icons.Filled.AccountCircle,
+                label = "Insights",
+                Icons.Filled.PieChart,
                 route = Screens.Profile.route
             ),
         )

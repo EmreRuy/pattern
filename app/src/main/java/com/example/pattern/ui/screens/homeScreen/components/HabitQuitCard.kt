@@ -43,12 +43,18 @@ fun HabitQuitCard(
     val surface = MaterialTheme.colorScheme.surface
     val fallbackColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val onSurface = MaterialTheme.colorScheme.onSurface
+
     val accentColor = remember(habit.accentColorHex, isDark, surface, fallbackColor) {
         runCatching { Color(habit.accentColorHex.toColorInt()) }
             .getOrDefault(fallbackColor)
             .let {
-                if (isDark) Color(ColorUtils.blendARGB(it.toArgb(), surface.toArgb(), 0.30f))
-                else it
+                if (isDark) Color(
+                    ColorUtils.blendARGB(
+                        it.toArgb(),
+                        surface.toArgb(),
+                        0.30f
+                    )
+                ) else it
             }
     }
 
@@ -63,7 +69,10 @@ fun HabitQuitCard(
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else Color.White
+            containerColor = if (isDark)
+                MaterialTheme.colorScheme.surfaceContainerLow
+            else
+                Color.White
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
@@ -73,7 +82,6 @@ fun HabitQuitCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon Section
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -88,10 +96,7 @@ fun HabitQuitCard(
                     fontSize = 28.sp,
                 )
             }
-
             Spacer(Modifier.width(16.dp))
-
-            // Info Section
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = habit.name.replaceFirstChar { it.uppercase() },
@@ -99,18 +104,19 @@ fun HabitQuitCard(
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = onSurface,
-                        fontSize = 18.sp,
+                        color = onSurface.copy(alpha = 0.9f),
+                        fontSize = 17.sp,
                         letterSpacing = (-0.5).sp
                     )
                 )
                 Text(
                     text = "Quit",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = accentColor,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             TaskRing(

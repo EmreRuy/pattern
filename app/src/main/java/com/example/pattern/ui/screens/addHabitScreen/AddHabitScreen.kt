@@ -18,6 +18,7 @@ import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.ColorSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.EmojiSelector
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitNameCard
+import com.example.pattern.ui.screens.addHabitScreen.components.HabitReminderCard
 import com.example.pattern.ui.screens.addHabitScreen.components.HabitTypeSelectorCard
 import com.example.pattern.ui.screens.addHabitScreen.components.HandleColorSheet
 import com.example.pattern.ui.screens.addHabitScreen.components.HandleEmojiSheet
@@ -71,7 +72,7 @@ fun AddHabitScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 CardHeader("Create your habit")
                 SectionHeader("Info",  modifier = Modifier.padding(start = 4.dp))
@@ -93,6 +94,7 @@ fun AddHabitScreen(
                     selectedType = habitType,
                     onOpen = { showHabitTypeSheet = true }
                 )
+                HabitReminderCard(isEnabled = true, onEnabledChange = {}, reminderTime = "12") { }
                 SaveHabitButton(
                     habitName = habitName,
                     habitType = habitType,

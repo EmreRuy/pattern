@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -58,7 +59,13 @@ fun HabitBuildCard(
         runCatching { Color(habit.accentColorHex.toColorInt()) }
             .getOrDefault(fallbackColor)
             .let {
-                if (isDark) Color(ColorUtils.blendARGB(it.toArgb(), surface.toArgb(), 0.30f)) else it
+                if (isDark) Color(
+                    ColorUtils.blendARGB(
+                        it.toArgb(),
+                        surface.toArgb(),
+                        0.30f
+                    )
+                ) else it
             }
     }
     val totalMillis = remember(habit.durationInMinutes) {
@@ -83,6 +90,7 @@ fun HabitBuildCard(
                 habit.timerStartTime == null -> totalMillis
                 habit.timerPauseTime != null ->
                     (totalMillis - (habit.timerPauseTime - habit.timerStartTime))
+
                 else ->
                     (totalMillis - (currentTime - habit.timerStartTime))
             }.coerceAtLeast(0L)
@@ -164,21 +172,29 @@ fun HabitBuildCard(
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = onSurface.copy(alpha = 0.9f),
+                        color = onSurface.copy(alpha = 0.8f),
                         fontSize = 17.sp,
-                        letterSpacing = 0.sp
+                        letterSpacing = (-0.5).sp
                     )
                 )
-                if (totalMillis > 0) {
-                    Text(
-                        text = if (habit.isCompleted) "Goal Reached" else formattedTime,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontFeatureSettings = "num"
-                        ),
-                        color = accentColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (totalMillis > 0) {
+                        Text(
+                            text = if (habit.isCompleted) "Goal Reached" else formattedTime,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontFeatureSettings = "num",
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.Gray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                    }
                 }
             }
             TimerRing(
@@ -202,5 +218,4 @@ fun HabitBuildCard(
         }
     }
 }
-
 

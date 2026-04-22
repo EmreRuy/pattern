@@ -30,6 +30,7 @@ fun ProfileScreen(
     isPro: Boolean = false, // This should come from  ViewModel/User State
     onOpenMenuSheet: () -> Unit,
     onOpenSettingsSheet: () -> Unit,
+    onPremiumClick: () -> Unit
 ) {
     val scroll = rememberScrollState()
 
@@ -41,7 +42,8 @@ fun ProfileScreen(
     ) {
         HomeTopBar(
             onMenuClick = onOpenMenuSheet,
-            onSettingsClick = onOpenSettingsSheet
+            onSettingsClick = onOpenSettingsSheet,
+            onPremiumClick = onPremiumClick
         )
         if (!isPro) {
             PatternProBanner()

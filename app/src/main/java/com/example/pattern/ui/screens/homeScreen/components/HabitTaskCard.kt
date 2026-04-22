@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -43,6 +46,7 @@ fun HabitTaskCard(
     val surface = MaterialTheme.colorScheme.surface
     val fallbackColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val onSurface = MaterialTheme.colorScheme.onSurface
+
     val accentColor = remember(habit.accentColorHex, isDark, surface, fallbackColor) {
         runCatching { Color(habit.accentColorHex.toColorInt()) }
             .getOrDefault(fallbackColor)
@@ -56,6 +60,7 @@ fun HabitTaskCard(
                 ) else it
             }
     }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -67,7 +72,10 @@ fun HabitTaskCard(
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else Color.White
+            containerColor = if (isDark)
+                MaterialTheme.colorScheme.surfaceContainerLow
+            else
+                Color.White
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
@@ -78,39 +86,57 @@ fun HabitTaskCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        color = accentColor.copy(alpha = if (isDark) 0.20f else 0.12f),
-                        shape = CircleShape
-                    )
+                modifier = Modifier.size(56.dp)
             ) {
-                Text(
-                    text = habit.iconEmoji.orEmpty(),
-                    fontSize = 28.sp,
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = accentColor.copy(alpha = if (isDark) 0.20f else 0.12f),
+                            shape = CircleShape
+                        )
+                ) {
+                    Text(
+                        text = habit.iconEmoji.orEmpty(),
+                        fontSize = 28.sp,
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = 24.dp, y = (-4).dp)
+                        .wrapContentSize(unbounded = true)
+                ) {
+                    StreakBadge(1)
+                }
             }
             Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
                 Text(
                     text = habit.name.replaceFirstChar { it.uppercase() },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = onSurface,
-                        fontSize = 18.sp,
+                        color = onSurface.copy(alpha = 0.9f),
+                        fontSize = 17.sp,
                         letterSpacing = (-0.5).sp
                     )
                 )
                 Text(
                     text = "Task",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = accentColor,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             TaskRing(

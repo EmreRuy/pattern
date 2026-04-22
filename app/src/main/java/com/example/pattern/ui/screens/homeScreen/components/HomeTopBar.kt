@@ -6,11 +6,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.rounded.SettingsSuggest
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,7 +29,13 @@ import androidx.compose.ui.unit.sp
 import com.example.pattern.R
 
 @Composable
-fun HomeTopBar(onMenuClick: () -> Unit, onSettingsClick: () -> Unit) {
+fun HomeTopBar(
+    onMenuClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onPremiumClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,28 +51,46 @@ fun HomeTopBar(onMenuClick: () -> Unit, onSettingsClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Menu,
-                contentDescription = "Menu Icon",
-                modifier = Modifier.size(32.dp).clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onMenuClick() },
+                contentDescription = "Menu",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onMenuClick() },
                 tint = MaterialTheme.colorScheme.onBackground
             )
-
-            Text(
-                text = stringResource(id = R.string.app_name),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Icon(
-                painter = painterResource(id = R.drawable.settings),
-                contentDescription = "Settings Icon",
-                modifier = Modifier.size(32.dp).clickable(
-                    interactionSource = remember { MutableInteractionSource() },
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.clickable(
+                    interactionSource = interactionSource,
                     indication = null
-                ) { onSettingsClick() },
+                ) { onPremiumClick() }
+            ) {
+                Text(
+                    text = stringResource(id = R.string.app_name),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.width(2.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_crown),
+                    contentDescription = "Upgrade to Premium",
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+            }
+            Icon(
+                imageVector = Icons.Rounded.SettingsSuggest,
+                contentDescription = "Settings",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onSettingsClick() },
                 tint = MaterialTheme.colorScheme.onBackground
             )
         }
