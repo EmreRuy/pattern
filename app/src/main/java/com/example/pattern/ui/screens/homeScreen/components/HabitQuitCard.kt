@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,6 +38,7 @@ import com.example.pattern.data.model.HabitCardModel
 @Composable
 fun HabitQuitCard(
     habit: HabitCardModel,
+    isToday: Boolean,
     onCardClick: (Int) -> Unit,
     onTaskCompleted: (habitId: Int, completed: Boolean) -> Unit,
 ) {
@@ -84,18 +86,34 @@ fun HabitQuitCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        color = accentColor.copy(alpha = if (isDark) 0.20f else 0.12f),
-                        shape = CircleShape
-                    )
+                modifier = Modifier.size(56.dp)
             ) {
-                Text(
-                    text = habit.iconEmoji.orEmpty(),
-                    fontSize = 28.sp,
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = accentColor.copy(alpha = if (isDark) 0.20f else 0.12f),
+                            shape = CircleShape
+                        )
+                ) {
+                    Text(
+                        text = habit.iconEmoji.orEmpty(),
+                        fontSize = 28.sp,
+                    )
+                }
+
+                if (habit.currentStreak > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                    ) {
+                        StreakBadge(
+                            streak = habit.currentStreak,
+                            isStreakActive = habit.isTaskChecked
+                        )
+                    }
+                }
             }
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -110,32 +128,23 @@ fun HabitQuitCard(
                         letterSpacing = (-0.5).sp
                     )
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Quit",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Color.Gray,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (habit.currentStreak > 0) {
-                        StreakBadge(streak = habit.currentStreak)
-                    }
-                }
+                Text(
+                    text = "Quit",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             TaskRing(
-                checked = habit.isTaskChecked.value,
+                checked = habit.isTaskChecked,
                 accentColor = accentColor,
                 onToggle = {
-                    val newValue = !habit.isTaskChecked.value
-                    habit.isTaskChecked.value = newValue
-                    onTaskCompleted(habit.id, newValue)
+                    if (isToday) {
+                        onTaskCompleted(habit.id, !habit.isTaskChecked)
+                    }
                 }
             )
         }

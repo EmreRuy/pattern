@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.runtime.mutableStateOf
 import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.model.HabitCardModel
@@ -26,18 +25,12 @@ fun LocalHabit.toCardModel(
         type = this.type,
         icon = icon,
         iconEmoji = this.iconCode,
-        // for task completion
-        isTaskChecked = mutableStateOf(daily?.isTaskCompleted ?: false),
-
-        isTimeChecked = mutableStateOf(false),
+        isTaskChecked = daily?.isTaskCompleted ?: false,
         accentColorHex = accentColorHex,
         durationInMinutes = this.durationInMinutes,
         timerStartTime = daily?.timerStartTime,
         timerPauseTime = daily?.timerPauseTime,
-
-        // for the timer completion
         isCompleted = daily?.isCompleted ?: false,
         currentStreak = currentStreak
     )
 }
-

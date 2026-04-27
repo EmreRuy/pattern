@@ -71,8 +71,14 @@ class HabitRepository @Inject constructor(
     suspend fun upsertDailyState(state: HabitDailyState) {
         try {
             habitDao.upsertDailyState(state)
-        } catch (_: SQLiteConstraintException) {
-            Log.w("HabitRepository", "Foreign key violation: Habit ${state.habitId} likely deleted. Ignoring upsert.")
+        } catch (e: Exception) {
+            // Catching all exceptions to prevent crash. 
+            // Specifically handling Foreign Key violations that can occur if a habit is deleted while updating state.
+            if (e is SQLiteConstraintException || e.message?.contains("FOREIGN KEY") == true) {
+                Log.w("HabitRepository", "Foreign key violation for habit ${state.habitId}: likely deleted. Ignoring upsert.")
+            } else {
+                Log.e("HabitRepository", "Error upserting daily state for habit ${state.habitId}", e)
+            }
         }
     }
 
@@ -81,7 +87,15 @@ class HabitRepository @Inject constructor(
 
     // For task type of habit completion
     suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
-        habitDao.setTaskCompleted(habitId, date, completed)
+        try {
+            habitDao.setTaskCompleted(habitId, date, completed)
+        } catch (e: Exception) {
+            if (e is SQLiteConstraintException || e.message?.contains("FOREIGN KEY") == true) {
+                Log.w("HabitRepository", "Foreign key violation in setTaskCompleted for habit $habitId: likely deleted.")
+            } else {
+                Log.e("HabitRepository", "Error in setTaskCompleted for habit $habitId", e)
+            }
+        }
     }
 
     //Settings (for Notifications)
@@ -90,12 +104,20 @@ class HabitRepository @Inject constructor(
     suspend fun getSettingsOnce() = settingsDao.getSettingsOnce()
 
     suspend fun updateQuietHours(enabled: Boolean, start: String, end: String) {
+        val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
         settingsDao.upsertSettings(
-            SettingsEntity(
+            current.copy(
                 quietHoursEnabled = enabled,
                 startTime = start,
                 endTime = end
             )
+        )
+    }
+
+    suspend fun addXP(xpToAdd: Int) {
+        val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
+        settingsDao.upsertSettings(
+            current.copy(totalXP = current.totalXP + xpToAdd)
         )
     }
 

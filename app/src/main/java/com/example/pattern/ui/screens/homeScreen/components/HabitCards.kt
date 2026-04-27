@@ -21,6 +21,7 @@ fun HabitCards(
     isToday: Boolean,
     onTaskCompleted: (Int, Boolean) -> Unit,
     onTimerFinished: (HabitCardModel) -> Unit,
+    onUnfinishTimer: (Int) -> Unit,
     onHabitCardClick: (Int) -> Unit,
     onStartTimer: (HabitCardModel) -> Unit,
     onPauseTimer: (HabitCardModel) -> Unit,
@@ -42,6 +43,7 @@ fun HabitCards(
                     habit = habit,
                     isToday = isToday,
                     onTimerFinished = onTimerFinished,
+                    onUnfinishTimer = onUnfinishTimer,
                     onCardClick = onHabitCardClick,
                     onStartTimer = onStartTimer,
                     onPauseTimer = onPauseTimer,
@@ -49,6 +51,7 @@ fun HabitCards(
                 )
                  HabitType.TASK -> HabitTaskCard(
                     habit = habit,
+                    isToday = isToday,
                     onTaskCompleted = { habitId, completed ->
                         onTaskCompleted(habitId, completed)
                     },
@@ -56,6 +59,7 @@ fun HabitCards(
                 )
                 HabitType.QUIT -> HabitQuitCard(
                     habit = habit,
+                    isToday = isToday,
                     onTaskCompleted = { habitId, completed ->
                         onTaskCompleted(habitId, completed)
                     },

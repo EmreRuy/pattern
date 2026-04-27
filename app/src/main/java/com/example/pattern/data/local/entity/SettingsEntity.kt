@@ -9,7 +9,8 @@ data class SettingsEntity(
     @PrimaryKey val id: Int = 0,
     val quietHoursEnabled: Boolean = false,
     val startTime: String = "22:00",
-    val endTime: String = "08:00"
+    val endTime: String = "08:00",
+    val totalXP: Int = 0
 ) {
     fun isQuietTime(now: LocalTime = LocalTime.now()): Boolean {
         if (!quietHoursEnabled) return false

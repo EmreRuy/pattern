@@ -10,6 +10,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -85,8 +87,15 @@ class MainActivity : ComponentActivity() {
 
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute =
-                    navBackStackEntry?.destination?.route ?: Screens.Home.route
+                val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
+                
+                // Routes that should NOT show the bottom bar
+                val hideBottomBarRoutes = listOf(
+                    Screens.HabitDetail.route
+                )
+                val shouldShowBottomBar = currentRoute !in hideBottomBarRoutes && 
+                                          !currentRoute.startsWith("habit_detail_route/")
+
                 val habitViewModel: HabitViewModel = hiltViewModel()
                 val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
                 var activeSheet by remember { mutableStateOf<AppSheet>(AppSheet.None) }
@@ -96,29 +105,32 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        CustomBottomBar(
-                            currentRoute = currentRoute,
-                            onItemClick = { item ->
-                                when (item.route) {
-                                    Screens.Add.route -> {
-                                        activeSheet = AppSheet.AddHabit
-                                    }
+                        if (shouldShowBottomBar) {
+                            CustomBottomBar(
+                                currentRoute = currentRoute,
+                                onItemClick = { item ->
+                                    when (item.route) {
+                                        Screens.Add.route -> {
+                                            activeSheet = AppSheet.AddHabit
+                                        }
 
-                                    else -> {
-                                        if (currentRoute != item.route) {
-                                            navController.navigate(item.route) {
-                                                popUpTo(navController.graph.startDestinationId) {
-                                                    saveState = true
+                                        else -> {
+                                            if (currentRoute != item.route) {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(navController.graph.startDestinationId) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
                                                 }
-                                                launchSingleTop = true
-                                                restoreState = true
                                             }
                                         }
                                     }
                                 }
-                            }
-                        )
-                    }
+                            )
+                        }
+                    },
+                    contentWindowInsets = WindowInsets.navigationBars
                 ) { paddingValues ->
                     NavHost(
                         navController = navController,
@@ -140,15 +152,22 @@ class MainActivity : ComponentActivity() {
                                 onClose = { activeSheet = AppSheet.None }
                             )
 
-                            AppSheet.Menu -> HabitListSheetContent(
-                                habits = uiState.habitList,
-                                onHabitClick = { id ->
-                                    activeSheet = AppSheet.None
-                                    navController.navigate(
-                                        Screens.HabitDetail.createRoute(id)
-                                    )
-                                }
-                            )
+                            AppSheet.Menu -> {
+                                val today = remember { java.time.LocalDate.now().toString() }
+                                val dailyStates by habitViewModel.getDailyStatesForDate(today)
+                                    .collectAsStateWithLifecycle(initialValue = emptyList())
+                                
+                                HabitListSheetContent(
+                                    habits = uiState.habitList,
+                                    dailyStates = dailyStates,
+                                    onHabitClick = { id ->
+                                        activeSheet = AppSheet.None
+                                        navController.navigate(
+                                            Screens.HabitDetail.createRoute(id)
+                                        )
+                                    }
+                                )
+                            }
                             AppSheet.Settings -> SettingsSheetContent()
                             AppSheet.Premium -> PremiumPlanScreen(
                                 onPurchase = {

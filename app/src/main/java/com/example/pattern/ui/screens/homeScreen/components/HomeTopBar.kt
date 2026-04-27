@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -75,12 +74,6 @@ fun HomeTopBar(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.width(2.dp))
-             /*  Icon(
-                    painter = painterResource(id = R.drawable.ic_crown),
-                    contentDescription = "Upgrade to Premium",
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.tertiary
-                ) */
             }
             Icon(
                 imageVector = Icons.Rounded.SettingsSuggest,

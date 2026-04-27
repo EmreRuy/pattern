@@ -39,6 +39,7 @@ import com.example.pattern.data.model.HabitCardModel
 @Composable
 fun HabitTaskCard(
     habit: HabitCardModel,
+    isToday: Boolean,
     onCardClick: (Int) -> Unit,
     onTaskCompleted: (habitId: Int, completed: Boolean) -> Unit,
 ) {
@@ -103,14 +104,15 @@ fun HabitTaskCard(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = 24.dp, y = (-4).dp)
-                        .wrapContentSize(unbounded = true)
-                ) {
-                    if (habit.currentStreak > 0) {
-                        StreakBadge(streak = habit.currentStreak)
+                if (habit.currentStreak > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                    ) {
+                        StreakBadge(
+                            streak = habit.currentStreak,
+                            isStreakActive = habit.isTaskChecked
+                        )
                     }
                 }
             }
@@ -142,12 +144,12 @@ fun HabitTaskCard(
                 )
             }
             TaskRing(
-                checked = habit.isTaskChecked.value,
+                checked = habit.isTaskChecked,
                 accentColor = accentColor,
                 onToggle = {
-                    val newValue = !habit.isTaskChecked.value
-                    habit.isTaskChecked.value = newValue
-                    onTaskCompleted(habit.id, newValue)
+                    if (isToday) {
+                        onTaskCompleted(habit.id, !habit.isTaskChecked)
+                    }
                 }
             )
         }

@@ -31,31 +31,26 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ExperienceLevelCard(
     title: String,
-    percentage: Float,
-    number: Int
+    level: Int,
+    levelTitle: String,
+    progress: Float,
+    totalXP: Int,
+    nextLevelXP: Int
 ) {
     // State to trigger the animation
     var animationPlayed by remember { mutableStateOf(false) }
     // The single animation state that both Text and Progress Bar will use
     val animatedProgress by animateFloatAsState(
-        targetValue = if (animationPlayed) percentage else 0f,
+        targetValue = if (animationPlayed) progress else 0f,
         animationSpec = tween(
-            durationMillis = 3000, // Matching LinearProgressBar duration
+            durationMillis = 1500,
             easing = FastOutSlowInEasing
         ),
         label = "MasterAnimation"
     )
     // Triggering the animation
-    LaunchedEffect(Unit) {
+    LaunchedEffect(progress) {
         animationPlayed = true
-    }
-    val level = (percentage * number).toInt().coerceIn(10, 100)
-    val levelTitle = when (level) {
-        in 10..29 -> "Beginner"
-        in 30..49 -> "Learner"
-        in 50..69 -> "Consistent"
-        in 70..89 -> "Expert"
-        else -> "Habit Master"
     }
     Card(
         modifier = Modifier
@@ -107,13 +102,13 @@ fun ExperienceLevelCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "\"Step by step walk a thousand mile road\"",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontStyle = FontStyle.Italic,
+                    text = "$totalXP / $nextLevelXP XP",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
                     color = Color.Gray
                 )
                 Text(
-                    text = "$level Lvl",
+                    text = "Lvl $level",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.Gray

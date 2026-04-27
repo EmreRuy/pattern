@@ -2,7 +2,12 @@ package com.example.pattern.ui.screens.homeScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -15,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -53,11 +59,11 @@ fun HomeScreen(
     var triggerConfetti by remember { mutableStateOf(false) }
 
     // Selected date logic
-    val selectedDate = remember(selectedDay.intValue) {
-        today.minusDays(180).plusDays(selectedDay.intValue.toLong())
+    val selectedDate = remember(selectedDay.intValue, dayList) {
+        dayList[selectedDay.intValue].date
     }
     val selectedDbIndex = selectedDate.dayOfWeek.value - 1
-    val selectedDateKey = selectedDate.toString()
+    val selectedDateKey = remember(selectedDate) { selectedDate.toString() }
     // Daily states for this day
     val dailyStates by habitViewModel
         .getDailyStatesForDate(selectedDateKey)
@@ -93,7 +99,8 @@ fun HomeScreen(
             topBar = {
                 Column(
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface)
+                        .background(MaterialTheme.colorScheme.background)
+                        .statusBarsPadding()
                         .fillMaxWidth()
                 ) {
                     HomeTopBar(onMenuClick = onOpenMenuSheet,
@@ -108,7 +115,7 @@ fun HomeScreen(
                         dayList = dayList
                     )
                 }
-            }
+            },
         ) { paddingValues ->
             HabitCards(
                 habits = habits,
@@ -118,6 +125,9 @@ fun HomeScreen(
                 onTimerFinished = { habitCard ->
                     habitViewModel.finishTimer(habitCard.id, selectedDateKey)
                     triggerConfetti = true
+                },
+                onUnfinishTimer = { habitId ->
+                    habitViewModel.unfinishTimer(habitId, selectedDateKey)
                 },
                 onStartTimer = { habitViewModel.startTimer(it.id, selectedDateKey) },
                 onPauseTimer = { habitViewModel.pauseTimer(it.id, selectedDateKey) },
@@ -152,6 +162,3 @@ fun HomeScreen(
         }
     }
 }
-
-
-

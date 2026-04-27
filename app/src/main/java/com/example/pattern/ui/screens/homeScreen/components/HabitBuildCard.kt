@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,6 +49,7 @@ fun HabitBuildCard(
     onPauseTimer: (HabitCardModel) -> Unit,
     onResumeTimer: (HabitCardModel) -> Unit,
     onTimerFinished: (HabitCardModel) -> Unit,
+    onUnfinishTimer: (Int) -> Unit,
     onCardClick: (Int) -> Unit,
 ) {
     val isDark = isSystemInDarkTheme()
@@ -147,18 +149,34 @@ fun HabitBuildCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        color = accentColor.copy(alpha = if (isDark) 0.20f else 0.12f),
-                        shape = CircleShape
-                    )
+                modifier = Modifier.size(56.dp)
             ) {
-                Text(
-                    text = habit.iconEmoji.orEmpty(),
-                    fontSize = 28.sp,
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = accentColor.copy(alpha = if (isDark) 0.20f else 0.12f),
+                            shape = CircleShape
+                        )
+                ) {
+                    Text(
+                        text = habit.iconEmoji.orEmpty(),
+                        fontSize = 28.sp,
+                    )
+                }
+
+                if (habit.currentStreak > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                    ) {
+                        StreakBadge(
+                            streak = habit.currentStreak,
+                            isStreakActive = habit.isCompleted
+                        )
+                    }
+                }
             }
             Spacer(Modifier.width(16.dp))
             Column(
@@ -177,27 +195,17 @@ fun HabitBuildCard(
                         letterSpacing = (-0.5).sp
                     )
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (totalMillis > 0) {
-                        Text(
-                            text = if (habit.isCompleted) "Goal Reached" else formattedTime,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontFeatureSettings = "num",
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = Color.Gray,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                    }
-                    if (habit.currentStreak > 0) {
-                        StreakBadge(streak = habit.currentStreak)
-                    }
+                if (totalMillis > 0) {
+                    Text(
+                        text = if (habit.isCompleted) "Goal Reached" else formattedTime,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFeatureSettings = "num",
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = Color.Gray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
             TimerRing(
@@ -208,7 +216,11 @@ fun HabitBuildCard(
                 isPaused = habit.timerStartTime != null && habit.timerPauseTime != null,
                 showSuccess = showSuccess.value,
                 onClick = {
-                    if (!isToday || habit.isCompleted) return@TimerRing
+                    if (!isToday) return@TimerRing
+                    if (habit.isCompleted) {
+                        onUnfinishTimer(habit.id)
+                        return@TimerRing
+                    }
                     val isRunning = habit.timerStartTime != null && habit.timerPauseTime == null
                     val isPaused = habit.timerStartTime != null && habit.timerPauseTime != null
                     when {

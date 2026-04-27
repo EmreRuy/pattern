@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.StarOutline
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.getValue
@@ -53,163 +54,200 @@ import com.example.pattern.ui.screens.proLocked.LockedProWrapper
 fun HabitCardDetailsScreen(
     habit: HabitDetailsUi,
     onBack: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit = {}
 ) {
     val accentColor = habit.accentColor
     val scrollState = rememberScrollState()
     var showDeleteSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val haptic = LocalHapticFeedback.current
     val isUserPro = false
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = habit.name.uppercase(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Rounded.ArrowBackIos,
-                            contentDescription = null
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBackIos,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* edit */ }) {
-                        Icon(Icons.Rounded.Edit, contentDescription = null)
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Rounded.Edit,
+                            contentDescription = "Edit Habit",
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                     IconButton(onClick = { showDeleteSheet = true }) {
-                        Icon(Icons.Rounded.DeleteOutline, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Rounded.DeleteOutline,
+                            contentDescription = "Delete Habit",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { padding ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Spacer(Modifier.height(16.dp))
-
-            // 🔥 STREAK CARD
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.padding(vertical = 28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Spacer(Modifier.height(16.dp))
+
+                // 🔥 STREAK CARD
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(32.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    tonalElevation = 2.dp
                 ) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(68.dp)
-                            .background(accentColor.copy(alpha = 0.12f), CircleShape),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        modifier = Modifier.padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = habit.icon ?: "⭐", fontSize = 30.sp)
-                    }
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .background(accentColor.copy(alpha = 0.15f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = habit.icon ?: "⭐",
+                                fontSize = 36.sp
+                            )
+                        }
 
-                    Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(20.dp))
 
-                    Text(
-                        text = habit.currentStreak.toString(),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontWeight = FontWeight.Black
-                        )
-                    )
-
-                    Spacer(Modifier.height(6.dp))
-
-                    Surface(
-                        color = accentColor.copy(alpha = 0.15f),
-                        shape = CircleShape
-                    ) {
                         Text(
-                            text = "DAY STREAK",
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = accentColor
+                            text = habit.currentStreak.toString(),
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = (-2).sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+
+                        Spacer(Modifier.height(4.dp))
+
+                        Surface(
+                            color = accentColor.copy(alpha = 0.2f),
+                            shape = CircleShape
+                        ) {
+                            Text(
+                                text = "DAY STREAK",
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = accentColor
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(40.dp))
+                Spacer(Modifier.height(32.dp))
 
-            SectionHeader("ACTIVITY PULSE")
+                SectionHeader("ACTIVITY PULSE")
 
-            Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
 
-            LockedProWrapper(isLocked = !isUserPro) {
+                LockedProWrapper(isLocked = !isUserPro) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = if (!isUserPro) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Rounded.BarChart,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.outline,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    "Heatmap Visualization",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(32.dp))
+
+                SectionHeader("MANAGEMENT")
+
+                Spacer(Modifier.height(16.dp))
+
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(170.dp),
-                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            "Heatmap Visualization",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.outline
+                    Column(
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    ) {
+                        DetailRow(Icons.Rounded.StarOutline, "Goal", habit.goal)
+                        DetailRow(Icons.Rounded.Repeat, "Frequency", habit.frequency)
+                        DetailRow(Icons.Rounded.BarChart, "Total", habit.totalCompletions.toString())
+                        DetailRow(
+                            Icons.Rounded.CalendarToday,
+                            "Created",
+                            habit.createdOn,
+                            isLast = true
                         )
                     }
                 }
+
+                Spacer(Modifier.height(40.dp))
             }
-
-            Spacer(Modifier.height(32.dp))
-
-            SectionHeader("MANAGEMENT")
-
-            Spacer(Modifier.height(12.dp))
-
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow
-            ) {
-                Column(
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    DetailRow(Icons.Rounded.StarOutline, "Goal", habit.goal)
-                    DetailRow(Icons.Rounded.Repeat, "Frequency", habit.frequency)
-                    DetailRow(Icons.Rounded.BarChart, "Total", habit.totalCompletions.toString())
-                    DetailRow(
-                        Icons.Rounded.CalendarToday,
-                        "Created",
-                        habit.createdOn,
-                        isLast = true
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(40.dp))
         }
 
         if (showDeleteSheet) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             ModalBottomSheet(
                 onDismissRequest = { showDeleteSheet = false },
                 sheetState = sheetState,
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surface,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
                 DeleteHabitSheetContent(
                     onCancel = { showDeleteSheet = false },

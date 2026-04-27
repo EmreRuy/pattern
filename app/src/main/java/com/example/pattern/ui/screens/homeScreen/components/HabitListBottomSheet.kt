@@ -33,21 +33,28 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.utils.ExperienceUtils
+import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
+import com.example.pattern.ui.screens.settings.MossGreen
 
 @Composable
 fun HabitListSheetContent(
     habits: List<Habit>,
+    dailyStates: List<HabitDailyState>,
     onHabitClick: (Int) -> Unit
 ) {
     HabitListBottomSheet(
         habits = habits,
+        dailyStates = dailyStates,
         onHabitClick = onHabitClick
     )
 }
+
 @Composable
 fun HabitListBottomSheet(
     habits: List<Habit>,
+    dailyStates: List<HabitDailyState>,
     onHabitClick: (Int) -> Unit
 ) {
     Column(
@@ -56,13 +63,13 @@ fun HabitListBottomSheet(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-       CardHeader("Your Habits")
+        CardHeader("Your Habits")
         Spacer(modifier = Modifier.height(16.dp))
         if (habits.isEmpty()) {
             EmptyHabitMessage()
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier.fillMaxHeight(0.7f), // Limit height for better sheet behavior
                 contentPadding = PaddingValues(bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -70,8 +77,10 @@ fun HabitListBottomSheet(
                     items = habits,
                     key = { it.id }
                 ) { habit ->
+                    val dailyState = dailyStates.find { it.habitId == habit.id }
                     HabitListItem(
                         habit = habit,
+                        dailyState = dailyState,
                         onHabitClick = onHabitClick
                     )
                 }
@@ -83,13 +92,14 @@ fun HabitListBottomSheet(
 @Composable
 fun HabitListItem(
     habit: Habit,
+    dailyState: HabitDailyState?,
     onHabitClick: (Int) -> Unit
 ) {
     val accentColor = remember(habit.accentColorHex) {
         Color(habit.accentColorHex.toColorInt())
     }
     val isDark = isSystemInDarkTheme()
-    val containerColor =  if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
+    val containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -133,18 +143,33 @@ fun HabitListItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        // XP Section
-        Row(verticalAlignment = Alignment.CenterVertically) {
+
+        // Habit XP Score
+        val xpScore = remember(habit, dailyState) {
+            ExperienceUtils.calculateHabitXP(habit, dailyState ?: HabitDailyState(habitId = habit.id, date = ""))
+        }
+        
+        // Let's also show the max XP if it's 0, so they know what it's worth.
+        val maxXP = remember(habit) {
+             val dummyState = when (habit.type) {
+                HabitType.BUILD -> HabitDailyState(habitId = habit.id, date = "", isCompleted = true)
+                HabitType.TASK, HabitType.QUIT -> HabitDailyState(habitId = habit.id, date = "", isTaskCompleted = true)
+            }
+            ExperienceUtils.calculateHabitXP(habit, dummyState)
+        }
+
+        Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = "12,312",
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary
+                text = if (xpScore > 0) "$xpScore" else "$maxXP",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = if (xpScore > 0) MossGreen else Color.Gray.copy(alpha = 0.5f)
+                )
             )
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "XP",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
-                color = Color.Gray
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

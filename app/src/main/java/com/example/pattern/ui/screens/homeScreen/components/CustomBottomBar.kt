@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,13 +32,12 @@ fun CustomBottomBar(
     Box {
         NavigationBar(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            tonalElevation = 6.dp
+            tonalElevation = 6.dp,
+            windowInsets = NavigationBarDefaults.windowInsets
         ) {
 
             mainItems.forEach { item ->
-
                 val selected = currentRoute == item.route
-
                 NavigationBarItem(
                     selected = selected,
                     onClick = { onItemClick(item) },
@@ -78,4 +78,3 @@ fun CustomBottomBar(
         }
     }
 }
-

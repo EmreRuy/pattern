@@ -38,13 +38,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.ui.screens.settings.MossGreen
+import com.example.pattern.utils.CalendarDayModel
 
 @Composable
 fun HomeCalendarSelector(
     listState: LazyListState,
     selectedDay: Int,
     onDaySelected: (Int) -> Unit,
-    dayList: List<Pair<String, String>>
+    dayList: List<CalendarDayModel>
 ) {
     LazyRow(
         modifier = Modifier
@@ -53,7 +54,10 @@ fun HomeCalendarSelector(
         state = listState,
         flingBehavior = ScrollableDefaults.flingBehavior()
     ) {
-        itemsIndexed(dayList) { index, (dayLetter, dayNumber) ->
+        itemsIndexed(
+            items = dayList,
+            key = { _, day -> day.fullDateString }
+        ) { index, day ->
             Box(
                 modifier = Modifier
                     .fillParentMaxWidth(1f / 7f)
@@ -65,8 +69,8 @@ fun HomeCalendarSelector(
             ) {
                 CalendarItem(
                     isSelected = selectedDay == index,
-                    dayLetter = dayLetter,
-                    dayNumber = dayNumber
+                    dayLetter = day.dayLetter,
+                    dayNumber = day.dayNumber
                 )
             }
         }

@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+import com.example.pattern.utils.ExperienceUtils
+import com.example.pattern.utils.LevelInfo
 import com.example.pattern.utils.calculateStreak
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 data class HomeUiState(
     val habitList: List<Habit> = emptyList(),
     val streaks: Map<Int, Int> = emptyMap(),
+    val levelInfo: LevelInfo = ExperienceUtils.getLevelInfo(0),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -38,24 +41,35 @@ class HabitViewModel @Inject constructor(
       The StateFlow that the HomeScreen will observe. It contains the list of all habits
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val homeUiState: StateFlow<HomeUiState> = repository.getAllHabitsStream()
-        .flatMapLatest { habits ->
-            val streakFlows = habits.map { habit ->
-                repository.getDailyStatesForHabit(habit.id).map { states ->
-                    habit.id to calculateStreak(habit, states).currentStreak
-                }
-            }
-            if (streakFlows.isEmpty()) {
-                kotlinx.coroutines.flow.flowOf(HomeUiState(habitList = habits))
-            } else {
-                combine(streakFlows) { streakPairs ->
-                    HomeUiState(
-                        habitList = habits,
-                        streaks = streakPairs.toMap()
-                    )
-                }
+    val homeUiState: StateFlow<HomeUiState> = combine(
+        repository.getAllHabitsStream(),
+        repository.getSettingsStream()
+    ) { habits, settings ->
+        habits to (settings?.totalXP ?: 0)
+    }.flatMapLatest { (habits, totalXP) ->
+        val levelInfo = ExperienceUtils.getLevelInfo(totalXP)
+        val streakFlows = habits.map { habit ->
+            repository.getDailyStatesForHabit(habit.id).map { states ->
+                habit.id to calculateStreak(habit, states).currentStreak
             }
         }
+        if (streakFlows.isEmpty()) {
+            kotlinx.coroutines.flow.flowOf(
+                HomeUiState(
+                    habitList = habits,
+                    levelInfo = levelInfo
+                )
+            )
+        } else {
+            combine(streakFlows) { streakPairs ->
+                HomeUiState(
+                    habitList = habits,
+                    streaks = streakPairs.toMap(),
+                    levelInfo = levelInfo
+                )
+            }
+        }
+    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -187,29 +201,63 @@ class HabitViewModel @Inject constructor(
 
     fun finishTimer(habitId: Int, date: String) {
         viewModelScope.launch {
-            // Verify habit exists first
-            repository.getHabitOnce(habitId) ?: return@launch
+            val habit = repository.getHabitOnce(habitId) ?: return@launch
+            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: HabitDailyState(habitId = habitId, date = date)
+            
+            if (currentDaily.isCompleted) return@launch
 
-            val currentDaily = repository.getDailyStateOnce(habitId, date)
-                ?: HabitDailyState(
-                    habitId = habitId,
-                    date = date
-                )
             val updated = currentDaily.copy(
                 isCompleted = true,
                 timerStartTime = null,
                 timerPauseTime = null
             )
             repository.upsertDailyState(updated)
+            
+            val xp = ExperienceUtils.calculateHabitXP(habit, updated)
+            repository.addXP(xp)
+        }
+    }
+
+    fun unfinishTimer(habitId: Int, date: String) {
+        viewModelScope.launch {
+            val habit = repository.getHabitOnce(habitId) ?: return@launch
+            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: return@launch
+            
+            if (!currentDaily.isCompleted) return@launch
+
+            val updated = currentDaily.copy(
+                isCompleted = false
+            )
+            repository.upsertDailyState(updated)
+            
+            val xp = ExperienceUtils.calculateHabitXP(habit, currentDaily)
+            repository.addXP(-xp)
         }
     }
 
     //For the task type of habit completion
     fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
         viewModelScope.launch {
-            // Verify habit exists first
-            repository.getHabitOnce(habitId) ?: return@launch
+            val habit = repository.getHabitOnce(habitId) ?: return@launch
+            val currentDaily = repository.getDailyStateOnce(habitId, date)
+            
+            // Only award XP if transitioning from not completed to completed
+            val wasCompleted = when(habit.type) {
+                HabitType.TASK, HabitType.QUIT -> currentDaily?.isTaskCompleted == true
+                HabitType.BUILD -> currentDaily?.isCompleted == true
+            }
+
             repository.setTaskCompleted(habitId, date, completed)
+            
+            if (completed && !wasCompleted) {
+                val updatedState = repository.getDailyStateOnce(habitId, date) ?: return@launch
+                val xp = ExperienceUtils.calculateHabitXP(habit, updatedState)
+                repository.addXP(xp)
+            } else if (!completed && wasCompleted) {
+                val updatedState = currentDaily ?: return@launch
+                val xp = ExperienceUtils.calculateHabitXP(habit, updatedState)
+                repository.addXP(-xp) // Subtract XP when un-completing
+            }
         }
     }
     fun ensureDailyStateExists(habitId: Int, date: String) {
