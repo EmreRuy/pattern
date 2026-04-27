@@ -25,7 +25,9 @@ fun SaveHabitButton(
     emoji: String,
     habitViewModel: HabitViewModel,
     onSaveSuccess: () -> Unit,
-    accentColorHex: String
+    accentColorHex: String,
+    reminderEnabled: Boolean,
+    reminderTime: String?
 ) {
     Box(modifier = Modifier.padding(bottom = 16.dp)) {
         Button(
@@ -44,7 +46,8 @@ fun SaveHabitButton(
                     durationMinutes = if (habitTypeEnum == HabitType.BUILD) durationMinutes else 0,
                     selectedDays = dayListBooleans,
                     iconCode = emoji,
-                    accentColorHex = accentColorHex
+                    accentColorHex = accentColorHex,
+                    reminderTime = if (reminderEnabled) reminderTime else null
                 )
                 onSaveSuccess()
             },

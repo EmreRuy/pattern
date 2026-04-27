@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SettingsDao {
-    @Query("SELECT * FROM app_settings WHERE id = 0")
-    fun getSettingsFlow(): Flow<SettingsEntity?>
-
-    @Query("SELECT * FROM app_settings WHERE id = 0")
+    @Query("SELECT * FROM settings_table LIMIT 1")
     suspend fun getSettingsOnce(): SettingsEntity?
 
-    @Upsert
+    @Query("SELECT * FROM settings_table LIMIT 1")
+    fun getSettingsFlow(): Flow<SettingsEntity?>
+
+    @Upsert // Modern Room alternative to @Insert(onConflict = REPLACE)
     suspend fun upsertSettings(settings: SettingsEntity)
 }

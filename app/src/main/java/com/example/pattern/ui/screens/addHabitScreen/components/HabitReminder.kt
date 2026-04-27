@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun HabitReminderCard(
-    reminderTime: String, // e.g., "08:00 AM"
+    reminderTime: String,
     isEnabled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
     onOpenTimePicker: () -> Unit

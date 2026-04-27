@@ -26,6 +26,7 @@ import com.example.pattern.ui.screens.addHabitScreen.components.HandleHabitNameS
 import com.example.pattern.ui.screens.addHabitScreen.components.HandleHabitTypeSheet
 import com.example.pattern.ui.screens.addHabitScreen.components.SaveHabitButton
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
+import com.example.pattern.ui.screens.settings.PatternTimePickerDialog
 import java.time.DayOfWeek
 
 @Composable
@@ -52,10 +53,13 @@ fun AddHabitScreen(
     var durationHours by remember { mutableIntStateOf(0) }
     var durationMinutes by remember { mutableIntStateOf(30) }
     var selectedColor by remember { mutableStateOf("#77DD77") }
+    var reminderEnabled by remember { mutableStateOf(false) }
+    var reminderTime by remember { mutableStateOf("09:00") }
     var showEmojiSheet by remember { mutableStateOf(false) }
     var showColorSheet by remember { mutableStateOf(false) }
     var showNameSheet by remember { mutableStateOf(false) }
     var showHabitTypeSheet by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     Scaffold { padding ->
         Box(
@@ -94,7 +98,12 @@ fun AddHabitScreen(
                     selectedType = habitType,
                     onOpen = { showHabitTypeSheet = true }
                 )
-                HabitReminderCard(isEnabled = true, onEnabledChange = {}, reminderTime = "12") { }
+                HabitReminderCard(
+                    isEnabled = reminderEnabled,
+                    onEnabledChange = { reminderEnabled = it },
+                    reminderTime = reminderTime,
+                    onOpenTimePicker = { showTimePicker = true }
+                )
                 SaveHabitButton(
                     habitName = habitName,
                     habitType = habitType,
@@ -104,7 +113,9 @@ fun AddHabitScreen(
                     emoji = emoji,
                     habitViewModel = habitViewModel,
                     onSaveSuccess = onSaveSuccess,
-                    accentColorHex = selectedColor
+                    accentColorHex = selectedColor,
+                    reminderEnabled = reminderEnabled,
+                    reminderTime = reminderTime
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -141,6 +152,17 @@ fun AddHabitScreen(
                 onEmojiChange = { emoji = it },
                 onDismiss = { showEmojiSheet = false }
             )
+
+            if (showTimePicker) {
+                PatternTimePickerDialog(
+                    initialTime = reminderTime,
+                    onTimeSelected = {
+                        reminderTime = it
+                        showTimePicker = false
+                    },
+                    onDismiss = { showTimePicker = false }
+                )
+            }
         }
     }
 }

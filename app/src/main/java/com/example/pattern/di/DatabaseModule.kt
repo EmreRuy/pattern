@@ -28,7 +28,8 @@ object DatabaseModule {
             HabitDatabase::class.java,
             "habit_database"
         )
-            .fallbackToDestructiveMigration(false) // Using this for only while developing the app
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .fallbackToDestructiveMigration(true)
             .build()
     }
 

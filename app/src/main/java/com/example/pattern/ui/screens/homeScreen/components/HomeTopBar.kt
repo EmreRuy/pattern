@@ -75,12 +75,12 @@ fun HomeTopBar(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.width(2.dp))
-                Icon(
+             /*  Icon(
                     painter = painterResource(id = R.drawable.ic_crown),
                     contentDescription = "Upgrade to Premium",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.tertiary
-                )
+                ) */
             }
             Icon(
                 imageVector = Icons.Rounded.SettingsSuggest,

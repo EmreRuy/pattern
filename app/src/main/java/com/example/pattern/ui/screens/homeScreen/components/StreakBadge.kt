@@ -17,24 +17,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun StreakBadge(streakCount: Int) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Whatshot,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
-            )
-            Text(
-                text = streakCount.toString(),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray,
-                    fontSize = 10.sp,
-                )
-            )
-        }
+fun StreakBadge(streak: Int) {
+    if (streak <= 0) return
+
+    Row(
+        modifier = Modifier.padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Whatshot,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = Color(0xFFFF9800) // Orange for fire
+        )
+        Text(
+            text = streak.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }

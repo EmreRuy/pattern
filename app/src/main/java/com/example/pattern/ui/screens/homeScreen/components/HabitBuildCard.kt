@@ -195,6 +195,9 @@ fun HabitBuildCard(
                             modifier = Modifier.weight(1f, fill = false)
                         )
                     }
+                    if (habit.currentStreak > 0) {
+                        StreakBadge(streak = habit.currentStreak)
+                    }
                 }
             }
             TimerRing(

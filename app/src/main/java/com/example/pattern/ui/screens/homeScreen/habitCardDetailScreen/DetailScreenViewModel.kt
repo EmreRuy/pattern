@@ -8,12 +8,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.repository.HabitRepository
 import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.utils.calculateStreak
+import com.example.pattern.utils.toUiDate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
-import kotlinx.coroutines.cancel
+import com.example.pattern.notifications.ReminderManager
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -24,39 +27,43 @@ import androidx.core.graphics.toColorInt
 @HiltViewModel
 class HabitDetailsViewModel @Inject constructor(
     private val repository: HabitRepository,
+    private val reminderManager: ReminderManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val habitId: Int = checkNotNull(savedStateHandle["habitId"])
 
     val habit: StateFlow<HabitDetailsUi?> =
-        repository.getHabitStream(habitId)
-            .map { habit -> habit?.toUi() }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5000),
-                null
-            )
+        combine(
+            repository.getHabitStream(habitId),
+            repository.getDailyStatesForHabit(habitId)
+        ) { habit, dailyStates ->
+            habit?.toUi(dailyStates)
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            null
+        )
 
     fun deleteHabit(habitId: Int) {
         viewModelScope.launch {
-            repository.getHabitStream(habitId).collect { habit ->
-                if (habit != null) {
-                    repository.deleteHabit(habit)
-                }
-                cancel()
+            val habitToDelete = repository.getHabitOnce(habitId)
+            if (habitToDelete != null) {
+                repository.deleteHabit(habitToDelete)
+                reminderManager.cancelReminder(habitId)
             }
         }
     }
 
-    private fun Habit.toUi(): HabitDetailsUi {
+    private fun Habit.toUi(dailyStates: List<HabitDailyState>): HabitDetailsUi {
+        val streakInfo = calculateStreak(this, dailyStates)
         return HabitDetailsUi(
             id = id,
             name = name,
             icon = iconCode,
             accentColor = Color(accentColorHex.toColorInt()),
-            currentStreak = if (isCompleted) 1 else 0, // placeholder
-            totalCompletions = 0, // placeholder
+            currentStreak = streakInfo.currentStreak,
+            totalCompletions = streakInfo.totalCompletions,
             goal = goalLabel(type, durationInMinutes),
             frequency = frequencyLabel(selectedDays),
             createdOn = createdAt.toUiDate()
@@ -76,14 +83,6 @@ fun goalLabel(type: HabitType, minutes: Int?): String {
         m > 0 -> "$m m"
         else -> ""
     }
-}
-
-fun Long.toUiDate(): String {
-    val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
-    return Instant.ofEpochMilli(this)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
-        .format(formatter)
 }
 
 fun frequencyLabel(selectedDays: List<Boolean>): String {

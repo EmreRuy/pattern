@@ -18,4 +18,5 @@ data class HabitCardModel(
     val timerStartTime: Long? = null,
     val timerPauseTime: Long? = null,
     val isCompleted: Boolean = false,
+    val currentStreak: Int = 0
 )

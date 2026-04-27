@@ -10,7 +10,10 @@ import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.model.HabitCardModel
 import com.example.pattern.data.local.entity.Habit as LocalHabit
 
-fun LocalHabit.toCardModel(daily: HabitDailyState?): HabitCardModel {
+fun LocalHabit.toCardModel(
+    daily: HabitDailyState?,
+    currentStreak: Int = 0
+): HabitCardModel {
     val icon = when (type) {
         HabitType.BUILD -> Icons.Default.Build
         HabitType.QUIT -> Icons.Default.CheckCircle
@@ -33,7 +36,8 @@ fun LocalHabit.toCardModel(daily: HabitDailyState?): HabitCardModel {
         timerPauseTime = daily?.timerPauseTime,
 
         // for the timer completion
-        isCompleted = daily?.isCompleted ?: false
+        isCompleted = daily?.isCompleted ?: false,
+        currentStreak = currentStreak
     )
 }
 

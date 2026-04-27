@@ -1,30 +1,30 @@
 package com.example.pattern.data.local
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.local.entity.SettingsEntity
 import com.example.pattern.data.repository.HabitRepository
-import com.example.pattern.data.worker.ReminderWorker
+import com.example.pattern.notifications.ReminderManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
+
+import com.example.pattern.utils.calculateStreak
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 
 data class HomeUiState(
     val habitList: List<Habit> = emptyList(),
+    val streaks: Map<Int, Int> = emptyMap(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -32,14 +32,29 @@ data class HomeUiState(
 @HiltViewModel
 class HabitViewModel @Inject constructor(
     private val repository: HabitRepository,
-    private val application: Application
+    private val reminderManager: ReminderManager
 ) : ViewModel() {
     /*
       The StateFlow that the HomeScreen will observe. It contains the list of all habits
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     val homeUiState: StateFlow<HomeUiState> = repository.getAllHabitsStream()
-        .map { habits ->
-            HomeUiState(habitList = habits)
+        .flatMapLatest { habits ->
+            val streakFlows = habits.map { habit ->
+                repository.getDailyStatesForHabit(habit.id).map { states ->
+                    habit.id to calculateStreak(habit, states).currentStreak
+                }
+            }
+            if (streakFlows.isEmpty()) {
+                kotlinx.coroutines.flow.flowOf(HomeUiState(habitList = habits))
+            } else {
+                combine(streakFlows) { streakPairs ->
+                    HomeUiState(
+                        habitList = habits,
+                        streaks = streakPairs.toMap()
+                    )
+                }
+            }
         }
         .stateIn(
             scope = viewModelScope,
@@ -58,7 +73,8 @@ class HabitViewModel @Inject constructor(
         durationMinutes: Int,
         selectedDays: List<Boolean>,
         iconCode: String,
-        accentColorHex: String
+        accentColorHex: String,
+        reminderTime: String? = null
     ) {
         if (name.isBlank()) {
             println("Error: Habit name cannot be empty.")
@@ -78,12 +94,14 @@ class HabitViewModel @Inject constructor(
             iconCode = iconCode,
             durationInMinutes = totalDurationInMinutes,
             selectedDays = selectedDays,
-            accentColorHex = accentColorHex
+            accentColorHex = accentColorHex,
+            reminderTime = reminderTime
         )
         viewModelScope.launch {
             try {
-                repository.insertHabit(newHabit)
-                scheduleHabitReminder(newHabit)
+                val id = repository.upsertHabit(newHabit)
+                val habitWithId = newHabit.copy(id = id.toInt())
+                reminderManager.scheduleReminder(habitWithId)
                 println("Habit saved and reminder scheduled: ${newHabit.name}")
 
             } catch (e: Exception) {
@@ -106,33 +124,25 @@ class HabitViewModel @Inject constructor(
             initialValue = SettingsEntity()
         )
 
-    //Notifications quite hours // reminder
-    fun scheduleHabitReminder(habit: Habit) {
-        val workData = workDataOf("HABIT_NAME" to habit.name)
-
-        val reminderRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
-            .setInitialDelay(10, TimeUnit.SECONDS)
-            .setInputData(workData)
-            .addTag("habit_${habit.id}")
-            .build()
-
-        // Access the context directly from the application object here
-        WorkManager.getInstance(application.applicationContext).enqueueUniqueWork(
-            "reminder_${habit.id}",
-            ExistingWorkPolicy.REPLACE,
-            reminderRequest
-        )
-    }
-
     fun updateHabit(habit: Habit) {
         viewModelScope.launch {
             repository.updateHabit(habit)
             // Reschedule to update the notification data (e.g. new name)
-            scheduleHabitReminder(habit)
+            reminderManager.scheduleReminder(habit)
+        }
+    }
+
+    fun deleteHabit(habit: Habit) {
+        viewModelScope.launch {
+            repository.deleteHabit(habit)
+            reminderManager.cancelReminder(habit.id)
         }
     }
     fun startTimer(habitId: Int, date: String) {
         viewModelScope.launch {
+            // Verify habit exists first to avoid FK constraint violation
+            repository.getHabitOnce(habitId) ?: return@launch
+            
             val currentDaily = repository.getDailyStateOnce(habitId, date)
             if (currentDaily?.isCompleted == true) return@launch
             val updated = HabitDailyState(
@@ -177,6 +187,9 @@ class HabitViewModel @Inject constructor(
 
     fun finishTimer(habitId: Int, date: String) {
         viewModelScope.launch {
+            // Verify habit exists first
+            repository.getHabitOnce(habitId) ?: return@launch
+
             val currentDaily = repository.getDailyStateOnce(habitId, date)
                 ?: HabitDailyState(
                     habitId = habitId,
@@ -194,11 +207,16 @@ class HabitViewModel @Inject constructor(
     //For the task type of habit completion
     fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
         viewModelScope.launch {
+            // Verify habit exists first
+            repository.getHabitOnce(habitId) ?: return@launch
             repository.setTaskCompleted(habitId, date, completed)
         }
     }
     fun ensureDailyStateExists(habitId: Int, date: String) {
         viewModelScope.launch {
+            // Verify habit exists first
+            repository.getHabitOnce(habitId) ?: return@launch
+
             val current = repository.getDailyStateOnce(habitId, date)
             if (current == null) {
                 repository.upsertDailyState(

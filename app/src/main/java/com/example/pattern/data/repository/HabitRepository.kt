@@ -1,12 +1,14 @@
 package com.example.pattern.data.repository
 
+import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.dao.SettingsDao
 import com.example.pattern.data.local.entity.SettingsEntity
-import jakarta.inject.Inject
-import jakarta.inject.Singleton
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 
 // This one is for managing habit data
@@ -37,27 +39,42 @@ class HabitRepository @Inject constructor(
         return habitDao.getHabit(id)
     }
 
+    suspend fun getHabitOnce(id: Int): Habit? {
+        return habitDao.getHabitOnce(id)
+    }
+
     /**
     This will be called when the user clicks 'Save' on the AddHabitScreen.
      */
-    suspend fun insertHabit(habit: Habit) {
-        habitDao.insert(habit)
+    suspend fun upsertHabit(habit: Habit): Long {
+        return habitDao.upsertHabit(habit)
     }
 
     suspend fun updateHabit(habit: Habit) {
-        habitDao.update(habit)
+        habitDao.updateHabit(habit)
     }
 
     suspend fun deleteHabit(habit: Habit) {
-        habitDao.delete(habit)
+        habitDao.deleteHabit(habit)
     }
 
     //For HabitDaily State, countdown timer problem fixed
     fun getDailyStatesForDate(date: String): Flow<List<HabitDailyState>> =
         habitDao.getDailyStatesForDate(date)
 
-    suspend fun upsertDailyState(state: HabitDailyState) =
-        habitDao.upsertDailyState(state)
+    fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>> =
+        habitDao.getDailyStatesForHabit(habitId)
+
+    suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState> =
+        habitDao.getDailyStatesForHabitOnce(habitId)
+
+    suspend fun upsertDailyState(state: HabitDailyState) {
+        try {
+            habitDao.upsertDailyState(state)
+        } catch (_: SQLiteConstraintException) {
+            Log.w("HabitRepository", "Foreign key violation: Habit ${state.habitId} likely deleted. Ignoring upsert.")
+        }
+    }
 
     suspend fun getDailyStateOnce(habitId: Int, date: String): HabitDailyState? =
         habitDao.getDailyStateOnce(habitId, date)

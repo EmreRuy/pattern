@@ -109,7 +109,9 @@ fun HabitTaskCard(
                         .offset(x = 24.dp, y = (-4).dp)
                         .wrapContentSize(unbounded = true)
                 ) {
-                    StreakBadge(1)
+                    if (habit.currentStreak > 0) {
+                        StreakBadge(streak = habit.currentStreak)
+                    }
                 }
             }
             Spacer(Modifier.width(16.dp))

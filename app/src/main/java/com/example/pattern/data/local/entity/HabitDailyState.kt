@@ -1,10 +1,21 @@
 package com.example.pattern.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 
 @Entity(
     tableName = "habit_daily_state",
-    primaryKeys = ["habitId", "date"]
+    primaryKeys = ["habitId", "date"],
+    foreignKeys = [
+        ForeignKey(
+            entity = Habit::class,
+            parentColumns = ["id"],
+            childColumns = ["habitId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["habitId"])]
 )
 data class HabitDailyState(
     val habitId: Int,

@@ -63,12 +63,13 @@ fun HomeScreen(
         .getDailyStatesForDate(selectedDateKey)
         .collectAsStateWithLifecycle(initialValue = emptyList())
     // Build mapped habit list
-    val habits = remember(selectedDateKey, uiState.habitList, dailyStates) {
+    val habits = remember(selectedDateKey, uiState.habitList, dailyStates, uiState.streaks) {
         uiState.habitList
             .filter { it.selectedDays.getOrNull(selectedDbIndex) == true }
             .map { habit ->
                 val daily = dailyStates.firstOrNull { it.habitId == habit.id }
-                habit.toCardModel(daily)
+                val streak = uiState.streaks[habit.id] ?: 0
+                habit.toCardModel(daily, streak)
             }
     }
     // daily states exist for mapped habits
