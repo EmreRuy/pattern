@@ -2,13 +2,9 @@ package com.example.pattern.ui.screens.homeScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -18,9 +14,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -36,6 +32,7 @@ import com.example.pattern.utils.generateNext365Days
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,18 +46,31 @@ fun HomeScreen(
 ) {
     val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
     val today = remember { LocalDate.now(ZoneId.systemDefault()) }
-    val selectedDay = remember { mutableIntStateOf(180) }
-    val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = selectedDay.intValue
-    )
     val dayList = remember { generateNext365Days() }
+
+    // Find the index of "today" in the generated list
+    val todayIndex = remember(dayList, today) {
+        val index = dayList.indexOfFirst { it.date == today }
+        if (index != -1) index else dayList.size / 2
+    }
+
+    // Selected day index (global index in dayList)
+    var selectedDayIndex by remember { mutableIntStateOf(todayIndex) }
+
+    // Pager state based on weeks
+    val initialPage = todayIndex / 7
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { dayList.size / 7 }
+    )
+
     // Confetti State
     var explodeConfetti by remember { mutableStateOf(false) }
     var triggerConfetti by remember { mutableStateOf(false) }
 
     // Selected date logic
-    val selectedDate = remember(selectedDay.intValue, dayList) {
-        dayList[selectedDay.intValue].date
+    val selectedDate = remember(selectedDayIndex, dayList) {
+        dayList[selectedDayIndex].date
     }
     val selectedDbIndex = selectedDate.dayOfWeek.value - 1
     val selectedDateKey = remember(selectedDate) { selectedDate.toString() }
@@ -113,9 +123,11 @@ fun HomeScreen(
                         onPremiumClick = onPremiumClick
                     )
                     HomeCalendarSelector(
-                        listState = listState,
-                        selectedDay = selectedDay.intValue,
-                        onDaySelected = { selectedDay.intValue = it },
+                        pagerState = pagerState,
+                        selectedDayIndex = selectedDayIndex,
+                        onDaySelected = { index ->
+                            selectedDayIndex = index
+                        },
                         dayList = dayList
                     )
                 }

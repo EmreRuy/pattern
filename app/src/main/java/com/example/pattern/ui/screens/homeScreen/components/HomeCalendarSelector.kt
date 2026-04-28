@@ -5,20 +5,19 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,39 +38,54 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.ui.screens.settings.MossGreen
 import com.example.pattern.utils.CalendarDayModel
+import java.time.DayOfWeek
 
 @Composable
 fun HomeCalendarSelector(
-    listState: LazyListState,
-    selectedDay: Int,
+    pagerState: PagerState,
+    selectedDayIndex: Int,
     onDaySelected: (Int) -> Unit,
     dayList: List<CalendarDayModel>
 ) {
-    LazyRow(
+    HorizontalPager(
+        state = pagerState,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 4.dp),
-        state = listState,
-        flingBehavior = ScrollableDefaults.flingBehavior()
-    ) {
-        itemsIndexed(
-            items = dayList,
-            key = { _, day -> day.fullDateString }
-        ) { index, day ->
-            Box(
-                modifier = Modifier
-                    .fillParentMaxWidth(1f / 7f)
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) { onDaySelected(index) },
-                contentAlignment = Alignment.Center
-            ) {
-                CalendarItem(
-                    isSelected = selectedDay == index,
-                    dayLetter = day.dayLetter,
-                    dayNumber = day.dayNumber
-                )
+            .padding(bottom = 8.dp),
+        verticalAlignment = Alignment.Top,
+        pageSpacing = 8.dp
+    ) { weekIndex ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            val startDayIndex = weekIndex * 7
+            for (i in 0 until 7) {
+                val dayIndex = startDayIndex + i
+                if (dayIndex >= dayList.size) break
+                
+                val day = dayList[dayIndex]
+                val isWeekend = day.date.dayOfWeek == DayOfWeek.SATURDAY || 
+                               day.date.dayOfWeek == DayOfWeek.SUNDAY
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { onDaySelected(dayIndex) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    CalendarItem(
+                        isSelected = selectedDayIndex == dayIndex,
+                        dayLetter = day.dayLetter,
+                        dayNumber = day.dayNumber,
+                        isWeekend = isWeekend
+                    )
+                }
             }
         }
     }
@@ -81,17 +95,24 @@ fun HomeCalendarSelector(
 fun CalendarItem(
     isSelected: Boolean,
     dayLetter: String,
-    dayNumber: String
+    dayNumber: String,
+    isWeekend: Boolean
 ) {
     val selectionProgress by animateFloatAsState(
         targetValue = if (isSelected) 1f else 0f,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "selection_fade"
     )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.graphicsLayer {
+            translationY = -4.dp.toPx() * selectionProgress
+        }
     ) {
         Text(
             text = dayLetter.uppercase(),
@@ -100,21 +121,24 @@ fun CalendarItem(
                 fontSize = 12.sp,
                 letterSpacing = 0.5.sp
             ),
-            color = MaterialTheme.colorScheme.onSurface
+            color = if (isWeekend) 
+                MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+            else 
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
         // Main Container
         Box(
             modifier = Modifier
-                .width(48.dp)
+                .width(46.dp)
                 .height(84.dp)
-                .clip(RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(23.dp))
                 .background(
-                    MossGreen.copy(alpha = 0.12f * selectionProgress)
+                    MossGreen.copy(alpha = 0.15f * selectionProgress)
                 ),
             contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
@@ -123,22 +147,25 @@ fun CalendarItem(
                     contentDescription = null,
                     modifier = Modifier
                         .size(18.dp)
-                        .graphicsLayer { alpha = if (isSelected) 1f else 0.3f },
+                        .graphicsLayer { 
+                            alpha = 0.3f + (0.7f * selectionProgress)
+                            scaleX = 0.8f + (0.2f * selectionProgress)
+                            scaleY = 0.8f + (0.2f * selectionProgress)
+                        },
                     tint = if (isSelected) MossGreen else MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(12.dp))
                 //circle container
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(34.dp)
                         .graphicsLayer {
-                            //pop animation
-                            scaleX = 0.8f + (0.2f * selectionProgress)
-                            scaleY = 0.8f + (0.2f * selectionProgress)
+                            scaleX = 0.85f + (0.15f * selectionProgress)
+                            scaleY = 0.85f + (0.15f * selectionProgress)
                         }
                         .background(
                             color = if (isSelected)
-                                MaterialTheme.colorScheme.surfaceContainerLowest
+                                MaterialTheme.colorScheme.surface
                             else
                                 Color.Transparent,
                             shape = CircleShape
@@ -154,13 +181,10 @@ fun CalendarItem(
                         color = if (isSelected)
                             MaterialTheme.colorScheme.onSurface
                         else
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }
             }
         }
     }
 }
-
-
-

@@ -35,7 +35,7 @@ object ReviewUtils {
                 val reviewInfo = manager.requestReview()
                 // Launch the review flow
                 manager.launchReview(activity, reviewInfo)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Fallback to Play Store on any error (e.g., no Play Services, quota reached)
                 redirectToPlayStore(context)
             }
@@ -54,7 +54,7 @@ object ReviewUtils {
         
         try {
             context.startActivity(intent)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Fallback for browsers or if Play Store app is missing
             val webIntent = Intent(Intent.ACTION_VIEW).apply {
                 data = "https://play.google.com/store/apps/details?id=$packageName".toUri()
