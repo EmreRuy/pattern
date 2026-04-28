@@ -39,12 +39,12 @@ import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
 import com.example.pattern.ui.screens.settings.MossGreen
 
 @Composable
-fun HabitListSheetContent(
+fun HabitListContent(
     habits: List<Habit>,
     dailyStates: List<HabitDailyState>,
     onHabitClick: (Int) -> Unit
 ) {
-    HabitListBottomSheet(
+    HabitListBody(
         habits = habits,
         dailyStates = dailyStates,
         onHabitClick = onHabitClick
@@ -52,7 +52,7 @@ fun HabitListSheetContent(
 }
 
 @Composable
-fun HabitListBottomSheet(
+fun HabitListBody(
     habits: List<Habit>,
     dailyStates: List<HabitDailyState>,
     onHabitClick: (Int) -> Unit

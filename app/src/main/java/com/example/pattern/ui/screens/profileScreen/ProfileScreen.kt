@@ -37,7 +37,8 @@ fun ProfileScreen(
     viewModel: HabitViewModel = hiltViewModel(),
     onOpenMenuSheet: () -> Unit,
     onOpenSettingsSheet: () -> Unit,
-    onPremiumClick: () -> Unit
+    onPremiumClick: () -> Unit,
+    onOpenSettings: () -> Unit = {}
 ) {
     val scroll = rememberScrollState()
     val uiState by viewModel.homeUiState.collectAsState()
@@ -52,7 +53,7 @@ fun ProfileScreen(
     ) {
         HomeTopBar(
             onMenuClick = onOpenMenuSheet,
-            onSettingsClick = onOpenSettingsSheet,
+            onSettingsClick = onOpenSettings,
             onPremiumClick = onPremiumClick
         )
         if (!isPro) {

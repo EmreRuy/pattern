@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitNameBottomSheet(
+fun HabitNameInput(
     habitName: String,
     onNameChange: (String) -> Unit,
     onDismiss: () -> Unit

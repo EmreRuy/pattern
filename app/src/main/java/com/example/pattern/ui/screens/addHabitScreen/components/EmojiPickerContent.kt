@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 @SuppressLint("ConfigurationScreenWidthHeight")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmojiPickerBottomSheet(
+fun EmojiPickerContent(
     selectedEmoji: String,
     onEmojiSelected: (String) -> Unit,
     onDismiss: () -> Unit

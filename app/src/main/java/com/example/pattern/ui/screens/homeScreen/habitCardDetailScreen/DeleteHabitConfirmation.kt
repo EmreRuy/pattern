@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun DeleteHabitSheetContent(
+fun DeleteHabitConfirmation(
     onCancel: () -> Unit,
     onConfirm: () -> Unit
 ) {

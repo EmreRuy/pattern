@@ -43,7 +43,7 @@ import java.time.ZoneId
 fun HomeScreen(
     habitViewModel: HabitViewModel = hiltViewModel(),
     navController: NavHostController,
-    onOpenMenuSheet: () -> Unit,
+    onOpenMenuScreen: () -> Unit,
     onOpenSettingsSheet: () -> Unit,
     onPremiumClick: () -> Unit
 ) {
@@ -103,10 +103,9 @@ fun HomeScreen(
                         .statusBarsPadding()
                         .fillMaxWidth()
                 ) {
-                    HomeTopBar(onMenuClick = onOpenMenuSheet,
-                        onSettingsClick = onOpenSettingsSheet,
+                    HomeTopBar(onMenuClick = onOpenMenuScreen,
+                        onSettingsClick = { navController.navigate(Screens.Settings.route) },
                         onPremiumClick = onPremiumClick
-
                     )
                     HomeCalendarSelector(
                         listState = listState,

@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import java.time.DayOfWeek
 
 @Composable
-fun HandleHabitTypeSheet(
+fun HabitTypeSheet(
     showSheet: Boolean,
     selectedType: String,
     selectedDays: List<DayOfWeek>,
@@ -25,7 +25,7 @@ fun HandleHabitTypeSheet(
     onDismiss: () -> Unit
 ) {
     if (showSheet) {
-        HabitTypeBottomSheet(
+        HabitTypeContent(
             selectedType = selectedType,
             selectedDays = selectedDays,
             durationHours = durationHours,
@@ -40,7 +40,7 @@ fun HandleHabitTypeSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitTypeBottomSheet(
+fun HabitTypeContent(
     selectedType: String,
     selectedDays: List<DayOfWeek>,
     durationHours: Int,

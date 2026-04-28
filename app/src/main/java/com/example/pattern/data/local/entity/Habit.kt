@@ -17,7 +17,8 @@ data class Habit(
     val accentColorHex: String = "#77DD77",
     val timerStartTime: Long? = null,
     val timerPauseTime: Long? = null,
-    val reminderTime: String? = null // Store in "HH:mm" format
+    val reminderTime: String? = null, // Stores in "HH:mm" format
+    val motivation: String? = null
 )
 
 enum class HabitType {

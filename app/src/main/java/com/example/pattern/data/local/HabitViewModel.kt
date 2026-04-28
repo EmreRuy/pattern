@@ -88,7 +88,8 @@ class HabitViewModel @Inject constructor(
         selectedDays: List<Boolean>,
         iconCode: String,
         accentColorHex: String,
-        reminderTime: String? = null
+        reminderTime: String? = null,
+        motivation: String? = null
     ) {
         if (name.isBlank()) {
             println("Error: Habit name cannot be empty.")
@@ -109,7 +110,8 @@ class HabitViewModel @Inject constructor(
             durationInMinutes = totalDurationInMinutes,
             selectedDays = selectedDays,
             accentColorHex = accentColorHex,
-            reminderTime = reminderTime
+            reminderTime = reminderTime,
+            motivation = if (motivation.isNullOrBlank()) null else motivation.trim()
         )
         viewModelScope.launch {
             try {

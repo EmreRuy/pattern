@@ -3,14 +3,14 @@ package com.example.pattern.ui.screens.addHabitScreen.components
 import androidx.compose.runtime.Composable
 
 @Composable
-fun HandleEmojiSheet(
+fun EmojiPickerSheet(
     showEmojiSheet: Boolean,
     selectedEmoji: String,
     onEmojiChange: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     if (showEmojiSheet) {
-        EmojiPickerBottomSheet(
+        EmojiPickerContent(
             selectedEmoji = selectedEmoji,
             onEmojiSelected = {
                 onEmojiChange(it)

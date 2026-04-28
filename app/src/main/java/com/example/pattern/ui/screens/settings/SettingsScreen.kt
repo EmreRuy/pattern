@@ -28,20 +28,8 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WbTwilight
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
-import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,19 +53,49 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.pattern.data.local.HabitViewModel
-import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsSheetContent() {
-    SettingsBottomSheetContent()
+fun SettingsScreen(onBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "SETTINGS",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 2.sp
+                        )
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowBackIosNew,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            SettingsContent()
+        }
+    }
 }
 @Composable
-fun SettingsBottomSheetContent(
+fun SettingsContent(
     viewModel: HabitViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settingsState.collectAsState()
@@ -94,7 +112,6 @@ fun SettingsBottomSheetContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        item { CardHeader("Settings") }
         item {
             SettingsSection(title = "App preferences") {
                 SettingsNavigationItem(Icons.Default.Palette, "Theme")
@@ -219,7 +236,7 @@ fun PatternTimePickerDialog(
                 .padding(24.dp)
                 .wrapContentSize()
                 .clip(RoundedCornerShape(32.dp)),
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
             tonalElevation = 6.dp
         ) {
             Column(

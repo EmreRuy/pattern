@@ -45,6 +45,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontStyle
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.ui.screens.proLocked.LockedProWrapper
 
@@ -128,7 +131,7 @@ fun HabitCardDetailsScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(32.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     tonalElevation = 2.dp
                 ) {
                     Column(
@@ -189,7 +192,7 @@ fun HabitCardDetailsScreen(
                             .fillMaxWidth()
                             .height(180.dp),
                         shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest,
                         border = if (!isUserPro) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -211,6 +214,40 @@ fun HabitCardDetailsScreen(
                     }
                 }
 
+                if (!habit.motivation.isNullOrBlank()) {
+                    Spacer(Modifier.height(32.dp))
+                    SectionHeader("MOTIVATION")
+                    Spacer(Modifier.height(16.dp))
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "“${habit.motivation}”",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    lineHeight = 28.sp,
+                                    textAlign = TextAlign.Center,
+                                    fontStyle = FontStyle.Italic,
+                                    fontSize = when {
+                                        habit.motivation.length > 150 -> 14.sp
+                                        habit.motivation.length > 80 -> 16.sp
+                                        else -> 20.sp
+                                    }
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
                 Spacer(Modifier.height(32.dp))
 
                 SectionHeader("MANAGEMENT")
@@ -220,7 +257,7 @@ fun HabitCardDetailsScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest
                 ) {
                     Column(
                         modifier = Modifier.padding(vertical = 12.dp)
@@ -249,7 +286,7 @@ fun HabitCardDetailsScreen(
                 containerColor = MaterialTheme.colorScheme.surface,
                 dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
-                DeleteHabitSheetContent(
+                DeleteHabitConfirmation(
                     onCancel = { showDeleteSheet = false },
                     onConfirm = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -302,7 +339,7 @@ private fun DetailRow(
 
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
         }

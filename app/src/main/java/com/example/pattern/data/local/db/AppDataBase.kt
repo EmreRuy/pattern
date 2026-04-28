@@ -12,7 +12,7 @@ import com.example.pattern.data.local.entity.SettingsEntity
 
 @Database(
     entities = [Habit::class, HabitDailyState::class, SettingsEntity::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class) // Tell Room to use my custom Type Converters

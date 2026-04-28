@@ -12,10 +12,14 @@ sealed class Screens(val route: String) {
     object Add : Screens("add_route")
     object Profile : Screens("profile_route")
     object HabitDetail : Screens("habit_detail_route/{habitId}") {
-        // Helper function to dynamically construct the route when navigating
         fun createRoute(habitId: Int) = "habit_detail_route/$habitId"
     }
+    object EditHabit : Screens("edit_habit_route/{habitId}") {
+        fun createRoute(habitId: Int) = "edit_habit_route/$habitId"
+    }
     object List : Screens("list_route")
+    object HabitList : Screens("habit_list_route")
+    object Settings : Screens("settings_route")
 }
 
 data class BottomNavigationItem(
@@ -27,7 +31,7 @@ data class BottomNavigationItem(
     fun bottomNavigationItems(): List<BottomNavigationItem> {
         return listOf(
             BottomNavigationItem(
-                label = "Home",
+                label = "Habits",
                 icon =   Icons.Outlined.LensBlur,
                 route = Screens.Home.route
             ),

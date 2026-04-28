@@ -11,5 +11,6 @@ data class HabitDetailsUi(
     val totalCompletions: Int,
     val goal: String,
     val frequency: String,
-    val createdOn: String
+    val createdOn: String,
+    val motivation: String? = null
 )

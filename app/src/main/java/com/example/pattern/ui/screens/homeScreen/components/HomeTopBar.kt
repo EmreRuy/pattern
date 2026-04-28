@@ -44,7 +44,7 @@ fun HomeTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
+              .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -52,7 +52,7 @@ fun HomeTopBar(
                 imageVector = Icons.Default.Menu,
                 contentDescription = "Menu",
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(30.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null

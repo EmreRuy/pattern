@@ -3,14 +3,14 @@ package com.example.pattern.ui.screens.addHabitScreen.components
 import androidx.compose.runtime.Composable
 
 @Composable
-fun HandleColorSheet(
+fun ColorPickerSheet(
     showColorSheet: Boolean,
     selectedColor: String,
     onColorChange: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     if (showColorSheet) {
-        ColorPickerBottomSheet(
+        ColorPickerContent(
             selectedColor = selectedColor,
             onColorSelected = {
                 onColorChange(it)

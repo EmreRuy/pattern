@@ -16,6 +16,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 @Composable
 fun HabitDetailsRoute(
     onBack: () -> Unit,
+    onEdit: () -> Unit,
     viewModel: HabitDetailsViewModel = hiltViewModel()
 ) {
     val habit = viewModel.habit.collectAsState().value
@@ -39,7 +40,8 @@ fun HabitDetailsRoute(
                     isDeleting = true
                     viewModel.deleteHabit(habit.id)
                     onBack()
-                }
+                },
+                onEdit = onEdit
             )
         }
     }

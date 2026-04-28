@@ -37,9 +37,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.navigation.NavHost
-import com.example.pattern.ui.screens.addHabitScreen.AddHabitSheetContent
-import com.example.pattern.ui.screens.homeScreen.components.HabitListSheetContent
-import com.example.pattern.ui.screens.settings.SettingsSheetContent
+import com.example.pattern.ui.screens.addHabitScreen.AddHabitContent
+import com.example.pattern.ui.screens.homeScreen.components.HabitListContent
+import com.example.pattern.ui.screens.settings.SettingsScreen
 import com.example.pattern.utils.PremiumPlanScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -91,10 +91,17 @@ class MainActivity : ComponentActivity() {
                 
                 // Routes that should NOT show the bottom bar
                 val hideBottomBarRoutes = listOf(
-                    Screens.HabitDetail.route
+                    Screens.HabitDetail.route,
+                    Screens.Add.route,
+                    Screens.EditHabit.route,
+                    Screens.Settings.route
                 )
                 val shouldShowBottomBar = currentRoute !in hideBottomBarRoutes && 
-                                          !currentRoute.startsWith("habit_detail_route/")
+                                          !currentRoute.startsWith("habit_detail_route/") &&
+                                          !currentRoute.startsWith("edit_habit_route/") &&
+                                          currentRoute != Screens.Add.route &&
+                                          currentRoute != Screens.HabitList.route &&
+                                          currentRoute != Screens.Settings.route
 
                 val habitViewModel: HabitViewModel = hiltViewModel()
                 val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
@@ -110,11 +117,11 @@ class MainActivity : ComponentActivity() {
                                 currentRoute = currentRoute,
                                 onItemClick = { item ->
                                     when (item.route) {
-                                        Screens.Add.route -> {
-                                            activeSheet = AppSheet.AddHabit
-                                        }
+                                    Screens.Add.route -> {
+                                        navController.navigate(Screens.Add.route)
+                                    }
 
-                                        else -> {
+                                    else -> {
                                             if (currentRoute != item.route) {
                                                 navController.navigate(item.route) {
                                                     popUpTo(navController.graph.startDestinationId) {
@@ -135,7 +142,6 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         modifier = Modifier.padding(paddingValues),
-                        showMenuSheet = { activeSheet = AppSheet.Menu },
                         showSettingsSheet = { activeSheet = AppSheet.Settings },
                         onPremiumClick = {activeSheet = AppSheet.Premium}
                     )
@@ -148,27 +154,10 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         when (activeSheet) {
-                            AppSheet.AddHabit -> AddHabitSheetContent(
-                                onClose = { activeSheet = AppSheet.None }
-                            )
+                            AppSheet.AddHabit -> Unit // Moved to screen
 
-                            AppSheet.Menu -> {
-                                val today = remember { java.time.LocalDate.now().toString() }
-                                val dailyStates by habitViewModel.getDailyStatesForDate(today)
-                                    .collectAsStateWithLifecycle(initialValue = emptyList())
-                                
-                                HabitListSheetContent(
-                                    habits = uiState.habitList,
-                                    dailyStates = dailyStates,
-                                    onHabitClick = { id ->
-                                        activeSheet = AppSheet.None
-                                        navController.navigate(
-                                            Screens.HabitDetail.createRoute(id)
-                                        )
-                                    }
-                                )
-                            }
-                            AppSheet.Settings -> SettingsSheetContent()
+                            AppSheet.Menu -> Unit // Moved to screen
+                            AppSheet.Settings -> SettingsScreen(onBack = { activeSheet = AppSheet.None })
                             AppSheet.Premium -> PremiumPlanScreen(
                                 onPurchase = {
                                     // Handle the Billing Logic here later

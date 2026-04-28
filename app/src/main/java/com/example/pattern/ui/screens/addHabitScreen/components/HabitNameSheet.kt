@@ -3,14 +3,14 @@ package com.example.pattern.ui.screens.addHabitScreen.components
 import androidx.compose.runtime.Composable
 
 @Composable
-fun HandleHabitNameSheet(
+fun HabitNameSheet(
     showSheet: Boolean,
     habitName: String,
     onNameChange: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     if (showSheet) {
-        HabitNameBottomSheet(
+        HabitNameInput(
             habitName = habitName,
             onNameChange = onNameChange,
             onDismiss = onDismiss,

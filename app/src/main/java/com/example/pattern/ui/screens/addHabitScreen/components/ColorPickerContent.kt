@@ -35,7 +35,7 @@ import androidx.core.graphics.toColorInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ColorPickerBottomSheet(
+fun ColorPickerContent(
     selectedColor: String,
     onColorSelected: (String) -> Unit,
     onDismiss: () -> Unit

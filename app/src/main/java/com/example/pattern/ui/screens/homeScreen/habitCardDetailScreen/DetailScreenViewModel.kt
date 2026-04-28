@@ -19,9 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import androidx.core.graphics.toColorInt
 
 @HiltViewModel
@@ -66,7 +63,8 @@ class HabitDetailsViewModel @Inject constructor(
             totalCompletions = streakInfo.totalCompletions,
             goal = goalLabel(type, durationInMinutes),
             frequency = frequencyLabel(selectedDays),
-            createdOn = createdAt.toUiDate()
+            createdOn = createdAt.toUiDate(),
+            motivation = motivation
         )
     }
 }
