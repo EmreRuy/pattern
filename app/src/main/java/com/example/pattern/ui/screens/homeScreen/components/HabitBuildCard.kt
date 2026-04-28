@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
+import androidx.compose.ui.res.stringResource
+import com.example.pattern.R
 import com.example.pattern.data.model.HabitCardModel
 import androidx.core.graphics.toColorInt
 import kotlinx.coroutines.delay
@@ -197,7 +199,7 @@ fun HabitBuildCard(
                 )
                 if (totalMillis > 0) {
                     Text(
-                        text = if (habit.isCompleted) "Goal Reached" else formattedTime,
+                        text = if (habit.isCompleted) stringResource(R.string.habit_goal_reached) else formattedTime,
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontFeatureSettings = "num",
                             fontWeight = FontWeight.SemiBold

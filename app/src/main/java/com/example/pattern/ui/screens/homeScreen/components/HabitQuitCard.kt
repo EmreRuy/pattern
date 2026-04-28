@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toColorInt
+import androidx.compose.ui.res.stringResource
+import com.example.pattern.R
 import com.example.pattern.data.model.HabitCardModel
 
 @Composable
@@ -129,7 +131,7 @@ fun HabitQuitCard(
                     )
                 )
                 Text(
-                    text = "Quit",
+                    text = stringResource(R.string.habit_type_quit),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),

@@ -9,7 +9,11 @@ data class StreakInfo(
     val totalCompletions: Int
 )
 
-fun calculateStreak(habit: Habit, dailyStates: List<HabitDailyState>): StreakInfo {
+fun calculateStreak(
+    habit: Habit,
+    dailyStates: List<HabitDailyState>,
+    today: LocalDate = LocalDate.now()
+): StreakInfo {
     val completedDates = dailyStates
         .filter { it.isCompleted || it.isTaskCompleted }
         .map { LocalDate.parse(it.date) }
@@ -21,7 +25,6 @@ fun calculateStreak(habit: Habit, dailyStates: List<HabitDailyState>): StreakInf
 
     val totalCompletions = completedDates.size
     
-    val today = LocalDate.now()
     var currentStreak = 0
     var checkDate = today
 

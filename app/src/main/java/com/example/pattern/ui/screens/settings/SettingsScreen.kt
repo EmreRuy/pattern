@@ -51,7 +51,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.pattern.R
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.utils.ReviewUtils
@@ -67,7 +70,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "SETTINGS",
+                        stringResource(R.string.settings_title),
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 2.sp
@@ -78,7 +81,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -94,11 +97,12 @@ fun SettingsScreen(onBack: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun SettingsContent(
     viewModel: HabitViewModel = hiltViewModel()
 ) {
-    val settings by viewModel.settingsState.collectAsState()
+    val settings by viewModel.settingsState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -113,20 +117,30 @@ fun SettingsContent(
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
         item {
-            SettingsSection(title = "App preferences") {
-                SettingsNavigationItem(Icons.Default.Palette, "Theme")
-                SettingsNavigationItem(Icons.Default.Language, "Language")
+            SettingsSection(title = stringResource(R.string.settings_section_preferences)) {
+                SettingsNavigationItem(
+                    Icons.Default.Palette,
+                    stringResource(R.string.settings_item_theme)
+                )
+                SettingsNavigationItem(
+                    Icons.Default.Language,
+                    stringResource(R.string.settings_item_language)
+                )
             }
         }
         item {
-            SettingsSection(title = "Notifications") {
+            SettingsSection(title = stringResource(R.string.settings_section_notifications)) {
                 SettingsSwitchItem(
                     icon = Icons.Default.Bedtime,
-                    title = "Quiet hours",
+                    title = stringResource(R.string.settings_item_quiet_hours),
                     checked = settings.quietHoursEnabled,
                     iconTint = MossGreen,
                     onCheckedChange = { isEnabled ->
-                        viewModel.updateQuietHoursSettings(isEnabled, settings.startTime, settings.endTime)
+                        viewModel.updateQuietHoursSettings(
+                            isEnabled,
+                            settings.startTime,
+                            settings.endTime
+                        )
                     }
                 )
                 //alpha value to "gray out" the items when disabled
@@ -141,43 +155,43 @@ fun SettingsContent(
 
                     SettingsNavigationItem(
                         icon = Icons.Default.WbTwilight,
-                        title = "Starts at",
+                        title = stringResource(R.string.settings_item_starts_at),
                         subtitle = settings.startTime,
                         // Only clickable if quietHoursEnabled is true
                         onClick = { if (settings.quietHoursEnabled) showStartTimePicker = true }
                     )
                     SettingsNavigationItem(
                         Icons.Default.WbSunny,
-                        title = "Ends at",
+                        title = stringResource(R.string.settings_item_ends_at),
                         subtitle = settings.endTime,
                         // Only clickable if quietHoursEnabled is true
                         onClick = { if (settings.quietHoursEnabled) showEndTimePicker = true }
                     )
                 }
 
-             /*   SettingsSwitchItem(
-                    icon = Icons.Default.Alarm,
-                    title = "Smart reminders",
-                    iconTint = MossGreen,
-                    checked = true,
-                    onCheckedChange = { /* ... */ }
-                ) */
+                /*   SettingsSwitchItem(
+                       icon = Icons.Default.Alarm,
+                       title = "Smart reminders",
+                       iconTint = MossGreen,
+                       checked = true,
+                       onCheckedChange = { /* ... */ }
+                   ) */
             }
         }
 
         item {
-            SettingsSection(title = "About") {
+            SettingsSection(title = stringResource(R.string.settings_section_about)) {
                 SettingsNavigationItem(
                     icon = Icons.Default.Share,
                     title = "Share with your friends ",
-                    onClick = { ShareUtils.shareApp(context)}
-                    )
+                    onClick = { ShareUtils.shareApp(context) }
+                )
                 SettingsNavigationItem(
-                    Icons.Default.Star, "Support our journey",
+                    Icons.Default.Star, stringResource(R.string.settings_rate_us),
                     onClick = { ReviewUtils.launchInAppReview(context, scope) }
                 )
                 SettingsNavigationItem(
-                    Icons.Default.Email, "Contact support",
+                    Icons.Default.Email, stringResource(R.string.settings_item_contact_support),
                     onClick = { SupportUtils.sendSupportEmail(context) }
                 )
             }
@@ -245,7 +259,7 @@ fun PatternTimePickerDialog(
             ) {
                 // Header
                 Text(
-                    text = "Select Time",
+                    text = stringResource(R.string.settings_select_time),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 20.dp)
@@ -270,7 +284,10 @@ fun PatternTimePickerDialog(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -279,13 +296,18 @@ fun PatternTimePickerDialog(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             // Import java.util.Locale
-                            val formatted = String.format(java.util.Locale.ROOT, "%02d:%02d", timePickerState.hour, timePickerState.minute)
+                            val formatted = String.format(
+                                java.util.Locale.ROOT,
+                                "%02d:%02d",
+                                timePickerState.hour,
+                                timePickerState.minute
+                            )
                             onTimeSelected(formatted)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MossGreen),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Confirm", color = Color.White)
+                        Text(stringResource(R.string.confirm), color = Color.White)
                     }
                 }
             }

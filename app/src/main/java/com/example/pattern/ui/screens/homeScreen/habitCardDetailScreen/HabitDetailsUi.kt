@@ -15,6 +15,7 @@ data class HabitDetailsUi(
     val frequency: String,
     val createdOn: String,
     val createdAtLocalDate: LocalDate,
+    val totalXP: Int,
     val motivation: String? = null,
     val completedDates: Set<String> = emptySet()
 )

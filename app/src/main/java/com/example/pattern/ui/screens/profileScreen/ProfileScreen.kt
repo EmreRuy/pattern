@@ -16,6 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
+import com.example.pattern.R
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.proLocked.LockedProWrapper
@@ -62,7 +64,7 @@ fun ProfileScreen(
 
         // FREE CARD , Accessible to everyone
         ExperienceLevelCard(
-            title = "Progress Score",
+            title = stringResource(R.string.profile_progress_score),
             level = levelInfo.level,
             levelTitle = levelInfo.title,
             progress = levelInfo.progress,
@@ -75,7 +77,7 @@ fun ProfileScreen(
             isLocked = !isPro,
         ) {
             ProfileExtraCard(
-                title = "Your Streak",
+                title = stringResource(R.string.profile_your_streak),
                 percentage = 0.60f,
                 number = 100
             )
@@ -88,7 +90,7 @@ fun ProfileScreen(
                 title = "Total Completed Tasks",
                 percentage = 1f,
                 number = 200,
-                label = "Total Habits"
+                label = stringResource(R.string.profile_total_habits)
             )
         }
 
@@ -96,10 +98,10 @@ fun ProfileScreen(
             isLocked = !isPro,
         ) {
             ProfileStatCard(
-                title = "Success Rate",
+                title = stringResource(R.string.profile_success_rate),
                 percentage = 0.9f,
                 number = 100,
-                label = "Success Score"
+                label = stringResource(R.string.profile_success_score)
             )
         }
         Spacer(modifier = Modifier.height(32.dp))

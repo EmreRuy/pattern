@@ -46,7 +46,15 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
+import com.example.pattern.utils.ExperienceUtils
+import androidx.compose.ui.res.stringResource
+import com.example.pattern.R
 import com.example.pattern.ui.components.HabitHeatMap
+import com.example.pattern.ui.components.HabitProgressCard
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 
 
@@ -165,7 +173,7 @@ fun HabitCardDetailsScreen(
                             shape = CircleShape
                         ) {
                             Text(
-                                text = "DAY STREAK",
+                                text = stringResource(R.string.detail_day_streak),
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
@@ -177,9 +185,14 @@ fun HabitCardDetailsScreen(
                     }
                 }
 
+                Spacer(Modifier.height(24.dp))
+
+                // ⚡ PROGRESS / XP CARD
+                HabitProgressCard(habit, accentColor)
+
                 Spacer(Modifier.height(32.dp))
 
-                SectionHeader("ACTIVITY PULSE")
+                SectionHeader(stringResource(R.string.detail_section_activity))
 
                 Spacer(Modifier.height(16.dp))
                 Surface(
@@ -196,7 +209,7 @@ fun HabitCardDetailsScreen(
                 }
                 if (!habit.motivation.isNullOrBlank()) {
                     Spacer(Modifier.height(32.dp))
-                    SectionHeader("MOTIVATION")
+                    SectionHeader(stringResource(R.string.detail_section_motivation))
                     Spacer(Modifier.height(16.dp))
                     Surface(
                         modifier = Modifier
@@ -230,7 +243,7 @@ fun HabitCardDetailsScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                SectionHeader("MANAGEMENT")
+                SectionHeader(stringResource(R.string.detail_section_management))
 
                 Spacer(Modifier.height(16.dp))
 
@@ -242,12 +255,24 @@ fun HabitCardDetailsScreen(
                     Column(
                         modifier = Modifier.padding(vertical = 12.dp)
                     ) {
-                        DetailRow(Icons.Rounded.StarOutline, "Goal", habit.goal)
-                        DetailRow(Icons.Rounded.Repeat, "Frequency", habit.frequency)
-                        DetailRow(Icons.Rounded.BarChart, "Total", habit.totalCompletions.toString())
+                        DetailRow(
+                            Icons.Rounded.StarOutline,
+                            stringResource(R.string.detail_label_goal),
+                            habit.goal
+                        )
+                        DetailRow(
+                            Icons.Rounded.Repeat,
+                            stringResource(R.string.detail_label_frequency),
+                            habit.frequency
+                        )
+                        DetailRow(
+                            Icons.Rounded.BarChart,
+                            stringResource(R.string.detail_label_total),
+                            habit.totalCompletions.toString()
+                        )
                         DetailRow(
                             Icons.Rounded.CalendarToday,
-                            "Created",
+                            stringResource(R.string.detail_label_created),
                             habit.createdOn,
                             isLast = true
                         )

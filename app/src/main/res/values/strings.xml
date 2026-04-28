@@ -25,6 +25,11 @@
     <string name="detail_section_activity">ACTIVITY PULSE</string>
     <string name="detail_section_motivation">MOTIVATION</string>
     <string name="detail_section_management">MANAGEMENT</string>
+    <string name="detail_mastery_progress">MASTERY PROGRESS</string>
+    <string name="detail_level_label">Level %1$d: %2$s</string>
+    <string name="detail_xp_value">%1$d XP</string>
+    <string name="detail_total_xp">TOTAL XP</string>
+    <string name="detail_xp_for_level">%1$d XP FOR LEVEL %2$d</string>
     <string name="detail_label_goal">Goal</string>
     <string name="detail_label_frequency">Frequency</string>
     <string name="detail_label_total">Total Completions</string>

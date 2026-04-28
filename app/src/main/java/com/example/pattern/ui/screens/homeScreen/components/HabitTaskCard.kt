@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toColorInt
+import androidx.compose.ui.res.stringResource
+import com.example.pattern.R
 import com.example.pattern.data.model.HabitCardModel
 
 @Composable
@@ -134,7 +136,7 @@ fun HabitTaskCard(
                     )
                 )
                 Text(
-                    text = "Task",
+                    text = stringResource(R.string.habit_type_task),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),

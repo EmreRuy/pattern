@@ -9,6 +9,7 @@ import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.repository.HabitRepository
 import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateStreak
 import com.example.pattern.utils.toUiDate
 import java.time.Instant
@@ -56,6 +57,8 @@ class HabitDetailsViewModel @Inject constructor(
 
     private fun Habit.toUi(dailyStates: List<HabitDailyState>): HabitDetailsUi {
         val streakInfo = calculateStreak(this, dailyStates)
+        val totalXP = dailyStates.sumOf { ExperienceUtils.calculateHabitXP(this, it) }
+        
         return HabitDetailsUi(
             id = id,
             name = name,
@@ -67,6 +70,7 @@ class HabitDetailsViewModel @Inject constructor(
             frequency = frequencyLabel(selectedDays),
             createdOn = createdAt.toUiDate(),
             createdAtLocalDate = Instant.ofEpochMilli(createdAt).atZone(ZoneId.systemDefault()).toLocalDate(),
+            totalXP = totalXP,
             motivation = motivation,
             completedDates = dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toSet()
         )
