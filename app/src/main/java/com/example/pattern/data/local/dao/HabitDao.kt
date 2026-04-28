@@ -63,6 +63,9 @@ interface HabitDao {
     """)
     fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>>
 
+    @Query("SELECT * FROM habit_daily_state")
+    fun getAllDailyStates(): Flow<List<HabitDailyState>>
+
     @Query("""
         SELECT * FROM habit_daily_state
         WHERE habitId = :habitId

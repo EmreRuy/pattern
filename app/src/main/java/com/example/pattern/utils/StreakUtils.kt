@@ -25,15 +25,9 @@ fun calculateStreak(habit: Habit, dailyStates: List<HabitDailyState>): StreakInf
     var currentStreak = 0
     var checkDate = today
 
-    // If today is not a selected day and not completed, start checking from yesterday
-    val todayDayOfWeek = today.dayOfWeek.value - 1 // 0-6
-    val isScheduledToday = habit.selectedDays.getOrNull(todayDayOfWeek) == true
-    
-    if (!completedDates.contains(today) && !isScheduledToday) {
-        checkDate = today.minusDays(1)
-    } else if (!completedDates.contains(today) && isScheduledToday) {
-        // Today is scheduled but not completed. 
-        // We check if the streak is still alive from yesterday.
+    // If today is not completed, we start checking if the streak is still alive from yesterday.
+    // This handles both scheduled and non-scheduled days.
+    if (!completedDates.contains(today)) {
         checkDate = today.minusDays(1)
     }
 
@@ -41,26 +35,22 @@ fun calculateStreak(habit: Habit, dailyStates: List<HabitDailyState>): StreakInf
     while (true) {
         val dayOfWeekIndex = checkDate.dayOfWeek.value - 1
         val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+        val isCompleted = completedDates.contains(checkDate)
         
-        if (isScheduled) {
-            if (completedDates.contains(checkDate)) {
-                currentStreak++
-            } else {
-                // Gap in a scheduled day - streak broken
-                // Exception: if we just started checking and today is scheduled but not yet completed,
-                // we don't break the streak yet, but we also don't increment.
-                // But the loop logic above already handled starting from yesterday if today is not completed.
-                break
-            }
+        if (isCompleted) {
+            currentStreak++
+        } else if (isScheduled) {
+            // Gap in a scheduled day - streak broken
+            break
         } else {
-            // Not scheduled - just skip this day (don't break streak)
+            // Not completed and not scheduled - keep looking back (streak is preserved)
         }
         
         checkDate = checkDate.minusDays(1)
         
-        // Safety break for very old habits or infinite loops (though minusDays is safe)
+        // Safety break for very old habits
         if (checkDate.isBefore(LocalDate.ofEpochDay(0))) break 
-        if (currentStreak > 10000) break // reasonable limit
+        if (currentStreak > 10000) break
     }
 
     return StreakInfo(currentStreak, totalCompletions)

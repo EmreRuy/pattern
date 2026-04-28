@@ -28,15 +28,13 @@ fun HabitListScreen(
     viewModel: HabitViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.homeUiState.collectAsStateWithLifecycle()
-    val today = remember { java.time.LocalDate.now().toString() }
-    val dailyStates by viewModel.getDailyStatesForDate(today).collectAsStateWithLifecycle(initialValue = emptyList())
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "YOUR HABITS",
+                        "ALL HABITS",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 2.sp
@@ -68,10 +66,17 @@ fun HabitListScreen(
                 uiState.isLoading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
+                uiState.error != null -> {
+                    Text(
+                        text = uiState.error ?: "Unknown error",
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 else -> {
                     HabitListBody(
                         habits = uiState.habitList,
-                        dailyStates = dailyStates,
+                        dailyStates = uiState.todayStates.values.toList(),
                         onHabitClick = onHabitClick
                     )
                 }

@@ -47,16 +47,15 @@ fun HabitListBody(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(4.dp))
         if (habits.isEmpty()) {
             EmptyHabitMessage()
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxHeight(),
-                contentPadding = PaddingValues(bottom = 32.dp),
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(

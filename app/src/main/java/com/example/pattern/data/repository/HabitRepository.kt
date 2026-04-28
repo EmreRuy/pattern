@@ -65,6 +65,9 @@ class HabitRepository @Inject constructor(
     fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>> =
         habitDao.getDailyStatesForHabit(habitId)
 
+    fun getAllDailyStatesStream(): Flow<List<HabitDailyState>> =
+        habitDao.getAllDailyStates()
+
     suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState> =
         habitDao.getDailyStatesForHabitOnce(habitId)
 

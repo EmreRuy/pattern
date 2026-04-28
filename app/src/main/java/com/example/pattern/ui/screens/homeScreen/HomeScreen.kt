@@ -64,24 +64,29 @@ fun HomeScreen(
     }
     val selectedDbIndex = selectedDate.dayOfWeek.value - 1
     val selectedDateKey = remember(selectedDate) { selectedDate.toString() }
-    // Daily states for this day
-    val dailyStates by habitViewModel
-        .getDailyStatesForDate(selectedDateKey)
-        .collectAsStateWithLifecycle(initialValue = emptyList())
+
+    // Use derived state from uiState for today, or fetch for other days
+    val isToday = selectedDate == today
+    val dailyStatesForSelectedDate by if (isToday) {
+        remember(uiState.todayStates) { mutableStateOf(uiState.todayStates.values.toList()) }
+    } else {
+        habitViewModel.getDailyStatesForDate(selectedDateKey).collectAsStateWithLifecycle(initialValue = emptyList())
+    }
+
     // Build mapped habit list
-    val habits = remember(selectedDateKey, uiState.habitList, dailyStates, uiState.streaks) {
+    val habits = remember(selectedDateKey, uiState.habitList, dailyStatesForSelectedDate, uiState.streaks) {
         uiState.habitList
             .filter { it.selectedDays.getOrNull(selectedDbIndex) == true }
             .map { habit ->
-                val daily = dailyStates.firstOrNull { it.habitId == habit.id }
+                val daily = dailyStatesForSelectedDate.firstOrNull { it.habitId == habit.id }
                 val streak = uiState.streaks[habit.id] ?: 0
                 habit.toCardModel(daily, streak)
             }
     }
     // daily states exist for mapped habits
-    LaunchedEffect(habits, selectedDateKey, dailyStates) {
+    LaunchedEffect(habits, selectedDateKey, dailyStatesForSelectedDate) {
         habits.forEach { habit ->
-            val exists = dailyStates.any { it.habitId == habit.id }
+            val exists = dailyStatesForSelectedDate.any { it.habitId == habit.id }
             if (!exists) {
                 habitViewModel.ensureDailyStateExists(habit.id, selectedDateKey)
             }

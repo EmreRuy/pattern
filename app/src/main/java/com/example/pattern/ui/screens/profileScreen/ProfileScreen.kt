@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
@@ -41,7 +41,7 @@ fun ProfileScreen(
     onOpenSettings: () -> Unit = {}
 ) {
     val scroll = rememberScrollState()
-    val uiState by viewModel.homeUiState.collectAsState()
+    val uiState by viewModel.homeUiState.collectAsStateWithLifecycle()
     val levelInfo = uiState.levelInfo
 
     Column(
