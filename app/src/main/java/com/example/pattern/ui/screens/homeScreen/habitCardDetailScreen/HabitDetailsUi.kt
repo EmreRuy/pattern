@@ -2,6 +2,8 @@ package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
 import androidx.compose.ui.graphics.Color
 
+import java.time.LocalDate
+
 data class HabitDetailsUi(
     val id: Int,
     val name: String,
@@ -12,5 +14,7 @@ data class HabitDetailsUi(
     val goal: String,
     val frequency: String,
     val createdOn: String,
-    val motivation: String? = null
+    val createdAtLocalDate: LocalDate,
+    val motivation: String? = null,
+    val completedDates: Set<String> = emptySet()
 )

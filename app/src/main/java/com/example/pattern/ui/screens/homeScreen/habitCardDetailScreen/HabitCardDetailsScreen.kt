@@ -34,7 +34,6 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.StarOutline
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.getValue
@@ -46,10 +45,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontStyle
+import com.example.pattern.ui.components.HabitHeatMap
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
-import com.example.pattern.ui.screens.proLocked.LockedProWrapper
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +62,6 @@ fun HabitCardDetailsScreen(
     val scrollState = rememberScrollState()
     var showDeleteSheet by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
-    val isUserPro = false
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -107,7 +104,7 @@ fun HabitCardDetailsScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
@@ -185,35 +182,18 @@ fun HabitCardDetailsScreen(
                 SectionHeader("ACTIVITY PULSE")
 
                 Spacer(Modifier.height(16.dp))
-
-                LockedProWrapper(isLocked = !isUserPro) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                        border = if (!isUserPro) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Rounded.BarChart,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.outline,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    "Heatmap Visualization",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-                            }
-                        }
-                    }
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                ) {
+                    HabitHeatMap(
+                        completedDates = habit.completedDates,
+                        accentColor = accentColor,
+                        createdAt = habit.createdAtLocalDate,
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
-
                 if (!habit.motivation.isNullOrBlank()) {
                     Spacer(Modifier.height(32.dp))
                     SectionHeader("MOTIVATION")

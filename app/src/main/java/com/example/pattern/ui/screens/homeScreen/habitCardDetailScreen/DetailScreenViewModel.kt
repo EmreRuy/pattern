@@ -11,6 +11,8 @@ import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.utils.calculateStreak
 import com.example.pattern.utils.toUiDate
+import java.time.Instant
+import java.time.ZoneId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.pattern.notifications.ReminderManager
 import javax.inject.Inject
@@ -64,7 +66,9 @@ class HabitDetailsViewModel @Inject constructor(
             goal = goalLabel(type, durationInMinutes),
             frequency = frequencyLabel(selectedDays),
             createdOn = createdAt.toUiDate(),
-            motivation = motivation
+            createdAtLocalDate = Instant.ofEpochMilli(createdAt).atZone(ZoneId.systemDefault()).toLocalDate(),
+            motivation = motivation,
+            completedDates = dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toSet()
         )
     }
 }
