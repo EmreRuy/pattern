@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,7 +34,6 @@ import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.data.local.entity.HabitDailyState
-import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
 import com.example.pattern.ui.screens.settings.MossGreen
 
 @Composable

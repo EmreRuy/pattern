@@ -70,16 +70,20 @@ class HabitDetailsViewModel @Inject constructor(
 }
 
 fun goalLabel(type: HabitType, minutes: Int?): String {
-    if (type != HabitType.BUILD || minutes == null) return ""
-
-    val h = minutes / 60
-    val m = minutes % 60
-
-    return when {
-        h > 0 && m > 0 -> "$h h $m m"
-        h > 0 -> "$h h"
-        m > 0 -> "$m m"
-        else -> ""
+    return when (type) {
+        HabitType.BUILD -> {
+            if (minutes == null) return "0 m"
+            val h = minutes / 60
+            val m = minutes % 60
+            when {
+                h > 0 && m > 0 -> "$h h $m m"
+                h > 0 -> "$h h"
+                m > 0 -> "$m m"
+                else -> "0 m"
+            }
+        }
+        HabitType.TASK -> "Complete task"
+        HabitType.QUIT -> "Drop habit"
     }
 }
 
