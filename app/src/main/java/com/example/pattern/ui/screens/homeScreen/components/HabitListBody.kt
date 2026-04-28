@@ -39,19 +39,6 @@ import com.example.pattern.ui.screens.addHabitScreen.components.CardHeader
 import com.example.pattern.ui.screens.settings.MossGreen
 
 @Composable
-fun HabitListContent(
-    habits: List<Habit>,
-    dailyStates: List<HabitDailyState>,
-    onHabitClick: (Int) -> Unit
-) {
-    HabitListBody(
-        habits = habits,
-        dailyStates = dailyStates,
-        onHabitClick = onHabitClick
-    )
-}
-
-@Composable
 fun HabitListBody(
     habits: List<Habit>,
     dailyStates: List<HabitDailyState>,
@@ -63,13 +50,12 @@ fun HabitListBody(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CardHeader("Your Habits")
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         if (habits.isEmpty()) {
             EmptyHabitMessage()
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxHeight(0.7f), // Limit height for better sheet behavior
+                modifier = Modifier.fillMaxHeight(),
                 contentPadding = PaddingValues(bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

@@ -7,6 +7,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.pattern.MainActivity
 import com.example.pattern.data.local.entity.Habit
@@ -26,16 +27,24 @@ class ReminderWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        val habitId = inputData.getInt("HABIT_ID", -1)
-        android.util.Log.d("ReminderWorker", "doWork started for habitId: $habitId")
+        val habitId = inputData.getInt(KEY_HABIT_ID, -1)
+        
         if (habitId == -1) {
-            android.util.Log.e("ReminderWorker", "habitId is -1, failing")
+            android.util.Log.e("ReminderWorker", "Invalid habitId (-1)")
             return Result.failure()
         }
 
         val habit = repository.getHabitOnce(habitId) ?: run {
-            android.util.Log.e("ReminderWorker", "Habit not found in DB for id: $habitId")
-            return Result.failure()
+            android.util.Log.d("ReminderWorker", "Habit $habitId not found. Cancelling periodic work.")
+            WorkManager.getInstance(applicationContext).cancelUniqueWork("reminder_$habitId")
+            return Result.success()
+        }
+
+        // Also check if reminder is still enabled for this habit
+        if (habit.reminderTime == null) {
+            android.util.Log.d("ReminderWorker", "Habit $habitId has no reminder time. Cancelling periodic work.")
+            WorkManager.getInstance(applicationContext).cancelUniqueWork("reminder_$habitId")
+            return Result.success()
         }
         
         // Check if today is a selected day for this habit
@@ -58,35 +67,30 @@ class ReminderWorker @AssistedInject constructor(
         val habitName = inputData.getString("HABIT_NAME") ?: habit.name
 
         android.util.Log.d("ReminderWorker", "Showing notification for: $habitName")
-        showNotification(habitName)
+        showNotification(habitId, habitName)
 
         return Result.success()
     }
 
-    private fun showNotification(name: String) {
+    private fun showNotification(habitId: Int, name: String) {
         val notificationManager = applicationContext.getSystemService(NotificationManager::class.java)
         
-        // Create Channel for Android 8.0+
-        val channel = android.app.NotificationChannel(
-            "habit_channel",
-            "Habit Reminders",
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Notifications for habit reminders"
-        }
-        notificationManager?.createNotificationChannel(channel)
+        // Ensure Notification Channel exists
+        createNotificationChannel(notificationManager)
 
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("HABIT_NAME", name)
         }
+        
         val pendingIntent = PendingIntent.getActivity(
             applicationContext,
-            0,
+            habitId, // Unique request code per habit
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val notification = NotificationCompat.Builder(applicationContext, "habit_channel")
+        
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Pattern Reminder")
             .setContentText("Time to work on: $name")
@@ -95,10 +99,23 @@ class ReminderWorker @AssistedInject constructor(
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
-        notificationManager?.notify(name.hashCode(), notification)
+            
+        notificationManager?.notify(habitId, notification)
+    }
+
+    private fun createNotificationChannel(notificationManager: NotificationManager?) {
+        val channel = android.app.NotificationChannel(
+            CHANNEL_ID,
+            "Habit Reminders",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Notifications for habit reminders"
+        }
+        notificationManager?.createNotificationChannel(channel)
     }
 
     companion object {
         const val KEY_HABIT_ID = "HABIT_ID"
+        const val CHANNEL_ID = "habit_channel"
     }
 }

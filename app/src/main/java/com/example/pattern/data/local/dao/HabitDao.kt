@@ -21,6 +21,9 @@ interface HabitDao {
     @Delete
     suspend fun deleteHabit(habit: Habit)
 
+    @Query("DELETE FROM habits WHERE id = :habitId")
+    suspend fun deleteHabitById(habitId: Int)
+
     @Query("SELECT * FROM habits WHERE id = :id")
     fun getHabit(id: Int): Flow<Habit?>
 

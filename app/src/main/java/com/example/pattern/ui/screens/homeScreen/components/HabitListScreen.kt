@@ -53,46 +53,27 @@ fun HabitListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = Color.Unspecified,
-                    navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = Color.Unspecified,
-                    actionIconContentColor = Color.Unspecified
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(padding)
         ) {
-            if (uiState.habitList.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        "No patterns yet",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            when {
+                uiState.isLoading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        items = uiState.habitList,
-                        key = { it.id }
-                    ) { habit ->
-                        val dailyState = dailyStates.find { it.habitId == habit.id }
-                        HabitListItem(
-                            habit = habit,
-                            dailyState = dailyState,
-                            onHabitClick = onHabitClick
-                        )
-                    }
+                else -> {
+                    HabitListBody(
+                        habits = uiState.habitList,
+                        dailyStates = dailyStates,
+                        onHabitClick = onHabitClick
+                    )
                 }
             }
         }

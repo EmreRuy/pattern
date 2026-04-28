@@ -17,7 +17,6 @@ sealed class Screens(val route: String) {
     object EditHabit : Screens("edit_habit_route/{habitId}") {
         fun createRoute(habitId: Int) = "edit_habit_route/$habitId"
     }
-    object List : Screens("list_route")
     object HabitList : Screens("habit_list_route")
     object Settings : Screens("settings_route")
 }

@@ -38,17 +38,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.data.local.HabitViewModel
 import com.example.pattern.ui.navigation.NavHost
 import com.example.pattern.ui.screens.addHabitScreen.AddHabitContent
-import com.example.pattern.ui.screens.homeScreen.components.HabitListContent
 import com.example.pattern.ui.screens.settings.SettingsScreen
 import com.example.pattern.utils.PremiumPlanScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 sealed class AppSheet {
     data object None : AppSheet()
-    data object AddHabit : AppSheet()
-    data object Menu : AppSheet()
     data object Settings : AppSheet()
-
     data object Premium: AppSheet()
 }
 
@@ -90,18 +86,16 @@ class MainActivity : ComponentActivity() {
                 val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
                 
                 // Routes that should NOT show the bottom bar
-                val hideBottomBarRoutes = listOf(
+                val fullScreenRoutes = listOf(
                     Screens.HabitDetail.route,
                     Screens.Add.route,
                     Screens.EditHabit.route,
+                    Screens.HabitList.route,
                     Screens.Settings.route
                 )
-                val shouldShowBottomBar = currentRoute !in hideBottomBarRoutes && 
+                val shouldShowBottomBar = currentRoute !in fullScreenRoutes && 
                                           !currentRoute.startsWith("habit_detail_route/") &&
-                                          !currentRoute.startsWith("edit_habit_route/") &&
-                                          currentRoute != Screens.Add.route &&
-                                          currentRoute != Screens.HabitList.route &&
-                                          currentRoute != Screens.Settings.route
+                                          !currentRoute.startsWith("edit_habit_route/")
 
                 val habitViewModel: HabitViewModel = hiltViewModel()
                 val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
@@ -154,9 +148,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         when (activeSheet) {
-                            AppSheet.AddHabit -> Unit // Moved to screen
-
-                            AppSheet.Menu -> Unit // Moved to screen
                             AppSheet.Settings -> SettingsScreen(onBack = { activeSheet = AppSheet.None })
                             AppSheet.Premium -> PremiumPlanScreen(
                                 onPurchase = {

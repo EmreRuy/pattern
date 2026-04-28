@@ -48,26 +48,25 @@ class HabitViewModel @Inject constructor(
         habits to (settings?.totalXP ?: 0)
     }.flatMapLatest { (habits, totalXP) ->
         val levelInfo = ExperienceUtils.getLevelInfo(totalXP)
+        if (habits.isEmpty()) {
+            return@flatMapLatest kotlinx.coroutines.flow.flowOf(
+                HomeUiState(habitList = emptyList(), levelInfo = levelInfo, isLoading = false)
+            )
+        }
+
         val streakFlows = habits.map { habit ->
             repository.getDailyStatesForHabit(habit.id).map { states ->
                 habit.id to calculateStreak(habit, states).currentStreak
             }
         }
-        if (streakFlows.isEmpty()) {
-            kotlinx.coroutines.flow.flowOf(
-                HomeUiState(
-                    habitList = habits,
-                    levelInfo = levelInfo
-                )
+
+        combine(streakFlows) { streakPairs ->
+            HomeUiState(
+                habitList = habits,
+                streaks = streakPairs.toMap(),
+                levelInfo = levelInfo,
+                isLoading = false
             )
-        } else {
-            combine(streakFlows) { streakPairs ->
-                HomeUiState(
-                    habitList = habits,
-                    streaks = streakPairs.toMap(),
-                    levelInfo = levelInfo
-                )
-            }
         }
     }
         .stateIn(
