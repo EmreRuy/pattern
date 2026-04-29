@@ -57,7 +57,8 @@ class HomeViewModel @Inject constructor(
             levelInfo = levelInfo,
             isLoading = false
         )
-    }.flowOn(Dispatchers.Default)
+    }
+        .flowOn(Dispatchers.Default)
         .catch { e ->
         emit(HomeUiState(error = e.message, isLoading = false))
     }.stateIn(
