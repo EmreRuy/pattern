@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.screens.homeScreen.HomeViewModel
 import com.example.pattern.data.mapper.toCardModel
 import com.example.pattern.ui.components.ConfettiView
 import com.example.pattern.ui.navigation.Screens
@@ -38,13 +38,12 @@ import java.time.temporal.ChronoUnit
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    habitViewModel: HabitViewModel = hiltViewModel(),
+    viewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController,
     onOpenMenuScreen: () -> Unit,
-    onOpenSettingsSheet: () -> Unit,
     onPremiumClick: () -> Unit
 ) {
-    val uiState by habitViewModel.homeUiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val today = remember { LocalDate.now(ZoneId.systemDefault()) }
     val dayList = remember { generateNext365Days() }
 
@@ -80,7 +79,7 @@ fun HomeScreen(
     val dailyStatesForSelectedDate by if (isToday) {
         remember(uiState.todayStates) { mutableStateOf(uiState.todayStates.values.toList()) }
     } else {
-        habitViewModel.getDailyStatesForDate(selectedDateKey).collectAsStateWithLifecycle(initialValue = emptyList())
+        viewModel.getDailyStatesForDate(selectedDateKey).collectAsStateWithLifecycle(initialValue = emptyList())
     }
 
     // Build mapped habit list
@@ -98,7 +97,7 @@ fun HomeScreen(
         habits.forEach { habit ->
             val exists = dailyStatesForSelectedDate.any { it.habitId == habit.id }
             if (!exists) {
-                habitViewModel.ensureDailyStateExists(habit.id, selectedDateKey)
+                viewModel.ensureDailyStateExists(habit.id, selectedDateKey)
             }
         }
     }
@@ -139,17 +138,17 @@ fun HomeScreen(
                 isToday = selectedDate == today,
 
                 onTimerFinished = { habitCard ->
-                    habitViewModel.finishTimer(habitCard.id, selectedDateKey)
+                    viewModel.finishTimer(habitCard.id, selectedDateKey)
                     triggerConfetti = true
                 },
                 onUnfinishTimer = { habitId ->
-                    habitViewModel.unfinishTimer(habitId, selectedDateKey)
+                    viewModel.unfinishTimer(habitId, selectedDateKey)
                 },
-                onStartTimer = { habitViewModel.startTimer(it.id, selectedDateKey) },
-                onPauseTimer = { habitViewModel.pauseTimer(it.id, selectedDateKey) },
-                onResumeTimer = { habitViewModel.resumeTimer(it.id, selectedDateKey) },
+                onStartTimer = { viewModel.startTimer(it.id, selectedDateKey) },
+                onPauseTimer = { viewModel.pauseTimer(it.id, selectedDateKey) },
+                onResumeTimer = { viewModel.resumeTimer(it.id, selectedDateKey) },
                 onTaskCompleted = { habitId, completed ->
-                    habitViewModel.setTaskCompleted(
+                    viewModel.setTaskCompleted(
                         habitId = habitId,
                         date = selectedDateKey,
                         completed = completed

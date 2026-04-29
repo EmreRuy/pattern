@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,7 @@ fun ColorPickerView(
                         .aspectRatio(1f)
                         .clip(CircleShape)
                         .background(color)
+                        .testTag("color_$colorHex")
                         .clickable {
                             onColorSelected(colorHex)
                         },

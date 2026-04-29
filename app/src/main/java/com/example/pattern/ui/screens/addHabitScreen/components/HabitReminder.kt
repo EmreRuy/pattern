@@ -38,7 +38,7 @@ fun HabitReminderCard(
                     imageVector = Icons.Default.NotificationsNone,
                     contentDescription = null,
                     tint = accentColor,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
             }
         },

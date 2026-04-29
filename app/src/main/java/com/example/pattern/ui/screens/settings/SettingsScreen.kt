@@ -55,7 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.R
-import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.screens.settings.SettingsViewModel
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
@@ -100,9 +100,10 @@ fun SettingsScreen(onBack: () -> Unit) {
 
 @Composable
 fun SettingsContent(
-    viewModel: HabitViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val settings by viewModel.settingsState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val settings = uiState.settings
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -136,7 +137,7 @@ fun SettingsContent(
                     checked = settings.quietHoursEnabled,
                     iconTint = MossGreen,
                     onCheckedChange = { isEnabled ->
-                        viewModel.updateQuietHoursSettings(
+                        viewModel.updateQuietHours(
                             isEnabled,
                             settings.startTime,
                             settings.endTime
@@ -208,7 +209,7 @@ fun SettingsContent(
             initialTime = settings.startTime,
             onTimeSelected = { newTime ->
                 dismissAllPickers()
-                viewModel.updateQuietHoursSettings(true, newTime, settings.endTime)
+                viewModel.updateQuietHours(true, newTime, settings.endTime)
             },
             onDismiss = dismissAllPickers
         )
@@ -219,7 +220,7 @@ fun SettingsContent(
             initialTime = settings.endTime,
             onTimeSelected = { newTime ->
                 dismissAllPickers()
-                viewModel.updateQuietHoursSettings(true, settings.startTime, newTime)
+                viewModel.updateQuietHours(true, settings.startTime, newTime)
             },
             onDismiss = dismissAllPickers
         )

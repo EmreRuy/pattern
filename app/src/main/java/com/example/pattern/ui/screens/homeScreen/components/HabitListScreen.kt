@@ -18,16 +18,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.pattern.data.local.HabitViewModel
+import androidx.compose.ui.platform.testTag
+import com.example.pattern.ui.screens.homeScreen.components.HabitListViewModel
+import com.example.pattern.data.local.entity.Habit
+import com.example.pattern.data.local.entity.HabitDailyState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitListScreen(
     onHabitClick: (Int) -> Unit,
     onBack: () -> Unit,
-    viewModel: HabitViewModel = hiltViewModel()
+    viewModel: HabitListViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.homeUiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -64,7 +67,11 @@ fun HabitListScreen(
         ) {
             when {
                 uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .testTag("HabitListLoading")
+                    )
                 }
                 uiState.error != null -> {
                     Text(
@@ -75,7 +82,7 @@ fun HabitListScreen(
                 }
                 else -> {
                     HabitListBody(
-                        habits = uiState.habitList,
+                        habits = uiState.habits,
                         dailyStates = uiState.todayStates.values.toList(),
                         onHabitClick = onHabitClick
                     )

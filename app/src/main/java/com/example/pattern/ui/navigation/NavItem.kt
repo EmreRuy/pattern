@@ -19,6 +19,7 @@ sealed class Screens(val route: String) {
     }
     object HabitList : Screens("habit_list_route")
     object Settings : Screens("settings_route")
+    data object Premium : Screens("premium_route")
 }
 
 data class BottomNavigationItem(

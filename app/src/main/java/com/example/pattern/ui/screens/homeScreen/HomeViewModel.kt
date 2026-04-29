@@ -1,17 +1,16 @@
-package com.example.pattern.data.local
+package com.example.pattern.ui.screens.homeScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.data.local.entity.SettingsEntity
 import com.example.pattern.data.repository.HabitRepository
-import com.example.pattern.notifications.ReminderManager
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.LevelInfo
 import com.example.pattern.utils.calculateStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -27,16 +26,15 @@ data class HomeUiState(
 )
 
 @HiltViewModel
-class HabitViewModel @Inject constructor(
-    private val repository: HabitRepository,
-    private val reminderManager: ReminderManager
+class HomeViewModel @Inject constructor(
+    private val repository: HabitRepository
 ) : ViewModel() {
 
     private val habitsFlow = repository.getAllHabitsStream().distinctUntilChanged()
     private val settingsFlow = repository.getSettingsStream().distinctUntilChanged()
     private val allDailyStatesFlow = repository.getAllDailyStatesStream().distinctUntilChanged()
 
-    val homeUiState: StateFlow<HomeUiState> = combine(
+    val uiState: StateFlow<HomeUiState> = combine(
         habitsFlow,
         settingsFlow,
         allDailyStatesFlow
@@ -59,7 +57,8 @@ class HabitViewModel @Inject constructor(
             levelInfo = levelInfo,
             isLoading = false
         )
-    }.catch { e ->
+    }.flowOn(Dispatchers.Default)
+        .catch { e ->
         emit(HomeUiState(error = e.message, isLoading = false))
     }.stateIn(
         scope = viewModelScope,
@@ -69,73 +68,6 @@ class HabitViewModel @Inject constructor(
 
     fun getDailyStatesForDate(date: String): Flow<List<HabitDailyState>> {
         return repository.getDailyStatesForDate(date)
-    }
-
-    fun saveNewHabit(
-        name: String,
-        type: HabitType,
-        durationHours: Int,
-        durationMinutes: Int,
-        selectedDays: List<Boolean>,
-        iconCode: String,
-        accentColorHex: String,
-        reminderTime: String? = null,
-        motivation: String? = null
-    ) {
-        if (name.isBlank()) return
-        
-        val totalDurationInMinutes = if (type == HabitType.BUILD) {
-            (durationHours * 60) + durationMinutes
-        } else {
-            null
-        }
-
-        val newHabit = Habit(
-            name = name.trim(),
-            type = type,
-            iconCode = iconCode,
-            durationInMinutes = totalDurationInMinutes,
-            selectedDays = selectedDays,
-            accentColorHex = accentColorHex,
-            reminderTime = reminderTime,
-            motivation = if (motivation.isNullOrBlank()) null else motivation.trim()
-        )
-        viewModelScope.launch {
-            try {
-                val id = repository.upsertHabit(newHabit)
-                reminderManager.scheduleReminder(newHabit.copy(id = id.toInt()))
-            } catch (e: Exception) {
-                // Silently handle error or use a UI event channel
-            }
-        }
-    }
-
-    fun updateQuietHoursSettings(enabled: Boolean, start: String, end: String) {
-        viewModelScope.launch {
-            repository.updateQuietHours(enabled, start, end)
-        }
-    }
-
-    val settingsState = settingsFlow
-        .map { it ?: SettingsEntity() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SettingsEntity()
-        )
-
-    fun updateHabit(habit: Habit) {
-        viewModelScope.launch {
-            repository.updateHabit(habit)
-            reminderManager.scheduleReminder(habit)
-        }
-    }
-
-    fun deleteHabit(habit: Habit) {
-        viewModelScope.launch {
-            repository.deleteHabit(habit)
-            reminderManager.cancelReminder(habit.id)
-        }
     }
 
     fun startTimer(habitId: Int, date: String) {

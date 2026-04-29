@@ -16,14 +16,13 @@ import com.example.pattern.ui.screens.homeScreen.components.HabitListScreen
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import com.example.pattern.ui.screens.settings.SettingsScreen
+import com.example.pattern.utils.PremiumPlanScreen
 
 @Composable
 fun NavHost(
     navController: NavHostController,
-    showSettingsSheet: () -> Unit,
     modifier: Modifier = Modifier,
     isPro: Boolean = false,
-    onPremiumClick: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -34,10 +33,28 @@ fun NavHost(
             HomeScreen(
                 navController = navController,
                 onOpenMenuScreen = { navController.navigate(Screens.HabitList.route) },
-                onOpenSettingsSheet = showSettingsSheet,
-                onPremiumClick = onPremiumClick
+                onPremiumClick = { navController.navigate(Screens.Premium.route) }
             )
         }
+        composable(
+            route = Screens.Settings.route,
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) }
+        ) {
+            SettingsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Screens.Premium.route,
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) }
+        ) {
+            PremiumPlanScreen(
+                onPurchase = {
+                    // Handle billing then pop
+                    navController.popBackStack()
+                }
+            ) }
         composable(
             route = Screens.HabitList.route,
             enterTransition = {
@@ -89,9 +106,8 @@ fun NavHost(
             ProfileScreen(
                 isPro = isPro,
                 onOpenMenuSheet = { navController.navigate(Screens.HabitList.route) },
-                onOpenSettingsSheet = showSettingsSheet,
-                onPremiumClick = onPremiumClick,
-                onOpenSettings = { navController.navigate(Screens.Settings.route) }
+                onOpenSettings = { navController.navigate(Screens.Settings.route) },
+                onPremiumClick = { navController.navigate(Screens.Premium.route) }
             )
         }
         composable(

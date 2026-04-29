@@ -14,9 +14,8 @@ import javax.inject.Singleton
 
 @Singleton
 class ReminderManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val workManager: WorkManager
 ) {
-    private val workManager = WorkManager.getInstance(context)
 
     fun scheduleReminder(habit: Habit) {
         val reminderTimeStr = habit.reminderTime ?: return

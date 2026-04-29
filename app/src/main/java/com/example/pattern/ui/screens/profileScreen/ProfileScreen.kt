@@ -18,7 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.example.pattern.R
-import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.screens.profileScreen.ProfileViewModel
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.proLocked.LockedProWrapper
 import com.example.pattern.ui.screens.proLocked.PatternProBanner
@@ -36,14 +36,13 @@ fun ProfileScreenPreview() {
 @Composable
 fun ProfileScreen(
     isPro: Boolean = false, // This should come from  ViewModel/User State
-    viewModel: HabitViewModel = hiltViewModel(),
+    viewModel: ProfileViewModel = hiltViewModel(),
     onOpenMenuSheet: () -> Unit,
-    onOpenSettingsSheet: () -> Unit,
     onPremiumClick: () -> Unit,
     onOpenSettings: () -> Unit = {}
 ) {
     val scroll = rememberScrollState()
-    val uiState by viewModel.homeUiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val levelInfo = uiState.levelInfo
 
     Column(

@@ -29,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.pattern.data.local.HabitViewModel
+import com.example.pattern.ui.screens.addHabitScreen.AddHabitViewModel
 import com.example.pattern.data.local.entity.HabitType
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import com.example.pattern.ui.screens.settings.PatternTimePickerDialog
@@ -43,12 +43,12 @@ enum class AddHabitStep {
 @Composable
 fun AddHabitContent(
     onClose: () -> Unit,
-    viewModel: HabitViewModel = hiltViewModel()
+    viewModel: AddHabitViewModel = hiltViewModel()
 ) {
     AddHabitScreen(
         onSaveSuccess = onClose,
         onBack = onClose,
-        habitViewModel = viewModel
+        viewModel = viewModel
     )
 }
 
@@ -57,7 +57,7 @@ fun AddHabitContent(
 fun AddHabitScreen(
     onSaveSuccess: () -> Unit,
     onBack: () -> Unit,
-    habitViewModel: HabitViewModel = hiltViewModel()
+    viewModel: AddHabitViewModel = hiltViewModel()
 ) {
     var currentStep by remember { mutableStateOf(AddHabitStep.Main) }
     
@@ -126,7 +126,7 @@ fun AddHabitScreen(
                             } else if (!isDaysValid) {
                                 scope.launch { snackbarHostState.showSnackbar("Please select at least one day") }
                             } else {
-                                habitViewModel.saveNewHabit(
+                                viewModel.saveNewHabit(
                                     name = habitName.trim(),
                                     type = when (habitType) {
                                         "Grow" -> HabitType.BUILD
