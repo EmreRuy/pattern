@@ -52,32 +52,31 @@ fun HomeCalendarSelector(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
-        verticalAlignment = Alignment.Top,
-        pageSpacing = 8.dp
+        verticalAlignment = Alignment.CenterVertically,
+        pageSpacing = 0.dp
     ) { weekIndex ->
+
+        val startDayIndex = weekIndex * 7
+
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            val startDayIndex = weekIndex * 7
             for (i in 0 until 7) {
                 val dayIndex = startDayIndex + i
                 if (dayIndex >= dayList.size) break
-                
+
                 val day = dayList[dayIndex]
-                val isWeekend = day.date.dayOfWeek == DayOfWeek.SATURDAY || 
-                               day.date.dayOfWeek == DayOfWeek.SUNDAY
+                val isWeekend = day.date.dayOfWeek == DayOfWeek.SATURDAY ||
+                        day.date.dayOfWeek == DayOfWeek.SUNDAY
 
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { onDaySelected(dayIndex) },
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { onDaySelected(dayIndex) }
                 ) {
                     CalendarItem(
                         isSelected = selectedDayIndex == dayIndex,
@@ -104,58 +103,65 @@ fun CalendarItem(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
         ),
-        label = "selection_fade"
+        label = "selection_progress"
     )
+
+    val letterColor = if (isWeekend)
+        MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+    else
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+
+    val numberColor = if (isSelected)
+        MaterialTheme.colorScheme.onSurface
+    else
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+
+    val bgColor = MossGreen.copy(alpha = 0.15f * selectionProgress)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier.graphicsLayer {
             translationY = -4.dp.toPx() * selectionProgress
         }
     ) {
         Text(
             text = dayLetter.uppercase(),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 12.sp,
-                letterSpacing = 0.5.sp
-            ),
-            color = if (isWeekend) 
-                MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-            else 
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            fontSize = 12.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.5.sp,
+            color = letterColor
         )
-        // Main Container
+
+        Spacer(Modifier.height(6.dp))
+
         Box(
             modifier = Modifier
                 .width(46.dp)
                 .height(84.dp)
                 .clip(RoundedCornerShape(23.dp))
-                .background(
-                    MossGreen.copy(alpha = 0.15f * selectionProgress)
-                ),
-            contentAlignment = Alignment.TopCenter
+                .background(bgColor),
+            contentAlignment = Alignment.Center
         ) {
             Column(
-                modifier = Modifier.padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                verticalArrangement = Arrangement.Center
             ) {
+
                 Icon(
                     imageVector = Icons.Rounded.Eco,
                     contentDescription = null,
                     modifier = Modifier
                         .size(18.dp)
-                        .graphicsLayer { 
+                        .graphicsLayer {
                             alpha = 0.3f + (0.7f * selectionProgress)
                             scaleX = 0.8f + (0.2f * selectionProgress)
                             scaleY = 0.8f + (0.2f * selectionProgress)
                         },
                     tint = if (isSelected) MossGreen else MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(Modifier.height(12.dp))
-                //circle container
+
+                Spacer(Modifier.height(10.dp))
+
                 Box(
                     modifier = Modifier
                         .size(34.dp)
@@ -174,14 +180,9 @@ fun CalendarItem(
                 ) {
                     Text(
                         text = dayNumber,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            fontSize = 14.sp
-                        ),
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Black,
+                        color = numberColor
                     )
                 }
             }

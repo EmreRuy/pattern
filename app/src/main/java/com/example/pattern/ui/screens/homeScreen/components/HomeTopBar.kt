@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -35,57 +36,47 @@ fun HomeTopBar(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(vertical = 8.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Icon(
+            imageVector = Icons.Default.Menu,
+            contentDescription = "Menu",
             modifier = Modifier
-                .fillMaxWidth()
-              .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Menu",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onMenuClick() },
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.clickable(
-                    interactionSource = interactionSource,
+                .size(30.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
                     indication = null
-                ) { onPremiumClick() }
-            ) {
-                Text(
-                    text = stringResource(id = R.string.app_name),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            Icon(
-                imageVector = Icons.Rounded.SettingsSuggest,
-                contentDescription = "Settings",
-                modifier = Modifier
-                    .size(32.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onSettingsClick() },
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-        }
+                ) { onMenuClick() },
+            tint = MaterialTheme.colorScheme.onBackground
+        )
+
+        Text(
+            text = stringResource(id = R.string.app_name),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onPremiumClick() },
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Icon(
+            imageVector = Icons.Rounded.SettingsSuggest,
+            contentDescription = "Settings",
+            modifier = Modifier
+                .size(32.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onSettingsClick() },
+            tint = MaterialTheme.colorScheme.onBackground
+        )
     }
 }

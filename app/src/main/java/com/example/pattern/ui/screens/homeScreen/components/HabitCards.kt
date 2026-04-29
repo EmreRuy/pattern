@@ -3,8 +3,11 @@ package com.example.pattern.ui.screens.homeScreen.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -27,17 +30,15 @@ fun HabitCards(
     onPauseTimer: (HabitCardModel) -> Unit,
     onResumeTimer: (HabitCardModel) -> Unit,
 ) {
-    val scrollUi = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(scrollUi)
-            .padding(paddingValues),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = paddingValues,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        habits.forEach { habit ->
+        items(
+            items = habits,
+            key = { it.id }
+        ) { habit ->
             when (habit.type) {
                 HabitType.BUILD -> HabitBuildCard(
                     habit = habit,
@@ -49,20 +50,18 @@ fun HabitCards(
                     onPauseTimer = onPauseTimer,
                     onResumeTimer = onResumeTimer
                 )
-                 HabitType.TASK -> HabitTaskCard(
+
+                HabitType.TASK -> HabitTaskCard(
                     habit = habit,
                     isToday = isToday,
-                    onTaskCompleted = { habitId, completed ->
-                        onTaskCompleted(habitId, completed)
-                    },
+                    onTaskCompleted = onTaskCompleted,
                     onCardClick = onHabitCardClick
                 )
+
                 HabitType.QUIT -> HabitQuitCard(
                     habit = habit,
                     isToday = isToday,
-                    onTaskCompleted = { habitId, completed ->
-                        onTaskCompleted(habitId, completed)
-                    },
+                    onTaskCompleted = onTaskCompleted,
                     onCardClick = onHabitCardClick
                 )
             }
