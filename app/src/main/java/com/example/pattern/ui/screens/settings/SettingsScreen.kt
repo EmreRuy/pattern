@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.R
 import com.example.pattern.ui.screens.settings.SettingsViewModel
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
+import com.example.pattern.ui.screens.homeScreen.components.DebouncedIconButton
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils
@@ -78,7 +79,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    DebouncedIconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
                             contentDescription = stringResource(R.string.back),

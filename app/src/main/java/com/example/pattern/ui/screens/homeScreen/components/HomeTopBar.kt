@@ -44,17 +44,14 @@ fun HomeTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Default.Menu,
-            contentDescription = "Menu",
-            modifier = Modifier
-                .size(30.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onMenuClick() },
-            tint = MaterialTheme.colorScheme.onBackground
-        )
+        DebouncedIconButton(onClick = onMenuClick) {
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = "Menu",
+                modifier = Modifier.size(30.dp),
+                tint = MaterialTheme.colorScheme.onBackground
+            )
+        }
 
         Text(
             text = stringResource(id = R.string.app_name),
@@ -66,17 +63,13 @@ fun HomeTopBar(
             ) { onPremiumClick() },
             color = MaterialTheme.colorScheme.onBackground
         )
-
-        Icon(
-            imageVector = Icons.Rounded.SettingsSuggest,
-            contentDescription = "Settings",
-            modifier = Modifier
-                .size(32.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onSettingsClick() },
-            tint = MaterialTheme.colorScheme.onBackground
-        )
+        DebouncedIconButton(onClick = onSettingsClick) {
+            Icon(
+                imageVector = Icons.Rounded.SettingsSuggest,
+                contentDescription = "Settings",
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }

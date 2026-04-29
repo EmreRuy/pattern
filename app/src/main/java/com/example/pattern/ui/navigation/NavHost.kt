@@ -97,7 +97,7 @@ fun NavHost(
                     navController.popBackStack()
                 },
                 onBack = {
-                    navController.popBackStack()
+                        navController.popBackStack()
                 }
             )
         }
