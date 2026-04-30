@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.onboarding
 
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -27,8 +28,8 @@ import androidx.compose.ui.unit.sp
 import com.example.pattern.R
 import com.example.pattern.ui.components.HabitProgressCard
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsUi
-import java.time.LocalDate
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -46,18 +47,19 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
     ) {
-        // Background Gradient
+        // Subtle ambient gradient for premium feel
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    Brush.verticalGradient(
+                    Brush.radialGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.05f),
-                            MaterialTheme.colorScheme.background
-                        )
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            Color.Transparent
+                        ),
+                        radius = 2000f
                     )
                 )
         )
@@ -68,138 +70,165 @@ fun OnboardingScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                userScrollEnabled = true
+                // Snap settings for "snappier" feeling
+                pageSpacing = 16.dp
             ) { position ->
-                OnboardingPagerItem(page = pages[position])
+                OnboardingPagerItem(page = pages[position], isVisible = pagerState.currentPage == position)
             }
 
-            // Bottom Navigation Area
+            // Bottom Navigation
             Column(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = 48.dp),
+                    .padding(bottom = 56.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // Page Indicator
+                // Modern elongated indicators
                 Row(
-                    Modifier.height(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Modifier.height(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     repeat(pages.size) { iteration ->
                         val color = if (pagerState.currentPage == iteration) 
                             MaterialTheme.colorScheme.primary 
                         else 
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                         
                         val width by animateDpAsState(
-                            targetValue = if (pagerState.currentPage == iteration) 32.dp else 8.dp,
+                            targetValue = if (pagerState.currentPage == iteration) 40.dp else 12.dp,
+                            animationSpec = spring(stiffness = Spring.StiffnessLow),
                             label = "indicatorWidth"
                         )
 
                         Box(
                             modifier = Modifier
                                 .width(width)
-                                .height(8.dp)
+                                .fillMaxHeight()
                                 .clip(CircleShape)
                                 .background(color)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
                 Button(
                     onClick = {
                         if (pagerState.currentPage < pages.size - 1) {
-                            scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                            scope.launch { 
+                                pagerState.animateScrollToPage(
+                                    pagerState.currentPage + 1,
+                                    animationSpec = tween(500, easing = FastOutSlowInEasing)
+                                ) 
+                            }
                         } else {
                             onFinish()
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
+                        .height(64.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 4.dp)
                 ) {
                     Text(
                         text = if (pagerState.currentPage < pages.size - 1) 
-                            stringResource(R.string.onboarding_btn_next) 
+                            stringResource(R.string.onboarding_btn_next).uppercase() 
                         else 
-                            stringResource(R.string.onboarding_btn_start),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            stringResource(R.string.onboarding_btn_start).uppercase(),
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 2.sp,
+                            fontSize = 14.sp
+                        )
                     )
                 }
+            }
+        }
 
-                if (pagerState.currentPage < pages.size - 1) {
-                    TextButton(onClick = onFinish) {
-                        Text(
-                            text = stringResource(R.string.onboarding_btn_skip),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                } else {
-                    Spacer(modifier = Modifier.height(48.dp)) // Maintain layout height
-                }
+        // Top Skip Button - Minimalist
+        if (pagerState.currentPage < pages.size - 1) {
+            TextButton(
+                onClick = onFinish,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 48.dp, end = 16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.onboarding_btn_skip),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                )
             }
         }
     }
 }
 
 @Composable
-fun OnboardingPagerItem(page: OnboardingPage) {
+fun OnboardingPagerItem(page: OnboardingPage, isVisible: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Visual Area
+        // Visual Area with entry animation
         Box(
             modifier = Modifier
-                .weight(1f)
+                .weight(1.2f)
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            when (page) {
-                OnboardingPage.Identity -> IdentityVisual()
-                OnboardingPage.Mastery -> MasteryVisual()
-                OnboardingPage.Discipline -> DisciplineVisual()
+            this@Column.AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(600)) + scaleIn(tween(600, easing = BackOut)),
+                exit = fadeOut(tween(300))
+            ) {
+                when (page) {
+                    OnboardingPage.Identity -> IdentityVisual()
+                    OnboardingPage.Mastery -> MasteryVisual()
+                    OnboardingPage.Discipline -> DisciplineVisual()
+                }
             }
         }
 
-        // Text Area
+        // Text Area - Taking inspiration from HabitProgressCard labels
         Column(
+            modifier = Modifier.weight(0.8f),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.Top
         ) {
             Text(
                 text = stringResource(page.headline),
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
-                    letterSpacing = (-1).sp
+                    letterSpacing = (-1.5).sp,
+                    lineHeight = 40.sp
                 ),
                 color = MaterialTheme.colorScheme.onBackground
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             Text(
                 text = stringResource(page.support),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     textAlign = TextAlign.Center,
-                    lineHeight = 24.sp
+                    lineHeight = 28.sp,
+                    letterSpacing = 0.2.sp
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                modifier = Modifier.padding(horizontal = 12.dp)
             )
         }
-        
-        Spacer(modifier = Modifier.height(48.dp))
     }
 }
 
@@ -208,9 +237,9 @@ fun IdentityVisual() {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.1f,
+        targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
+            animation = tween(2500, easing = EaseInOutSine),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scale"
@@ -218,17 +247,17 @@ fun IdentityVisual() {
 
     Surface(
         modifier = Modifier
-            .size(160.dp)
+            .size(180.dp)
             .scale(scale),
-        shape = RoundedCornerShape(48.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-        border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        shape = RoundedCornerShape(56.dp),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = Icons.Rounded.AutoAwesome,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp),
+                modifier = Modifier.size(72.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
         }
@@ -256,8 +285,8 @@ fun MasteryVisual() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .scale(0.85f)
+            .padding(horizontal = 4.dp)
+            .scale(0.9f)
     ) {
         HabitProgressCard(
             habit = mockHabit,
@@ -269,39 +298,39 @@ fun MasteryVisual() {
 @Composable
 fun DisciplineVisual() {
     Surface(
-        modifier = Modifier.size(200.dp, 120.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp
+        modifier = Modifier.size(240.dp, 100.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        shadowElevation = 0.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Surface(
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(52.dp),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primary
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
                     contentDescription = null,
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(14.dp),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     modifier = Modifier
-                        .size(100.dp, 12.dp)
+                        .size(120.dp, 14.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                 )
-                Spacer(Modifier.height(8.dp))
                 Box(
                     modifier = Modifier
-                        .size(60.dp, 8.dp)
+                        .size(80.dp, 10.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
                 )
@@ -314,7 +343,13 @@ sealed class OnboardingPage(
     val headline: Int,
     val support: Int
 ) {
-    object Identity : OnboardingPage(R.string.onboarding_1_headline, R.string.onboarding_1_support)
-    object Mastery : OnboardingPage(R.string.onboarding_2_headline, R.string.onboarding_2_support)
-    object Discipline : OnboardingPage(R.string.onboarding_3_headline, R.string.onboarding_3_support)
+    data object Identity : OnboardingPage(R.string.onboarding_1_headline, R.string.onboarding_1_support)
+    data object Mastery : OnboardingPage(R.string.onboarding_2_headline, R.string.onboarding_2_support)
+    data object Discipline : OnboardingPage(R.string.onboarding_3_headline, R.string.onboarding_3_support)
+}
+
+val BackOut = Easing { fraction ->
+    val s = 1.70158f
+    val f = fraction - 1.0f
+    f * f * ((s + 1.0f) * f + s) + 1.0f
 }
