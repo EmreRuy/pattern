@@ -23,12 +23,19 @@ fun NavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     isPro: Boolean = false,
+    startDestination: String = Screens.Home.route,
+    onOnboardingFinish: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screens.Home.route,
+        startDestination = startDestination,
         modifier = modifier
     ) {
+        composable(Screens.Onboarding.route) {
+            com.example.pattern.ui.screens.onboarding.OnboardingScreen(
+                onFinish = onOnboardingFinish
+            )
+        }
         composable(Screens.Home.route) {
             HomeScreen(
                 navController = navController,

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.outlined.LensBlur
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screens(val route: String) {
+    object Onboarding : Screens("onboarding_route")
     object Home : Screens("home_route")
     object Add : Screens("add_route")
     object Profile : Screens("profile_route")

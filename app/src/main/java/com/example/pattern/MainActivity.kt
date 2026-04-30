@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.navigation.Screens
 import com.example.pattern.ui.theme.AppTheme
@@ -42,7 +44,16 @@ class MainActivity : ComponentActivity() {
             )
         )
         setContent {
+            val viewModel: MainViewModel = viewModel()
+            val startDestination by viewModel.startDestination.collectAsState()
+            val isLoading by viewModel.isLoading.collectAsState()
+
             AppTheme {
+                if (isLoading || startDestination == null) {
+                    // Splash or Empty Screen while determining start destination
+                    return@AppTheme
+                }
+
                 val context = LocalContext.current
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()
@@ -68,6 +79,7 @@ class MainActivity : ComponentActivity() {
 
                 // Routes that should NOT show the bottom bar
                 val fullScreenRoutes = listOf(
+                    Screens.Onboarding.route,
                     Screens.HabitDetail.route,
                     Screens.Add.route,
                     Screens.EditHabit.route,
@@ -111,7 +123,14 @@ class MainActivity : ComponentActivity() {
                 ) { paddingValues ->
                     NavHost(
                         navController = navController,
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.padding(paddingValues),
+                        startDestination = startDestination!!,
+                        onOnboardingFinish = {
+                            viewModel.completeOnboarding()
+                            navController.navigate(Screens.Home.route) {
+                                popUpTo(Screens.Onboarding.route) { inclusive = true }
+                            }
+                        }
                     )
                 }
             }

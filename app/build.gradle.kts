@@ -98,6 +98,7 @@ dependencies {
     // WorkManager & Hilt Integration (Notifications)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.datastore.preferences)
 
     ksp(libs.androidx.hilt.compiler)
 }

@@ -82,4 +82,14 @@
     <string name="schedule_weekends">Weekends</string>
     <string name="schedule_weekdays">Weekdays</string>
     <string name="schedule_none">No schedule</string>
+    <!-- Onboarding -->
+    <string name="onboarding_1_headline">Design Your Better Self</string>
+    <string name="onboarding_1_support">Break the cycle of inconsistency. Build the patterns that define who you truly want to become.</string>
+    <string name="onboarding_2_headline">Mastery in Every Step</string>
+    <string name="onboarding_2_support">Every action earns XP. Watch your habits evolve from Novice to Grandmaster as you gain momentum.</string>
+    <string name="onboarding_3_headline">Discipline Without Noise</string>
+    <string name="onboarding_3_support">Smart reminders and a calm interface. No clutter, just the focus you need to stay on track.</string>
+    <string name="onboarding_btn_next">Level Up</string>
+    <string name="onboarding_btn_start">Begin Transformation</string>
+    <string name="onboarding_btn_skip">Skip</string>
 </resources>
