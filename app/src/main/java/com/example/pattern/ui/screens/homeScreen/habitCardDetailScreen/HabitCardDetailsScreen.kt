@@ -50,12 +50,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import com.example.pattern.utils.ExperienceUtils
 import androidx.compose.ui.res.stringResource
 import com.example.pattern.R
 import com.example.pattern.ui.components.HabitHeatMap
 import com.example.pattern.ui.components.HabitProgressCard
 import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
+import com.example.pattern.ui.screens.homeScreen.components.DebouncedIconButton
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,10 +89,10 @@ fun HabitCardDetailsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    DebouncedIconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBackIos,
-                            contentDescription = "Back",
+                            imageVector = Icons.Rounded.ArrowBackIosNew,
+                            contentDescription = stringResource(R.string.back),
                             modifier = Modifier.size(20.dp)
                         )
                     }

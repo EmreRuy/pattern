@@ -51,8 +51,8 @@ fun HomeCalendarSelector(
         state = pagerState,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+           // .padding(bottom = 8.dp),
+     ,   verticalAlignment = Alignment.CenterVertically,
         pageSpacing = 0.dp
     ) { weekIndex ->
 
@@ -132,7 +132,7 @@ fun CalendarItem(
             color = letterColor
         )
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(4.dp))
 
         Box(
             modifier = Modifier
@@ -160,7 +160,7 @@ fun CalendarItem(
                     tint = if (isSelected) MossGreen else MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(8.dp))
 
                 Box(
                     modifier = Modifier

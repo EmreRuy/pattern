@@ -33,7 +33,7 @@ fun HabitCards(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = paddingValues,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
         items(
             items = habits,

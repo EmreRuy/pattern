@@ -32,7 +32,7 @@ fun ProfileStatCard(
             .height(260.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor =  MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.25f),
+            containerColor =  MaterialTheme.colorScheme.surfaceContainerLowest,
         )
     ) {
         Column(
