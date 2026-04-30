@@ -40,14 +40,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 
 
 @Composable
 fun ProfileExtraCard(
     title: String = "Extra Score",
     percentage: Float,
-    number: Int,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    doneCount: Int,
+    missedCount: Int,
+    xpPoints: Int,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
 ) {
     Card(
         modifier = Modifier
@@ -64,59 +67,67 @@ fun ProfileExtraCard(
         ) {
             Text(
                 text = title.uppercase(),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 1.2.sp
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.5.sp
+                ),
+                color = Color.LightGray
             )
             Spacer(modifier = Modifier.height(20.dp))
             Box(contentAlignment = Alignment.Center) {
                 HalfCircularProgressBar(
                     percentage = percentage,
-                    number = number
+                    number = (percentage * 100).toInt()
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                    .padding(vertical = 12.dp),
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                    .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatItem(
                     label = "Done",
-                    value = "176",
-                    color = MaterialTheme.colorScheme.primary
+                    value = doneCount.toString(),
+                    color = Color(0xFF386641)
                 )
 
                 VerticalDivider(
                     modifier = Modifier.height(24.dp),
                     thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
 
                 StatItem(
-                    label = "Skip",
-                    value = "75",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    label = "Missed",
+                    value = missedCount.toString(),
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                 )
 
                 VerticalDivider(
                     modifier = Modifier.height(24.dp),
                     thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
 
                 StatItem(
-                    label = "XP",
-                    value = "1.2k",
-                    color = MaterialTheme.colorScheme.tertiary
+                    label = "Total XP",
+                    value = formatXPLabel(xpPoints.toFloat()),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
+    }
+}
+
+private fun formatXPLabel(value: Float): String {
+    return when {
+        value >= 1000f -> String.format(Locale.US, "%.1fk", value / 1000f)
+        else -> value.toInt().toString()
     }
 }
 

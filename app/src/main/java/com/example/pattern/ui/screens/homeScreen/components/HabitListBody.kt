@@ -143,7 +143,7 @@ fun HabitListItem(
 
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = if (xpScore > 0) "$xpScore" else "$maxXP",
+                text = if (xpScore > 0) "+$xpScore" else "$maxXP",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = if (xpScore > 0) MossGreen else Color.Gray.copy(alpha = 0.5f)

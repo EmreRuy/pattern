@@ -7,9 +7,11 @@ import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.dao.SettingsDao
 import com.example.pattern.data.local.entity.SettingsEntity
+import com.example.pattern.utils.ExperienceUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 
 // This one is for managing habit data
 /*
@@ -98,6 +100,23 @@ class HabitRepository @Inject constructor(
             } else {
                 Log.e("HabitRepository", "Error in setTaskCompleted for habit $habitId", e)
             }
+        }
+    }
+
+    /**
+     * The "Source of Truth" for XP.
+     * Calculates total XP by summing up all completed daily states for existing habits.
+     */
+    fun getTotalXPStream(): Flow<Int> = combine(
+        getAllHabitsStream(),
+        getAllDailyStatesStream()
+    ) { habits, allStates ->
+        val habitMap = habits.associateBy { it.id }
+        allStates.sumOf { state ->
+            val habit = habitMap[state.habitId]
+            if (habit != null) {
+                ExperienceUtils.calculateHabitXP(habit, state)
+            } else 0
         }
     }
 
