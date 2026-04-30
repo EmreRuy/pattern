@@ -20,7 +20,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +40,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Locale
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import com.example.pattern.ui.screens.profileScreen.HabitStat
 
+
+import androidx.core.graphics.toColorInt
 
 @Composable
 fun ProfileExtraCard(
@@ -50,75 +55,232 @@ fun ProfileExtraCard(
     doneCount: Int,
     missedCount: Int,
     xpPoints: Int,
+    topDoneHabits: List<HabitStat> = emptyList(),
+    topMissedHabits: List<HabitStat> = emptyList(),
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
 ) {
+    val pagerState = rememberPagerState(pageCount = { 4 })
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = title.uppercase(),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.5.sp
-                ),
-                color = Color.LightGray
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Box(contentAlignment = Alignment.Center) {
-                HalfCircularProgressBar(
-                    percentage = percentage,
-                    number = (percentage * 100).toInt()
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
-                    .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .height(260.dp), // Fixed height to prevent jumping
+                verticalAlignment = Alignment.Top
+            ) { page ->
+                when (page) {
+                    0 -> SuccessScoreOverview(
+                        title = title,
+                        percentage = percentage,
+                        doneCount = doneCount,
+                        missedCount = missedCount,
+                        xpPoints = xpPoints
+                    )
+
+                    1 -> TopHabitsList(
+                        title = "TOP 3 DONE",
+                        habits = topDoneHabits,
+                        emptyMessage = "Keep going! No habits done yet."
+                    )
+
+                    2 -> TopHabitsList(
+                        title = "TOP 3 MISSED",
+                        habits = topMissedHabits,
+                        emptyMessage = "Perfect! No missed habits."
+                    )
+
+                    3 -> HabitInsights(
+                        topDone = topDoneHabits,
+                        topMissed = topMissedHabits
+                    )
+                }
+            }
+
+            // Pager Indicator - Minimalistic
+            Row(
+                Modifier
+                    .padding(top = 4.dp)
+                    .height(4.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatItem(
-                    label = "Done",
-                    value = doneCount.toString(),
-                    color = Color(0xFF386641)
-                )
+                repeat(4) { iteration ->
+                    val isSelected = pagerState.currentPage == iteration
+                    val width by animateFloatAsState(
+                        targetValue = if (isSelected) 18f else 6f,
+                        animationSpec = tween(durationMillis = 300),
+                        label = "width"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 3.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                            )
+                            .size(width = width.dp, height = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
 
-                VerticalDivider(
-                    modifier = Modifier.height(24.dp),
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                )
+@Composable
+private fun SuccessScoreOverview(
+    title: String,
+    percentage: Float,
+    doneCount: Int,
+    missedCount: Int,
+    xpPoints: Int
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.5.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Box(contentAlignment = Alignment.Center) {
+            HalfCircularProgressBar(
+                percentage = percentage,
+                number = (percentage * 100).toInt()
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            StatItem(
+                label = "Done",
+                value = doneCount.toString(),
+                color = Color(0xFF386641)
+            )
 
-                StatItem(
-                    label = "Missed",
-                    value = missedCount.toString(),
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                )
+            Box(modifier = Modifier.size(1.dp, 24.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
 
-                VerticalDivider(
-                    modifier = Modifier.height(24.dp),
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                )
+            StatItem(
+                label = "Missed",
+                value = missedCount.toString(),
+                color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+            )
 
-                StatItem(
-                    label = "Total XP",
-                    value = formatXPLabel(xpPoints.toFloat()),
-                    color = MaterialTheme.colorScheme.onSurface
+            Box(modifier = Modifier.size(1.dp, 24.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
+
+            StatItem(
+                label = "Total XP",
+                value = formatXPLabel(xpPoints.toFloat()),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun TopHabitsList(
+    title: String,
+    habits: List<HabitStat>,
+    emptyMessage: String,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.5.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (habits.isEmpty()) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Text(
+                    text = emptyMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
+            }
+        } else {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                habits.forEach { habit ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Minimalist Icon Circle - 32dp
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    try { Color(habit.colorHex.toColorInt()).copy(alpha = 0.12f) }
+                                    catch (_: Exception) { MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = habit.iconCode,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+
+                        Text(
+                            text = habit.name,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Text(
+                            text = habit.count.toString(),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -130,6 +292,104 @@ private fun formatXPLabel(value: Float): String {
         else -> value.toInt().toString()
     }
 }
+
+@Composable
+private fun HabitInsights(
+    topDone: List<HabitStat>,
+    topMissed: List<HabitStat>
+) {
+    val insight = remember(topDone, topMissed) {
+        when {
+            topDone.isNotEmpty() && topMissed.isEmpty() -> {
+                InsightData(
+                    title = "UNSTOPPABLE",
+                    message = "Your consistency is legendary. You've mastered your current routine.",
+                    action = "Time to level up? Consider adding a small, high-impact habit to your morning.",
+                    emoji = "🔥"
+                )
+            }
+            topDone.isNotEmpty() -> {
+                val bestHabit = topDone.first().name
+                val toughHabit = topMissed.first().name
+                InsightData(
+                    title = "MOMENTUM & FRICTION",
+                    message = "You're crushing '$bestHabit', but '$toughHabit' seems to be a hurdle lately.",
+                    action = "Try the '2-minute rule' for $toughHabit: make it so easy you can't say no.",
+                    emoji = "⚖️"
+                )
+            }
+            topMissed.isNotEmpty() -> {
+                InsightData(
+                    title = "FRESH START",
+                    message = "The first step is always the hardest. Don't let the misses define you.",
+                    action = "Pick one habit for tomorrow and focus only on showing up. Just 1% better.",
+                    emoji = "🌱"
+                )
+            }
+            else -> {
+                InsightData(
+                    title = "YOUR JOURNEY",
+                    message = "Every master was once a beginner. Start small, stay consistent.",
+                    action = "Track your first habit today to unlock personalized insights.",
+                    emoji = "✨"
+                )
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp)
+            .padding(horizontal = 32.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "${insight.emoji} ${insight.title}",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp
+            ),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = insight.message,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Medium,
+                lineHeight = 24.sp,
+                letterSpacing = 0.2.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = insight.action,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 18.sp
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+private data class InsightData(
+    val title: String,
+    val message: String,
+    val action: String,
+    val emoji: String
+)
 
 @Composable
 fun StatItem(

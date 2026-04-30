@@ -53,15 +53,21 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
-                    Text(
-                        text = stringResource(
-                            R.string.detail_level_label,
-                            levelInfo.level,
-                            levelInfo.title
-                        ),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HabitLevelIcon(
+                            levelTitle = levelInfo.title,
+                            accentColor = accentColor
+                        )
+                        Text(
+                            text = levelInfo.title,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
 
                 Box(contentAlignment = Alignment.Center) {
@@ -129,7 +135,7 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.detail_xp_value, habit.totalXP),
+                    text = stringResource(R.string.detail_level_only, levelInfo.level),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )

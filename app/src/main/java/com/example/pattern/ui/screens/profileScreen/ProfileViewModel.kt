@@ -25,7 +25,16 @@ data class ProfileUiState(
     val successRate: Float = 0f,
     val totalXp: Int = 0,
     val totalHabits: Int = 0,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val topDoneHabits: List<HabitStat> = emptyList(),
+    val topMissedHabits: List<HabitStat> = emptyList()
+)
+
+data class HabitStat(
+    val name: String,
+    val count: Int,
+    val iconCode: String,
+    val colorHex: String
 )
 
 @HiltViewModel
@@ -48,12 +57,13 @@ class ProfileViewModel @Inject constructor(
         var totalDone = 0
         var totalMissed = 0
         var currentTotalXp = 0
-        
-        habits.forEach { habit ->
+
+        val habitStatsList = habits.map { habit ->
             val states = stateMap[habit.id] ?: emptyList()
             
             // 1. Calculate Done and Total XP from existing states
             val completionDates = mutableSetOf<String>()
+            var habitDone = 0
             states.forEach { state ->
                 val isDone = when (habit.type) {
                     HabitType.BUILD -> state.isCompleted
@@ -61,34 +71,44 @@ class ProfileViewModel @Inject constructor(
                 }
                 if (isDone) {
                     completionDates.add(state.date)
+                    habitDone++
                     totalDone++
                     currentTotalXp += ExperienceUtils.calculateHabitXP(habit, state)
                 }
             }
             
             // 2. Calculate Missed days (scheduled but not completed)
-            // We start from the creation date of the habit.
             val startDate = Instant.ofEpochMilli(habit.createdAt)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
             
+            var habitMissed = 0
             var checkDate = startDate
-            // We only look at days before today to determine misses.
             while (checkDate.isBefore(today)) {
-                // DayOfWeek index mapping: Monday = 1...Sunday = 7.
-                // Our selectedDays list follows: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
                 val dayOfWeekIndex = checkDate.dayOfWeek.value - 1
-                
                 val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
                 
-                // If it was scheduled but no completion record exists for that date
                 if (isScheduled && !completionDates.contains(checkDate.toString())) {
+                    habitMissed++
                     totalMissed++
                 }
                 checkDate = checkDate.plusDays(1)
             }
+            Triple(habit, habitDone, habitMissed)
         }
         
+        val topDone = habitStatsList
+            .filter { it.second > 0 }
+            .sortedByDescending { it.second }
+            .take(3)
+            .map { HabitStat(it.first.name, it.second, it.first.iconCode, it.first.accentColorHex) }
+
+        val topMissed = habitStatsList
+            .filter { it.third > 0 }
+            .sortedByDescending { it.third }
+            .take(3)
+            .map { HabitStat(it.first.name, it.third, it.first.iconCode, it.first.accentColorHex) }
+
         val totalAttempts = totalDone + totalMissed
         val rate = if (totalAttempts > 0) totalDone.toFloat() / totalAttempts else 0f
         
@@ -100,6 +120,8 @@ class ProfileViewModel @Inject constructor(
             successRate = rate,
             totalXp = currentTotalXp,
             totalHabits = habits.size,
+            topDoneHabits = topDone,
+            topMissedHabits = topMissed,
             isLoading = false
         )
     }

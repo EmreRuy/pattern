@@ -44,17 +44,20 @@ object ExperienceUtils {
      * Determines Level and Title based on total accumulated XP.
      */
     fun getLevelInfo(totalXP: Int): LevelInfo {
-        val thresholds = listOf(0, 100, 300, 700, 1500, 3100, 6300, 12700, 25500)
+        val thresholds = listOf(0, 100, 300, 700, 1500, 3100, 6300, 12700, 25500, 51100, 102300, 204700)
         val titles = listOf(
-            "Novice",      // Level 1
-            "Beginner",    // Level 2
-            "Learner",     // Level 3
-            "Consistent",  // Level 4
-            "Advanced",    // Level 5
-            "Expert",      // Level 6
-            "Elite",       // Level 7
-            "Master",      // Level 8
-            "Grandmaster"  // Level 9+
+            "Novice",        // Level 1
+            "Beginner",      // Level 2
+            "Apprentice",    // Level 3
+            "Learner",       // Level 4
+            "Practitioner",  // Level 5
+            "Consistent",    // Level 6
+            "Skilled",       // Level 7
+            "Advanced",      // Level 8
+            "Expert",        // Level 9
+            "Elite",         // Level 10
+            "Master",        // Level 11
+            "Grandmaster"    // Level 12+
         )
 
         var level = 1

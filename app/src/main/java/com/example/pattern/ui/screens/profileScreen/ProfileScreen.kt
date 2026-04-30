@@ -82,7 +82,9 @@ fun ProfileScreen(
             percentage = uiState.successRate,
             doneCount = uiState.doneCount,
             missedCount = uiState.missedCount,
-            xpPoints = uiState.totalXp
+            xpPoints = uiState.totalXp,
+            topDoneHabits = uiState.topDoneHabits,
+            topMissedHabits = uiState.topMissedHabits
         )
 
 

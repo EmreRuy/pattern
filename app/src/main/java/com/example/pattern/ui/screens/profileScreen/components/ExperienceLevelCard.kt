@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.pattern.ui.components.HabitLevelIcon
 
 @Composable
 fun ExperienceLevelCard(
@@ -77,12 +78,21 @@ fun ExperienceLevelCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = levelTitle,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    HabitLevelIcon(
+                        levelTitle = levelTitle,
+                        accentColor = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = levelTitle,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 // Uses the master animatedProgress
                 Text(
                     text = "${(animatedProgress * 100).toInt()}%",
