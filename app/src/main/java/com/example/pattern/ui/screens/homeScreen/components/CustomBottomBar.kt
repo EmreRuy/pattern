@@ -1,80 +1,84 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pattern.ui.navigation.BottomNavigationItem
-import com.example.pattern.ui.navigation.Screens
 
 @Composable
 fun CustomBottomBar(
     currentRoute: String,
     onItemClick: (BottomNavigationItem) -> Unit
 ) {
-    val items = remember { BottomNavigationItem().bottomNavigationItems() }
-    val addItem = items.first { it.route == Screens.Add.route }
-    val mainItems = items.filter { it.route != Screens.Add.route }
+    val items = remember { BottomNavigationItem.items() }
 
-    Box {
-        NavigationBar(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            tonalElevation = 6.dp,
-            windowInsets = NavigationBarDefaults.windowInsets
-        ) {
-
-            mainItems.forEach { item ->
-                val selected = currentRoute == item.route
-                NavigationBarItem(
-                    selected = selected,
-                    onClick = { onItemClick(item) },
-                    icon = {
-                        Icon(
-                            imageVector = item.icon,
-                            contentDescription = item.label
-                        )
-                    },
-                    label = {
-                        Text(text = item.label)
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    )
-                )
-            }
-        }
-
-        FloatingActionButton(
-            onClick = { onItemClick(addItem) },
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            shape = CircleShape,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = (-28).dp)
-                .size(64.dp)
-        ) {
-            Icon(
-                imageVector = addItem.icon,
-                contentDescription = addItem.label
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp, // Minimalistic look: no elevation shadow
+        windowInsets = androidx.compose.material3.NavigationBarDefaults.windowInsets
+    ) {
+        items.forEach { item ->
+            val isSelected = currentRoute == item.route
+            
+            StandardNavigationBarItem(
+                item = item,
+                isSelected = isSelected,
+                onClick = { onItemClick(item) }
             )
         }
     }
+}
+
+@Composable
+private fun RowScope.StandardNavigationBarItem(
+    item: BottomNavigationItem,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        animationSpec = tween(durationMillis = 300),
+        label = "IconColor"
+    )
+
+    NavigationBarItem(
+        selected = isSelected,
+        onClick = onClick,
+        icon = {
+            Icon(
+                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                contentDescription = item.label,
+                tint = iconColor
+            )
+        },
+        label = {
+            Text(
+                text = item.label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    letterSpacing = 0.5.sp
+                )
+            )
+        },
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = MaterialTheme.colorScheme.primary,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            selectedTextColor = MaterialTheme.colorScheme.primary,
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            indicatorColor = Color.Transparent // Minimalistic: no pill indicator
+        )
+    )
 }

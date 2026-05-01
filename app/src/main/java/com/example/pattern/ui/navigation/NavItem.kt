@@ -1,51 +1,55 @@
 package com.example.pattern.ui.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material.icons.outlined.LensBlur
+import androidx.compose.material.icons.outlined.Analytics
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Analytics
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screens(val route: String) {
-    object Onboarding : Screens("onboarding_route")
-    object Home : Screens("home_route")
-    object Add : Screens("add_route")
-    object Profile : Screens("profile_route")
-    object HabitDetail : Screens("habit_detail_route/{habitId}") {
+    data object Onboarding : Screens("onboarding_route")
+    data object Home : Screens("home_route")
+    data object Add : Screens("add_route")
+    data object Profile : Screens("profile_route")
+    data object HabitDetail : Screens("habit_detail_route/{habitId}") {
         fun createRoute(habitId: Int) = "habit_detail_route/$habitId"
     }
-    object EditHabit : Screens("edit_habit_route/{habitId}") {
+    data object EditHabit : Screens("edit_habit_route/{habitId}") {
         fun createRoute(habitId: Int) = "edit_habit_route/$habitId"
     }
-    object HabitList : Screens("habit_list_route")
-    object Settings : Screens("settings_route")
+    data object HabitList : Screens("habit_list_route")
+    data object Settings : Screens("settings_route")
     data object Premium : Screens("premium_route")
 }
 
 data class BottomNavigationItem(
-    val label: String = "",
-    val icon: ImageVector = Icons.Filled.Home,
-    val route: String = ""
+    val label: String,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+    val route: String
 ) {
-    //function to get the list of bottomNavigationItems
-    fun bottomNavigationItems(): List<BottomNavigationItem> {
-        return listOf(
+    companion object {
+        fun items(): List<BottomNavigationItem> = listOf(
             BottomNavigationItem(
                 label = "Habits",
-                icon =   Icons.Outlined.LensBlur,
+                selectedIcon = Icons.Rounded.GridView,
+                unselectedIcon = Icons.Outlined.GridView,
                 route = Screens.Home.route
             ),
             BottomNavigationItem(
                 label = "Add",
-                icon = Icons.Filled.Add,
+                selectedIcon = Icons.Rounded.Add,
+                unselectedIcon = Icons.Rounded.Add, // Add usually stays same
                 route = Screens.Add.route
             ),
             BottomNavigationItem(
                 label = "Insights",
-                Icons.Filled.PieChart,
+                selectedIcon = Icons.Rounded.Analytics,
+                unselectedIcon = Icons.Outlined.Analytics,
                 route = Screens.Profile.route
-            ),
+            )
         )
     }
 }
