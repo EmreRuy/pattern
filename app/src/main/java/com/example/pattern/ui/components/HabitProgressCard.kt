@@ -56,16 +56,16 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
                     Spacer(Modifier.height(16.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        HabitLevelIcon(
-                            levelTitle = levelInfo.title,
-                            accentColor = accentColor
-                        )
                         Text(
                             text = levelInfo.title,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                             color = MaterialTheme.colorScheme.onSurface
+                        )
+                        HabitLevelIcon(
+                            levelTitle = levelInfo.title,
+                            accentColor = accentColor
                         )
                     }
                 }
