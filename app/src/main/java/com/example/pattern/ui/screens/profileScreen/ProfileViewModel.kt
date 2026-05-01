@@ -20,6 +20,7 @@ import javax.inject.Inject
 data class ProfileUiState(
     val levelInfo: LevelInfo = ExperienceUtils.getLevelInfo(0),
     val xpHistory: List<XPDataPoint> = emptyList(),
+    val yearlyXpHistory: List<XPDataPoint> = emptyList(),
     val doneCount: Int = 0,
     val missedCount: Int = 0,
     val successRate: Float = 0f,
@@ -115,6 +116,7 @@ class ProfileViewModel @Inject constructor(
         ProfileUiState(
             levelInfo = ExperienceUtils.getLevelInfo(currentTotalXp),
             xpHistory = calculateRealXpHistory(habits, allStates),
+            yearlyXpHistory = calculateYearlyXpHistory(habits, allStates),
             doneCount = totalDone,
             missedCount = totalMissed,
             successRate = rate,
@@ -163,6 +165,48 @@ class ProfileViewModel @Inject constructor(
             val dateString = date.toString()
             runningTotal += (dailyGains[dateString] ?: 0)
             XPDataPoint(i + 1, date.format(formatter), runningTotal)
+        }
+    }
+
+    private fun calculateYearlyXpHistory(habits: List<Habit>, allStates: List<HabitDailyState>): List<XPDataPoint> {
+        val formatter = DateTimeFormatter.ofPattern("MMM")
+        val today = LocalDate.now()
+        val habitMap = habits.associateBy { it.id }
+
+        val dailyGains = allStates.groupBy { it.date }
+            .mapValues { (_, states) ->
+                states.sumOf { state ->
+                    val habit = habitMap[state.habitId]
+                    if (habit != null) ExperienceUtils.calculateHabitXP(habit, state) else 0
+                }
+            }
+
+        val startDate = today.minusMonths(11).withDayOfMonth(1)
+        var runningTotal = 0f
+
+        // Baseline XP: sum all XP before startDate
+        allStates.forEach { state ->
+            val habit = habitMap[state.habitId]
+            if (habit != null) {
+                val stateDate = try { LocalDate.parse(state.date) } catch (_: Exception) { null }
+                if (stateDate != null && stateDate.isBefore(startDate)) {
+                    runningTotal += ExperienceUtils.calculateHabitXP(habit, state)
+                }
+            }
+        }
+
+        return List(12) { i ->
+            val monthDate = startDate.plusMonths(i.toLong())
+            // Sum all daily gains in this month
+            var monthTotal = 0f
+            var checkDate = monthDate
+            val nextMonth = monthDate.plusMonths(1)
+            while (checkDate.isBefore(nextMonth) && !checkDate.isAfter(today)) {
+                monthTotal += (dailyGains[checkDate.toString()] ?: 0).toFloat()
+                checkDate = checkDate.plusDays(1)
+            }
+            runningTotal += monthTotal
+            XPDataPoint(i + 1, monthDate.format(formatter), runningTotal)
         }
     }
 }

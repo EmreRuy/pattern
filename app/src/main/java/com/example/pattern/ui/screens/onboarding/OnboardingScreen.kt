@@ -10,8 +10,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.rounded.NightsStay
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -250,15 +250,15 @@ fun IdentityVisual() {
             .size(180.dp)
             .scale(scale),
         shape = RoundedCornerShape(56.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
+        //Patterns Logo will be here maybe I Don't know yet
         Box(contentAlignment = Alignment.Center) {
             Icon(
-                imageVector = Icons.Rounded.AutoAwesome,
+                imageVector = Icons.Default.LocalFireDepartment,
                 contentDescription = null,
                 modifier = Modifier.size(72.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint =  Color(0xFF246A4B)
             )
         }
     }
@@ -290,7 +290,7 @@ fun MasteryVisual() {
     ) {
         HabitProgressCard(
             habit = mockHabit,
-            accentColor = MaterialTheme.colorScheme.primary
+            accentColor = Color(0xFF246A4B)
         )
     }
 }
@@ -302,7 +302,6 @@ fun DisciplineVisual() {
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         shadowElevation = 0.dp,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier.padding(20.dp),
@@ -312,13 +311,13 @@ fun DisciplineVisual() {
             Surface(
                 modifier = Modifier.size(52.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary
+                color = Color(0xFF246A4B)
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Check,
+                    Icons.Rounded.NightsStay,
                     contentDescription = null,
                     modifier = Modifier.padding(14.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    tint = MaterialTheme.colorScheme.surfaceContainerLowest
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

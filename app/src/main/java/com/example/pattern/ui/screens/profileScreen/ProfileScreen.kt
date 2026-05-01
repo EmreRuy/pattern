@@ -71,7 +71,8 @@ fun ProfileScreen(
 
         XPProgressChartCard(
             title = "TOTAL XP GAINED",
-            dataPoints = uiState.xpHistory
+            monthlyDataPoints = uiState.xpHistory,
+            yearlyDataPoints = uiState.yearlyXpHistory
         )
 
         // LOCKED CARDS , Wrapped in the Pro logic

@@ -493,36 +493,5 @@ fun HalfCircularProgressBar(
         )
     }
 }
-/*
-@Composable
-fun StreakFlame(
-    streak: Int,
-    maxStreak: Int = 30,
-    size: Dp = 100.dp,
-    flameColor: Color = MaterialTheme.colorScheme.primary
-) {
-    val fillFraction = (streak / maxStreak.toFloat()).coerceIn(0f, 1f)
-
-    Box(
-        modifier = Modifier.size(size),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        // Background flame (gray)
-        Icon(
-            painter = painterResource(id = R.drawable.settings), // use your flame drawable
-            contentDescription = "Flame Background",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Filled flame
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(fillFraction)
-                .background(flameColor)
-        )
-    }
-} */
 
 

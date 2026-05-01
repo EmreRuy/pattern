@@ -1,56 +1,56 @@
 package com.example.pattern.ui.screens.profileScreen.components
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Locale
+import kotlin.math.roundToInt
 
 data class XPDataPoint(val dayIndex: Int, val dateLabel: String, val xpValue: Float)
 
 /**
- * A professional, minimalistic area chart interface card.
- * Features a clean white rounded rectangle, labeled Y-axis with Total XP,
- * and X-axis with dates.
+ * A professional, borderless area chart interface card.
+ * Features animated page indicators, interactive tooltips, and padded drawing to prevent clipping.
  */
 @Composable
 fun XPProgressChartCard(
     modifier: Modifier = Modifier,
     title: String = "XP PROGRESS",
-    dataPoints: List<XPDataPoint> = emptyList(),
+    monthlyDataPoints: List<XPDataPoint> = emptyList(),
+    yearlyDataPoints: List<XPDataPoint> = emptyList(),
     accentColor: Color = Color(0xFF386641)
 ) {
-    val animationProgress = remember { Animatable(0f) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
 
-    LaunchedEffect(dataPoints) {
-        animationProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 1200)
-        )
-    }
-
-    Surface(
+    // Borderless Card Container - Clean flat white background
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = Color.White,
-        shadowElevation = 0.dp
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(Color.White, RoundedCornerShape(28.dp))
     ) {
         Column(
             modifier = Modifier.padding(24.dp)
@@ -70,34 +70,150 @@ fun XPProgressChartCard(
                         ),
                         color = Color.LightGray
                     )
-                    Text(
-                        text = "Total XP Gained",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    AnimatedContent(
+                        targetState = pagerState.currentPage,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
+                                    fadeOut(animationSpec = tween(90))
+                        },
+                        label = "TitleAnim"
+                    ) { page ->
+                        Text(
+                            text = if (page == 0) "Monthly Progress" else "Yearly Progress",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
-                
-                val currentMax = dataPoints.maxOfOrNull { it.xpValue }?.toInt() ?: 0
-                Text(
-                    text = "Peak: $currentMax XP",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontFeatureSettings = "tnum"
-                    ),
-                    color = accentColor.copy(alpha = 0.6f)
-                )
+
+                // Page Indicator Dots
+                Row(
+                    modifier = Modifier.padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(2) { index ->
+                        val isSelected = pagerState.currentPage == index
+                        val dotWidth by animateDpAsState(
+                            targetValue = if (isSelected) 18.dp else 6.dp,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                            label = "dotWidth"
+                        )
+                        Box(
+                            modifier = Modifier
+                                .height(6.dp)
+                                .width(dotWidth)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isSelected) accentColor else Color.LightGray.copy(alpha = 0.3f)
+                                )
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            val maxYValue = (dataPoints.maxOfOrNull { it.xpValue } ?: 100f) * 1.2f
-            
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth(),
+                userScrollEnabled = true,
+                pageSpacing = 16.dp
+            ) { page ->
+                val currentData = if (page == 0) monthlyDataPoints else yearlyDataPoints
+                ChartPage(
+                    dataPoints = currentData,
+                    accentColor = accentColor
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChartPage(
+    dataPoints: List<XPDataPoint>,
+    accentColor: Color
+) {
+    val animationProgress = remember { Animatable(0f) }
+    var selectedPoint by remember { mutableStateOf<XPDataPoint?>(null) }
+    val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(dataPoints) {
+        animationProgress.snapTo(0f)
+        animationProgress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
+        )
+    }
+
+    if (dataPoints.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No data available yet",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.LightGray
+            )
+        }
+    } else {
+        Column {
+            val currentMax = dataPoints.maxOfOrNull { it.xpValue }?.toInt() ?: 0
+            val maxYValue = (dataPoints.maxOfOrNull { it.xpValue } ?: 0f).coerceAtLeast(100f) * 1.3f
+
+            // Tooltip / Stat Row
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = selectedPoint != null,
+                    enter = fadeIn() + slideInHorizontally(),
+                    exit = fadeOut() + slideOutHorizontally()
+                ) {
+                    selectedPoint?.let { point ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(accentColor))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${point.dateLabel}: ",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "${point.xpValue.toInt()} XP",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = accentColor
+                            )
+                        }
+                    }
+                }
+
+                if (selectedPoint == null) {
+                    Text(
+                        text = "Peak: $currentMax XP",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = accentColor.copy(alpha = 0.6f)
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
             ) {
-                // Y-Axis Labels (Left)
+                // Y-Axis Labels
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -105,16 +221,15 @@ fun XPProgressChartCard(
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.End
                 ) {
-                    val yLabels = listOf(maxYValue, maxYValue * 0.66f, maxYValue * 0.33f, 0f)
+                    val yLabels = listOf(maxYValue, maxYValue * 0.5f, 0f)
                     yLabels.forEach { value ->
                         Text(
                             text = formatXPLabel(value),
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFeatureSettings = "tnum"
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
                             ),
-                            color = Color.LightGray.copy(alpha = 0.8f)
+                            color = Color.Gray.copy(alpha = 0.4f)
                         )
                     }
                 }
@@ -129,38 +244,40 @@ fun XPProgressChartCard(
                         dataPoints = dataPoints,
                         maxYValue = maxYValue,
                         animationProgress = animationProgress.value,
-                        accentColor = accentColor
+                        accentColor = accentColor,
+                        onPointSelected = { point ->
+                            if (selectedPoint != point) {
+                                selectedPoint = point
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                        },
+                        onRelease = { selectedPoint = null }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // X-Axis Labels (Bottom - Dates)
+            // X-Axis Labels
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 40.dp), // Approximate width of Y-axis labels + padding
+                    .padding(start = 36.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (dataPoints.isNotEmpty()) {
-                    val first = dataPoints.first()
-                    val mid = dataPoints[dataPoints.size / 2]
-                    val last = dataPoints.last()
-                    
-                    Text(text = first.dateLabel, style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
-                    Text(text = mid.dateLabel, style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
-                    Text(text = last.dateLabel, style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
+                val labels = if (dataPoints.size >= 3) {
+                    listOf(dataPoints.first(), dataPoints[dataPoints.size / 2], dataPoints.last())
+                } else dataPoints
+
+                labels.forEach { point ->
+                    Text(
+                        text = point.dateLabel,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = Color.LightGray
+                    )
                 }
             }
         }
-    }
-}
-
-private fun formatXPLabel(value: Float): String {
-    return when {
-        value >= 1000f -> String.format(Locale.US, "%.1fk", value / 1000f)
-        else -> value.toInt().toString()
     }
 }
 
@@ -169,102 +286,121 @@ private fun ChartDrawing(
     dataPoints: List<XPDataPoint>,
     maxYValue: Float,
     animationProgress: Float,
-    accentColor: Color
+    accentColor: Color,
+    onPointSelected: (XPDataPoint) -> Unit,
+    onRelease: () -> Unit
 ) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
+    var touchX by remember { mutableStateOf<Float?>(null) }
+    val density = LocalDensity.current
+    val paddingPx = with(density) { 16.dp.toPx() } // Internal padding to prevent point clipping
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(dataPoints) {
+                detectTapGestures(
+                    onPress = { offset ->
+                        val width = size.width
+                        val drawableWidth = width - (paddingPx * 2)
+                        
+                        touchX = offset.x
+                        val index = (((offset.x - paddingPx) / drawableWidth) * (dataPoints.size - 1))
+                            .roundToInt()
+                            .coerceIn(0, dataPoints.size - 1)
+                        onPointSelected(dataPoints[index])
+                        
+                        tryAwaitRelease()
+                        touchX = null
+                        onRelease()
+                    }
+                )
+            }
+            .pointerInput(dataPoints) {
+                detectDragGestures(
+                    onDragStart = { offset -> touchX = offset.x },
+                    onDragEnd = { touchX = null; onRelease() },
+                    onDragCancel = { touchX = null; onRelease() },
+                    onDrag = { change, _ ->
+                        val width = size.width
+                        val drawableWidth = width - (paddingPx * 2)
+                        
+                        touchX = change.position.x
+                        val index = (((change.position.x - paddingPx) / drawableWidth) * (dataPoints.size - 1))
+                            .roundToInt()
+                            .coerceIn(0, dataPoints.size - 1)
+                        onPointSelected(dataPoints[index])
+                    }
+                )
+            }
+    ) {
         val width = size.width
         val height = size.height
-        
-        // Grid setup
-        val gridColor = Color(0xFFF5F5F5)
-        val dashEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
-        
-        // Horizontal Grid
-        for (i in 0..3) {
-            val y = height * (i / 3f)
-            drawLine(
-                color = gridColor,
-                start = Offset(0f, y),
-                end = Offset(width, y),
-                strokeWidth = 1.dp.toPx(),
-                pathEffect = dashEffect
-            )
-        }
-        
-        // Vertical Grid
-        for (i in 0..2) {
-            val x = width * (i / 2f)
-            drawLine(
-                color = gridColor,
-                start = Offset(x, 0f),
-                end = Offset(x, height),
-                strokeWidth = 1.dp.toPx(),
-                pathEffect = dashEffect
-            )
-        }
+        val drawableWidth = width - (paddingPx * 2)
+        val drawableHeight = height - (paddingPx * 2)
+        val divisor = (dataPoints.size - 1).coerceAtLeast(1).toFloat()
+
+        // Grid lines
+        val gridColor = Color(0xFFF8F8F8)
+        drawLine(gridColor, Offset(0f, height * 0.5f), Offset(width, height * 0.5f), strokeWidth = 1.dp.toPx())
+        drawLine(gridColor, Offset(0f, paddingPx), Offset(width, paddingPx), strokeWidth = 1.dp.toPx())
+        drawLine(gridColor, Offset(0f, height - paddingPx), Offset(width, height - paddingPx), strokeWidth = 1.dp.toPx())
 
         if (dataPoints.size < 2) return@Canvas
 
-        val points = dataPoints.map {
+        val points = dataPoints.mapIndexed { index, point ->
             Offset(
-                x = ((it.dayIndex - 1) / 29f) * width,
-                y = height - ((it.xpValue / maxYValue) * height * animationProgress)
+                x = paddingPx + (index / divisor) * drawableWidth,
+                y = (height - paddingPx) - ((point.xpValue / maxYValue) * drawableHeight * animationProgress)
             )
         }
 
-        // Draw Area Fill
+        // Area Fill
         val fillPath = Path().apply {
-            moveTo(points.first().x, height)
-            var lastPoint = points.first()
-            lineTo(lastPoint.x, lastPoint.y)
-            
-            for (i in 1 until points.size) {
-                val currentPoint = points[i]
-                val cp1 = Offset(lastPoint.x + (currentPoint.x - lastPoint.x) / 2, lastPoint.y)
-                val cp2 = Offset(lastPoint.x + (currentPoint.x - lastPoint.x) / 2, currentPoint.y)
-                cubicTo(cp1.x, cp1.y, cp2.x, cp2.y, currentPoint.x, currentPoint.y)
-                lastPoint = currentPoint
+            moveTo(points.first().x, height - paddingPx)
+            for (i in 0 until points.size) {
+                val current = points[i]
+                if (i == 0) lineTo(current.x, current.y)
+                else {
+                    val prev = points[i - 1]
+                    cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
+                }
             }
-            lineTo(width, height)
+            lineTo(points.last().x, height - paddingPx)
             close()
         }
+        drawPath(fillPath, Brush.verticalGradient(listOf(accentColor.copy(alpha = 0.2f), Color.Transparent)))
 
-        drawPath(
-            path = fillPath,
-            brush = Brush.verticalGradient(
-                colors = listOf(accentColor.copy(alpha = 0.15f), Color.Transparent)
-            )
-        )
-
-        // Draw Stroke Line
+        // Main Line
         val strokePath = Path().apply {
-            var lastPoint = points.first()
-            moveTo(lastPoint.x, lastPoint.y)
+            moveTo(points.first().x, points.first().y)
             for (i in 1 until points.size) {
-                val currentPoint = points[i]
-                val cp1 = Offset(lastPoint.x + (currentPoint.x - lastPoint.x) / 2, lastPoint.y)
-                val cp2 = Offset(lastPoint.x + (currentPoint.x - lastPoint.x) / 2, currentPoint.y)
-                cubicTo(cp1.x, cp1.y, cp2.x, cp2.y, currentPoint.x, currentPoint.y)
-                lastPoint = currentPoint
+                val prev = points[i - 1]
+                val current = points[i]
+                cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
             }
         }
+        drawPath(strokePath, accentColor, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
 
-        drawPath(
-            path = strokePath,
-            color = accentColor,
-            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
-        
-        // Last point indicator
-        drawCircle(
-            color = accentColor,
-            radius = 5.dp.toPx(),
-            center = points.last()
-        )
-        drawCircle(
-            color = Color.White,
-            radius = 2.5.dp.toPx(),
-            center = points.last()
-        )
+        // Interaction indicators
+        touchX?.let { x ->
+            val index = (((x - paddingPx) / drawableWidth) * divisor).roundToInt().coerceIn(0, dataPoints.size - 1)
+            val p = points[index]
+            
+            drawLine(accentColor.copy(alpha = 0.2f), Offset(p.x, paddingPx), Offset(p.x, height - paddingPx), strokeWidth = 2.dp.toPx())
+            drawCircle(Color.White, 8.dp.toPx(), p)
+            drawCircle(accentColor, 6.dp.toPx(), p)
+        } ?: run {
+            // Pulse on last point
+            drawCircle(accentColor.copy(alpha = 0.1f * animationProgress), 12.dp.toPx(), points.last())
+            drawCircle(accentColor, 5.dp.toPx(), points.last())
+            drawCircle(Color.White, 2.dp.toPx(), points.last())
+        }
+    }
+}
+
+private fun formatXPLabel(value: Float): String {
+    return when {
+        value >= 1000f -> String.format(Locale.US, "%.1fk", value / 1000f)
+        else -> value.toInt().toString()
     }
 }
