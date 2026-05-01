@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.example.pattern.ui.screens.homeScreen.HomeViewModel
 import com.example.pattern.data.mapper.toCardModel
 import com.example.pattern.ui.components.ConfettiView
@@ -39,8 +38,9 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    navController: NavHostController,
     onOpenMenuScreen: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onHabitClick: (Int) -> Unit,
     onPremiumClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -118,7 +118,7 @@ fun HomeScreen(
                         .fillMaxWidth()
                 ) {
                     HomeTopBar(onMenuClick = onOpenMenuScreen,
-                        onSettingsClick = { navController.navigate(Screens.Settings.route) },
+                        onSettingsClick = onSettingsClick,
                         onPremiumClick = onPremiumClick
                     )
                     HomeCalendarSelector(
@@ -155,7 +155,7 @@ fun HomeScreen(
                     )
                 },
                 onHabitCardClick = { id ->
-                    navController.navigate(Screens.HabitDetail.createRoute(id))
+                    onHabitClick(id)
                 }
             )
             // Empty states

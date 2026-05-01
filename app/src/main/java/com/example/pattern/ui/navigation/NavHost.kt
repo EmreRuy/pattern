@@ -3,6 +3,7 @@ package com.example.pattern.ui.navigation
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,6 +27,8 @@ fun NavHost(
     startDestination: String = Screens.Home.route,
     onOnboardingFinish: () -> Unit = {}
 ) {
+    val actions = remember(navController) { NavActions(navController) }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -36,87 +39,51 @@ fun NavHost(
                 onFinish = onOnboardingFinish
             )
         }
+
         composable(Screens.Home.route) {
             HomeScreen(
-                navController = navController,
-                onOpenMenuScreen = { navController.navigate(Screens.HabitList.route) },
-                onPremiumClick = { navController.navigate(Screens.Premium.route) }
+                onOpenMenuScreen = { actions.navigateToHabitList() },
+                onSettingsClick = { actions.navigateToSettings() },
+                onHabitClick = { id -> actions.navigateToDetail(id) },
+                onPremiumClick = { actions.navigateToPremium() }
             )
-        }
-        composable(
-            route = Screens.Settings.route,
-            enterTransition = { fadeIn(tween(300)) },
-            exitTransition = { fadeOut(tween(300)) }
-        ) {
-            SettingsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
-            route = Screens.Premium.route,
-            enterTransition = { fadeIn(tween(300)) },
-            exitTransition = { fadeOut(tween(300)) }
-        ) {
-            PremiumPlanScreen(
-                onPurchase = {
-                    // Handle billing then pop
-                    navController.popBackStack()
-                }
-            ) }
-        composable(
             route = Screens.HabitList.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.9f, animationSpec = tween(400))
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(400)) + scaleOut(targetScale = 0.9f, animationSpec = tween(400))
-            },
-            popEnterTransition = {
-                fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.9f, animationSpec = tween(400))
-            },
-            popExitTransition = {
-                fadeOut(animationSpec = tween(400)) + scaleOut(targetScale = 0.9f, animationSpec = tween(400))
-            }
+            enterTransition = { scaleEnter() },
+            exitTransition = { scaleExit() },
+            popEnterTransition = { scaleEnter() },
+            popExitTransition = { scaleExit() }
         ) {
             HabitListScreen(
-                onHabitClick = { id ->
-                    navController.navigate(Screens.HabitDetail.createRoute(id))
-                },
-                onBack = { navController.popBackStack() }
+                onHabitClick = { id -> actions.navigateToDetail(id) },
+                onBack = { actions.popBackStack() }
             )
         }
+
         composable(
             route = Screens.Add.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.9f, animationSpec = tween(400))
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(400)) + scaleOut(targetScale = 0.9f, animationSpec = tween(400))
-            },
-            popEnterTransition = {
-                fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.9f, animationSpec = tween(400))
-            },
-            popExitTransition = {
-                fadeOut(animationSpec = tween(400)) + scaleOut(targetScale = 0.9f, animationSpec = tween(400))
-            }
+            enterTransition = { scaleEnter() },
+            exitTransition = { scaleExit() },
+            popEnterTransition = { scaleEnter() },
+            popExitTransition = { scaleExit() }
         ) {
             AddHabitScreen(
-                onSaveSuccess = {
-                    navController.popBackStack()
-                },
-                onBack = {
-                        navController.popBackStack()
-                }
+                onSaveSuccess = { actions.popBackStack() },
+                onBack = { actions.popBackStack() }
             )
         }
+
         composable(Screens.Profile.route) {
-            // Pass the state and the click action here
             ProfileScreen(
                 isPro = isPro,
-                onOpenMenuSheet = { navController.navigate(Screens.HabitList.route) },
-                onOpenSettings = { navController.navigate(Screens.Settings.route) },
-                onPremiumClick = { navController.navigate(Screens.Premium.route) }
+                onOpenMenuSheet = { actions.navigateToHabitList() },
+                onOpenSettings = { actions.navigateToSettings() },
+                onPremiumClick = { actions.navigateToPremium() }
             )
         }
+
         composable(
             route = Screens.HabitDetail.route,
             arguments = listOf(
@@ -125,49 +92,43 @@ fun NavHost(
         ) { backStackEntry ->
             val habitId = backStackEntry.arguments?.getInt("habitId") ?: 0
             HabitDetailsRoute(
-                onBack = { navController.popBackStack() },
-                onEdit = { navController.navigate(Screens.EditHabit.createRoute(habitId)) }
+                onBack = { actions.popBackStack() },
+                onEdit = { actions.navigateToEdit(habitId) }
             )
         }
+
         composable(
             route = Screens.EditHabit.route,
             arguments = listOf(
                 navArgument("habitId") { type = NavType.IntType }
             ),
-            enterTransition = {
-                slideIntoContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Up,
-                    animationSpec = tween(400)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Down,
-                    animationSpec = tween(400)
-                )
-            }
+            enterTransition = { slideUpEnter() },
+            exitTransition = { slideDownExit() }
         ) {
             EditHabitScreen(
-                onSaveSuccess = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
+                onSaveSuccess = { actions.popBackStack() },
+                onBack = { actions.popBackStack() }
             )
         }
+
         composable(
             route = Screens.Settings.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.9f, animationSpec = tween(400))
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(400)) + scaleOut(targetScale = 0.9f, animationSpec = tween(400))
-            },
-            popEnterTransition = {
-                fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.9f, animationSpec = tween(400))
-            },
-            popExitTransition = {
-                fadeOut(animationSpec = tween(400)) + scaleOut(targetScale = 0.9f, animationSpec = tween(400))
-            }
+            enterTransition = { scaleEnter() },
+            exitTransition = { scaleExit() },
+            popEnterTransition = { scaleEnter() },
+            popExitTransition = { scaleExit() }
         ) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(onBack = { actions.popBackStack() })
+        }
+
+        composable(
+            route = Screens.Premium.route,
+            enterTransition = { fadeEnter() },
+            exitTransition = { fadeExit() }
+        ) {
+            PremiumPlanScreen(
+                onPurchase = { actions.popBackStack() }
+            )
         }
     }
 }
