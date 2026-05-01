@@ -86,6 +86,7 @@ fun ExperienceLevelCard(
                         ),
                         color = Color.LightGray
                     )
+                   // Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = levelTitle,
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -111,11 +112,11 @@ fun ExperienceLevelCard(
                     verticalAlignment = Alignment.Bottom
                 ) {
                     Text(
-                        text = "Next: Level ${level + 1}",
+                        text = "Level $level",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
                     Text(
                         text = "${(animatedProgress * 100).toInt()}%",
@@ -153,7 +154,7 @@ fun ExperienceLevelCard(
                         )
                     }
                     Text(
-                        text = "/ $nextLevelXP XP",
+                        text = "$nextLevelXP XP",
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),
