@@ -6,23 +6,19 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Eco
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -37,8 +33,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Premium Calendar Selector for the Home Screen.
- * Optimized for performance, smooth natural motion, and refined tactile feedback.
+ * Premium, minimalist Calendar Selector for the Home Screen.
+ * Engineered for maximum performance and a refined user experience.
  */
 @Composable
 fun HomeCalendarSelector(
@@ -122,9 +118,9 @@ private fun CalendarHeader(title: String) {
             text = targetTitle,
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                letterSpacing = 0.8.sp
             ),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
             modifier = Modifier.padding(start = 24.dp, bottom = 4.dp)
         )
     }
@@ -145,8 +141,8 @@ private fun CalendarItem(
     val selectionProgress by animateFloatAsState(
         targetValue = if (isSelected) 1f else 0f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "selection_progress"
     )
@@ -162,7 +158,8 @@ private fun CalendarItem(
                 onClick = onDayClick
             )
             .graphicsLayer {
-                translationY = -CalendarSelectorDefaults.SelectionOffset.toPx() * selectionProgress
+                // Subtle lift animation on selection
+                translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgress
             }
     ) {
         DayLetterHeader(
@@ -174,10 +171,10 @@ private fun CalendarItem(
 
         Spacer(Modifier.height(CalendarSelectorDefaults.HeaderSpacing))
 
-        DaySelectionCapsule(
+        DayNumberCircle(
+            dayNumber = day.dayNumber,
             isSelected = isSelected,
             isToday = isToday,
-            dayNumber = day.dayNumber,
             selectionProgress = selectionProgress
         )
     }
@@ -193,73 +190,18 @@ private fun DayLetterHeader(
     val color = when {
         isSelected -> MaterialTheme.colorScheme.primary
         isToday -> MaterialTheme.colorScheme.secondary
-        isWeekend -> MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        isWeekend -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
     }
 
     Text(
         text = letter.uppercase(),
         style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = if (isToday || isSelected) FontWeight.Black else FontWeight.ExtraBold,
+            fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Medium,
             letterSpacing = 0.5.sp
         ),
         color = color
     )
-}
-
-@Composable
-private fun DaySelectionCapsule(
-    isSelected: Boolean,
-    isToday: Boolean,
-    dayNumber: String,
-    selectionProgress: Float
-) {
-    val containerColor = MaterialTheme.colorScheme.primary.copy(
-        alpha = CalendarSelectorDefaults.SelectedBgAlpha * selectionProgress
-    )
-
-    Box(
-        modifier = Modifier
-            .size(
-                width = CalendarSelectorDefaults.CapsuleWidth,
-                height = CalendarSelectorDefaults.CapsuleHeight
-            )
-            .clip(RoundedCornerShape(CalendarSelectorDefaults.CapsuleCornerRadius))
-            .background(containerColor),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Eco,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(CalendarSelectorDefaults.IconSize)
-                    .graphicsLayer {
-                        alpha = 0.3f + (0.7f * selectionProgress)
-                        val scale = 0.8f + (0.2f * selectionProgress)
-                        scaleX = scale
-                        scaleY = scale
-                    },
-                tint = when {
-                    isSelected -> MaterialTheme.colorScheme.primary
-                    isToday -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                    else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                }
-            )
-
-            Spacer(Modifier.height(CalendarSelectorDefaults.IconToNumberSpacing))
-
-            DayNumberCircle(
-                dayNumber = dayNumber,
-                isSelected = isSelected,
-                isToday = isToday,
-                selectionProgress = selectionProgress
-            )
-        }
-    }
 }
 
 @Composable
@@ -269,44 +211,58 @@ private fun DayNumberCircle(
     isToday: Boolean,
     selectionProgress: Float
 ) {
-    val numberColor = when {
-        isSelected -> MaterialTheme.colorScheme.onSurface
-        isToday -> MaterialTheme.colorScheme.secondary
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    val selectionColor = MaterialTheme.colorScheme.primary
+    val todayColor = MaterialTheme.colorScheme.secondary
+    
+    // Background color updated to surfaceContainerLowest for a minimalist selection effect
+    val backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(
+        alpha = selectionProgress
+    )
+
+    val contentColor = when {
+        isSelected -> selectionColor
+        isToday -> todayColor
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     }
 
     Box(
         modifier = Modifier
             .size(CalendarSelectorDefaults.NumberCircleSize)
             .graphicsLayer {
-                val scale = 0.85f + (0.15f * selectionProgress)
+                // Natural scaling effect
+                val scale = 0.94f + (0.06f * selectionProgress)
                 scaleX = scale
                 scaleY = scale
             }
             .background(
-                color = if (isSelected)
-                    MaterialTheme.colorScheme.surface
-                else
-                    Color.Transparent,
+                color = backgroundColor,
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = dayNumber,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = if (isSelected || isToday) FontWeight.Black else FontWeight.Bold,
-                    fontSize = 14.sp
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = if (isSelected || isToday) FontWeight.ExtraBold else FontWeight.SemiBold,
+                    fontSize = 16.sp
                 ),
-                color = numberColor
+                color = contentColor
             )
-            if (isToday && !isSelected) {
+            
+            if (isToday) {
                 Box(
                     modifier = Modifier
-                        .size(4.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondary)
+                        .padding(top = 1.dp)
+                        .size(3.dp)
+                        .graphicsLayer {
+                            // Fade out dot as selection fills up for a cleaner transition
+                            alpha = 1f - (selectionProgress * 0.5f)
+                        }
+                        .background(todayColor, CircleShape)
                 )
             }
         }
@@ -314,17 +270,9 @@ private fun DayNumberCircle(
 }
 
 private object CalendarSelectorDefaults {
-    val CapsuleWidth = 46.dp
-    val CapsuleHeight = 84.dp
-    val CapsuleCornerRadius = 23.dp
-    val ItemCornerRadius = 24.dp
-    val NumberCircleSize = 34.dp
-    val IconSize = 18.dp
-    
-    val SelectionOffset = 4.dp
-    val HeaderSpacing = 4.dp
-    val IconToNumberSpacing = 8.dp
-    val VerticalPadding = 8.dp
-    
-    const val SelectedBgAlpha = 0.15f
+    val ItemCornerRadius = 12.dp
+    val NumberCircleSize = 42.dp
+    val SelectionLift = 3.dp
+    val HeaderSpacing = 10.dp
+    val VerticalPadding = 14.dp
 }
