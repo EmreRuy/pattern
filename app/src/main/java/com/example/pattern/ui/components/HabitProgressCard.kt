@@ -58,6 +58,10 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
+                        HabitLevelIcon(
+                            levelTitle = levelInfo.title,
+                            accentColor = accentColor
+                        )
                         Text(
                             text = levelInfo.title,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
