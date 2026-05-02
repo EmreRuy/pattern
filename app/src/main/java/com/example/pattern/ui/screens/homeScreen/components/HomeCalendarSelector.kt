@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -138,7 +139,7 @@ private fun CalendarItem(
         day.date.dayOfWeek == DayOfWeek.SATURDAY || day.date.dayOfWeek == DayOfWeek.SUNDAY
     }
 
-    val selectionProgress by animateFloatAsState(
+    val selectionProgressState = animateFloatAsState(
         targetValue = if (isSelected) 1f else 0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
@@ -158,8 +159,8 @@ private fun CalendarItem(
                 onClick = onDayClick
             )
             .graphicsLayer {
-                // Subtle lift animation on selection
-                translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgress
+                // Subtle lift animation on selection using state value in lambda to avoid recomposition
+                translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgressState.value
             }
     ) {
         DayLetterHeader(
@@ -175,7 +176,7 @@ private fun CalendarItem(
             dayNumber = day.dayNumber,
             isSelected = isSelected,
             isToday = isToday,
-            selectionProgress = selectionProgress
+            selectionProgress = { selectionProgressState.value }
         )
     }
 }
@@ -209,15 +210,11 @@ private fun DayNumberCircle(
     dayNumber: String,
     isSelected: Boolean,
     isToday: Boolean,
-    selectionProgress: Float
+    selectionProgress: () -> Float
 ) {
     val selectionColor = MaterialTheme.colorScheme.primary
     val todayColor = MaterialTheme.colorScheme.secondary
-    
-    // Background color updated to surfaceContainerLowest for a minimalist selection effect
-    val backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(
-        alpha = selectionProgress
-    )
+    val surfaceContainerLowest = MaterialTheme.colorScheme.surfaceContainerLowest
 
     val contentColor = when {
         isSelected -> selectionColor
@@ -229,15 +226,18 @@ private fun DayNumberCircle(
         modifier = Modifier
             .size(CalendarSelectorDefaults.NumberCircleSize)
             .graphicsLayer {
-                // Natural scaling effect
-                val scale = 0.94f + (0.06f * selectionProgress)
+                // Natural scaling effect using lambda for performance
+                val progress = selectionProgress()
+                val scale = 0.96f + (0.04f * progress)
                 scaleX = scale
                 scaleY = scale
             }
-            .background(
-                color = backgroundColor,
-                shape = CircleShape
-            ),
+            .drawBehind {
+                // background color updated to surfaceContainerLowest with smooth alpha transition
+                drawCircle(
+                    color = surfaceContainerLowest.copy(alpha = selectionProgress()),
+                )
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -248,7 +248,7 @@ private fun DayNumberCircle(
                 text = dayNumber,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = if (isSelected || isToday) FontWeight.ExtraBold else FontWeight.SemiBold,
-                    fontSize = 16.sp
+                    fontSize = 15.sp
                 ),
                 color = contentColor
             )
@@ -260,7 +260,7 @@ private fun DayNumberCircle(
                         .size(3.dp)
                         .graphicsLayer {
                             // Fade out dot as selection fills up for a cleaner transition
-                            alpha = 1f - (selectionProgress * 0.5f)
+                            alpha = 1f - (selectionProgress() * 0.5f)
                         }
                         .background(todayColor, CircleShape)
                 )
@@ -271,8 +271,8 @@ private fun DayNumberCircle(
 
 private object CalendarSelectorDefaults {
     val ItemCornerRadius = 12.dp
-    val NumberCircleSize = 42.dp
-    val SelectionLift = 3.dp
-    val HeaderSpacing = 10.dp
-    val VerticalPadding = 14.dp
+    val NumberCircleSize = 40.dp
+    val SelectionLift = 2.dp
+    val HeaderSpacing = 8.dp
+    val VerticalPadding = 12.dp
 }
