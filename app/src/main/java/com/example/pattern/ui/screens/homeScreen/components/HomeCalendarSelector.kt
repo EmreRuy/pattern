@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -233,10 +235,19 @@ private fun DayNumberCircle(
                 scaleY = scale
             }
             .drawBehind {
+                val progress = selectionProgress()
                 // background color updated to surfaceContainerLowest with smooth alpha transition
                 drawCircle(
-                    color = surfaceContainerLowest.copy(alpha = selectionProgress()),
+                    color = surfaceContainerLowest.copy(alpha = progress),
                 )
+                
+                // Subtle thin border for a refined, minimalistic selection
+                if (progress > 0f) {
+                    drawCircle(
+                        color = Color.Black.copy(alpha = progress * 0.08f),
+                        style = Stroke(width = CalendarSelectorDefaults.SelectionBorderWidth.toPx())
+                    )
+                }
             },
         contentAlignment = Alignment.Center
     ) {
@@ -275,4 +286,5 @@ private object CalendarSelectorDefaults {
     val SelectionLift = 2.dp
     val HeaderSpacing = 8.dp
     val VerticalPadding = 12.dp
+    val SelectionBorderWidth = 0.5.dp
 }
