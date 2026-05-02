@@ -1,8 +1,10 @@
 package com.example.pattern.data.model
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.pattern.data.local.entity.HabitType
 
+@Immutable
 data class HabitCardModel(
     val id: Int,
     val name: String,

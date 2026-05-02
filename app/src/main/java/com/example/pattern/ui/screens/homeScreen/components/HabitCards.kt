@@ -37,7 +37,8 @@ fun HabitCards(
     ) {
         items(
             items = habits,
-            key = { it.id }
+            key = { it.id },
+            contentType = { it.type }
         ) { habit ->
             when (habit.type) {
                 HabitType.BUILD -> HabitBuildCard(
