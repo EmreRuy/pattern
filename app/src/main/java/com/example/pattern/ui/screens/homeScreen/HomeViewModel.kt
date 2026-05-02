@@ -50,9 +50,9 @@ class HomeViewModel @Inject constructor(
     }.flatMapLatest { (date, settings, hasAnyHabits) ->
         // Fetch a window of days (yesterday, today, tomorrow) for snappy swiping
         val dateWindow = listOf(date.minusDays(1), date, date.plusDays(1))
-        
+
         combine(
-            dateWindow.map { d -> 
+            dateWindow.map { d ->
                 getHomeHabitsUseCase(d).map { habits -> d to habits }
             }
         ) { results ->
@@ -68,15 +68,15 @@ class HomeViewModel @Inject constructor(
             )
         }
     }
-    .flowOn(Dispatchers.Default)
-    .catch { e ->
-        emit(HomeUiState(error = e.message, isLoading = false))
-    }
-    .stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HomeUiState(isLoading = true)
-    )
+        .flowOn(Dispatchers.Default)
+        .catch { e ->
+            emit(HomeUiState(error = e.message, isLoading = false))
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeUiState(isLoading = true)
+        )
 
     fun onDateSelected(date: LocalDate) {
         _selectedDate.value = date
@@ -146,15 +146,23 @@ class HomeViewModel @Inject constructor(
             val dateStr = date.toString()
             val habit = repository.getHabitOnce(habitId) ?: return@launch
             val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
+            
             val wasCompleted = when(habit.type) {
                 HabitType.TASK, HabitType.QUIT -> currentDaily?.isTaskCompleted == true
                 HabitType.BUILD -> currentDaily?.isCompleted == true
             }
-            repository.setTaskCompleted(habitId, dateStr, completed)
-            val updatedState = repository.getDailyStateOnce(habitId, dateStr) ?: return@launch
-            if (completed && !wasCompleted) {
+
+            if (wasCompleted == completed) return@launch
+
+            val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
+                isTaskCompleted = completed,
+                isCompleted = completed 
+            )
+            repository.upsertDailyState(updatedState)
+
+            if (completed) {
                 repository.addXP(ExperienceUtils.calculateHabitXP(habit, updatedState))
-            } else if (!completed && wasCompleted) {
+            } else {
                 repository.addXP(-ExperienceUtils.calculateHabitXP(habit, currentDaily ?: updatedState))
             }
         }

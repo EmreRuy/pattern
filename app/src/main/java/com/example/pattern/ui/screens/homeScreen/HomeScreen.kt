@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.pattern.data.model.HabitCardModel
 import com.example.pattern.ui.components.ConfettiView
 import com.example.pattern.ui.screens.homeScreen.components.EmptyStateMessage
 import com.example.pattern.ui.screens.homeScreen.components.HabitCardsPager
@@ -64,7 +66,7 @@ fun HomeScreen(
         val selectedDate = dayList[habitPagerState.currentPage].date
         if (selectedDate != uiState.selectedDate) {
             viewModel.onDateSelected(selectedDate)
-            
+
             // Sync calendar week pager if needed
             val targetWeekPage = habitPagerState.currentPage / 7
             if (calendarPagerState.currentPage != targetWeekPage) {
@@ -120,29 +122,47 @@ fun HomeScreen(
             },
         ) { paddingValues ->
             if (!uiState.isLoading) {
+                val onTimerFinished = remember {
+                    { habit: HabitCardModel, date: LocalDate ->
+                        viewModel.finishTimer(habit.id, date)
+                        triggerConfetti = true
+                    }
+                }
+                val onUnfinishTimer = remember {
+                    { id: Int, date: LocalDate -> viewModel.unfinishTimer(id, date) }
+                }
+                val onStartTimer = remember {
+                    { habit: HabitCardModel, date: LocalDate -> viewModel.startTimer(habit.id, date) }
+                }
+                val onPauseTimer = remember {
+                    { habit: HabitCardModel, date: LocalDate -> viewModel.pauseTimer(habit.id, date) }
+                }
+                val onResumeTimer = remember {
+                    { habit: HabitCardModel, date: LocalDate -> viewModel.resumeTimer(habit.id, date) }
+                }
+                val onTaskCompleted = remember {
+                    { id: Int, date: LocalDate, completed: Boolean ->
+                        viewModel.setTaskCompleted(id, date, completed)
+                        if (completed) triggerConfetti = true
+                    }
+                }
+                val onHabitClickInternal = remember(onHabitClick) { { id: Int -> onHabitClick(id) } }
+
                 HabitCardsPager(
                     pagerState = habitPagerState,
                     dayList = dayList,
                     habitsByDate = uiState.habitsByDate,
                     hasAnyHabits = uiState.hasAnyHabits,
                     paddingValues = paddingValues,
-                    onTimerFinished = { habitCard, date ->
-                        viewModel.finishTimer(habitCard.id, date)
-                        triggerConfetti = true
-                    },
-                    onUnfinishTimer = { habitId, date ->
-                        viewModel.unfinishTimer(habitId, date)
-                    },
-                    onStartTimer = { habitCard, date -> viewModel.startTimer(habitCard.id, date) },
-                    onPauseTimer = { habitCard, date -> viewModel.pauseTimer(habitCard.id, date) },
-                    onResumeTimer = { habitCard, date -> viewModel.resumeTimer(habitCard.id, date) },
-                    onTaskCompleted = { habitId, date, completed ->
-                        viewModel.setTaskCompleted(habitId, date, completed)
-                        if (completed) triggerConfetti = true
-                    },
-                    onHabitCardClick = onHabitClick
+                    onTimerFinished = onTimerFinished,
+                    onUnfinishTimer = onUnfinishTimer,
+                    onStartTimer = onStartTimer,
+                    onPauseTimer = onPauseTimer,
+                    onResumeTimer = onResumeTimer,
+                    onTaskCompleted = onTaskCompleted,
+                    onHabitCardClick = onHabitClickInternal
                 )
             }
         }
     }
-}
+    }
