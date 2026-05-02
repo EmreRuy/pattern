@@ -29,6 +29,7 @@ import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.utils.generateNext365Days
 import kotlinx.coroutines.delay
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -82,10 +83,24 @@ fun HomeScreen(
         viewModel.getDailyStatesForDate(selectedDateKey).collectAsStateWithLifecycle(initialValue = emptyList())
     }
 
-    // Build mapped habit list
+    // Build mapped habit list with senior-level performance optimization
     val habits = remember(selectedDateKey, uiState.habitList, dailyStatesForSelectedDate, uiState.streaks) {
+        val selectedLocalDate = LocalDate.parse(selectedDateKey)
+        
         uiState.habitList
-            .filter { it.selectedDays.getOrNull(selectedDbIndex) == true }
+            .filter { habit ->
+                // Filter 1: Check if the habit was already created by this date
+                val creationDate = Instant.ofEpochMilli(habit.createdAt)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                
+                val wasCreated = !selectedLocalDate.isBefore(creationDate)
+                
+                // Filter 2: Check if it's scheduled for this day of the week
+                val isScheduled = habit.selectedDays.getOrNull(selectedDbIndex) == true
+                
+                wasCreated && isScheduled
+            }
             .map { habit ->
                 val daily = dailyStatesForSelectedDate.firstOrNull { it.habitId == habit.id }
                 val streak = uiState.streaks[habit.id] ?: 0
