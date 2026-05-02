@@ -21,6 +21,7 @@ data class HomeUiState(
     val selectedDate: LocalDate = LocalDate.now(),
     val isSelectedDateToday: Boolean = true,
     val habits: List<HabitCardModel> = emptyList(),
+    val habitsByDate: Map<LocalDate, List<HabitCardModel>> = emptyMap(),
     val hasAnyHabits: Boolean = false,
     val levelInfo: LevelInfo = ExperienceUtils.getLevelInfo(0),
     val isLoading: Boolean = false,
@@ -47,11 +48,20 @@ class HomeViewModel @Inject constructor(
     ) { date, settings, hasAnyHabits ->
         Triple(date, settings, hasAnyHabits)
     }.flatMapLatest { (date, settings, hasAnyHabits) ->
-        getHomeHabitsUseCase(date).map { habitCards ->
+        // Fetch a window of days (yesterday, today, tomorrow) for snappy swiping
+        val dateWindow = listOf(date.minusDays(1), date, date.plusDays(1))
+        
+        combine(
+            dateWindow.map { d -> 
+                getHomeHabitsUseCase(d).map { habits -> d to habits }
+            }
+        ) { results ->
+            val habitsMap = results.toMap()
             HomeUiState(
                 selectedDate = date,
                 isSelectedDateToday = date == LocalDate.now(),
-                habits = habitCards,
+                habits = habitsMap[date] ?: emptyList(),
+                habitsByDate = habitsMap,
                 hasAnyHabits = hasAnyHabits,
                 levelInfo = ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0),
                 isLoading = false
@@ -72,13 +82,13 @@ class HomeViewModel @Inject constructor(
         _selectedDate.value = date
     }
 
-    fun startTimer(habitId: Int) {
+    fun startTimer(habitId: Int, date: LocalDate) {
         viewModelScope.launch {
-            val date = _selectedDate.value.toString()
+            val dateStr = date.toString()
             repository.getHabitOnce(habitId) ?: return@launch
-            val currentDaily = repository.getDailyStateOnce(habitId, date)
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
             if (currentDaily?.isCompleted == true) return@launch
-            val updated = (currentDaily ?: HabitDailyState(habitId = habitId, date = date)).copy(
+            val updated = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
                 timerStartTime = System.currentTimeMillis(),
                 timerPauseTime = null,
                 isCompleted = false
@@ -87,19 +97,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun pauseTimer(habitId: Int) {
+    fun pauseTimer(habitId: Int, date: LocalDate) {
         viewModelScope.launch {
-            val date = _selectedDate.value.toString()
-            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: return@launch
+            val dateStr = date.toString()
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return@launch
             if (currentDaily.isCompleted || currentDaily.timerStartTime == null) return@launch
             repository.upsertDailyState(currentDaily.copy(timerPauseTime = System.currentTimeMillis()))
         }
     }
 
-    fun resumeTimer(habitId: Int) {
+    fun resumeTimer(habitId: Int, date: LocalDate) {
         viewModelScope.launch {
-            val date = _selectedDate.value.toString()
-            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: return@launch
+            val dateStr = date.toString()
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return@launch
             if (currentDaily.isCompleted || currentDaily.timerStartTime == null || currentDaily.timerPauseTime == null) return@launch
             val now = System.currentTimeMillis()
             val pausedDuration = now - currentDaily.timerPauseTime
@@ -108,11 +118,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun finishTimer(habitId: Int) {
+    fun finishTimer(habitId: Int, date: LocalDate) {
         viewModelScope.launch {
-            val date = _selectedDate.value.toString()
+            val dateStr = date.toString()
             val habit = repository.getHabitOnce(habitId) ?: return@launch
-            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: HabitDailyState(habitId = habitId, date = date)
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
             if (currentDaily.isCompleted) return@launch
             val updated = currentDaily.copy(isCompleted = true, timerStartTime = null, timerPauseTime = null)
             repository.upsertDailyState(updated)
@@ -120,28 +130,28 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun unfinishTimer(habitId: Int) {
+    fun unfinishTimer(habitId: Int, date: LocalDate) {
         viewModelScope.launch {
-            val date = _selectedDate.value.toString()
+            val dateStr = date.toString()
             val habit = repository.getHabitOnce(habitId) ?: return@launch
-            val currentDaily = repository.getDailyStateOnce(habitId, date) ?: return@launch
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return@launch
             if (!currentDaily.isCompleted) return@launch
             repository.upsertDailyState(currentDaily.copy(isCompleted = false))
             repository.addXP(-ExperienceUtils.calculateHabitXP(habit, currentDaily))
         }
     }
 
-    fun setTaskCompleted(habitId: Int, completed: Boolean) {
+    fun setTaskCompleted(habitId: Int, date: LocalDate, completed: Boolean) {
         viewModelScope.launch {
-            val date = _selectedDate.value.toString()
+            val dateStr = date.toString()
             val habit = repository.getHabitOnce(habitId) ?: return@launch
-            val currentDaily = repository.getDailyStateOnce(habitId, date)
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
             val wasCompleted = when(habit.type) {
                 HabitType.TASK, HabitType.QUIT -> currentDaily?.isTaskCompleted == true
                 HabitType.BUILD -> currentDaily?.isCompleted == true
             }
-            repository.setTaskCompleted(habitId, date, completed)
-            val updatedState = repository.getDailyStateOnce(habitId, date) ?: return@launch
+            repository.setTaskCompleted(habitId, dateStr, completed)
+            val updatedState = repository.getDailyStateOnce(habitId, dateStr) ?: return@launch
             if (completed && !wasCompleted) {
                 repository.addXP(ExperienceUtils.calculateHabitXP(habit, updatedState))
             } else if (!completed && wasCompleted) {

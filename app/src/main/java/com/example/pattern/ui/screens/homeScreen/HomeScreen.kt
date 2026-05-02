@@ -14,11 +14,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.ui.components.ConfettiView
 import com.example.pattern.ui.screens.homeScreen.components.EmptyStateMessage
-import com.example.pattern.ui.screens.homeScreen.components.HabitCards
+import com.example.pattern.ui.screens.homeScreen.components.HabitCardsPager
 import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.utils.generateNext365Days
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +33,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val dayList = remember { generateNext365Days() }
+    val scope = rememberCoroutineScope()
 
     // Initial index for "today"
     val todayIndex = remember(dayList) {
@@ -41,14 +43,41 @@ fun HomeScreen(
     }
 
     // Pager state for the calendar weeks
-    val pagerState = rememberPagerState(
+    val calendarPagerState = rememberPagerState(
         initialPage = todayIndex / 7,
         pageCount = { dayList.size / 7 }
+    )
+
+    // Pager state for the habit cards (daily)
+    val habitPagerState = rememberPagerState(
+        initialPage = todayIndex,
+        pageCount = { dayList.size }
     )
 
     // Synchronize local selection index with ViewModel state
     val selectedDayIndex = remember(uiState.selectedDate, dayList) {
         dayList.indexOfFirst { it.date == uiState.selectedDate }.coerceAtLeast(0)
+    }
+
+    // Update ViewModel and sync Calendar when Habit Pager changes
+    LaunchedEffect(habitPagerState.currentPage) {
+        val selectedDate = dayList[habitPagerState.currentPage].date
+        if (selectedDate != uiState.selectedDate) {
+            viewModel.onDateSelected(selectedDate)
+            
+            // Sync calendar week pager if needed
+            val targetWeekPage = habitPagerState.currentPage / 7
+            if (calendarPagerState.currentPage != targetWeekPage) {
+                calendarPagerState.animateScrollToPage(targetWeekPage)
+            }
+        }
+    }
+
+    // Sync Habit Pager when date is selected from Calendar
+    LaunchedEffect(selectedDayIndex) {
+        if (habitPagerState.currentPage != selectedDayIndex) {
+            habitPagerState.animateScrollToPage(selectedDayIndex)
+        }
     }
 
     // Confetti animation control
@@ -80,7 +109,7 @@ fun HomeScreen(
                         onPremiumClick = onPremiumClick
                     )
                     HomeCalendarSelector(
-                        pagerState = pagerState,
+                        pagerState = calendarPagerState,
                         selectedDayIndex = selectedDayIndex,
                         onDaySelected = { index ->
                             viewModel.onDateSelected(dayList[index].date)
@@ -91,36 +120,28 @@ fun HomeScreen(
             },
         ) { paddingValues ->
             if (!uiState.isLoading) {
-                HabitCards(
-                    habits = uiState.habits,
+                HabitCardsPager(
+                    pagerState = habitPagerState,
+                    dayList = dayList,
+                    habitsByDate = uiState.habitsByDate,
+                    hasAnyHabits = uiState.hasAnyHabits,
                     paddingValues = paddingValues,
-                    isToday = uiState.isSelectedDateToday,
-                    onTimerFinished = { habitCard ->
-                        viewModel.finishTimer(habitCard.id)
+                    onTimerFinished = { habitCard, date ->
+                        viewModel.finishTimer(habitCard.id, date)
                         triggerConfetti = true
                     },
-                    onUnfinishTimer = { habitId ->
-                        viewModel.unfinishTimer(habitId)
+                    onUnfinishTimer = { habitId, date ->
+                        viewModel.unfinishTimer(habitId, date)
                     },
-                    onStartTimer = { viewModel.startTimer(it.id) },
-                    onPauseTimer = { viewModel.pauseTimer(it.id) },
-                    onResumeTimer = { viewModel.resumeTimer(it.id) },
-                    onTaskCompleted = { habitId, completed ->
-                        viewModel.setTaskCompleted(habitId, completed)
+                    onStartTimer = { habitCard, date -> viewModel.startTimer(habitCard.id, date) },
+                    onPauseTimer = { habitCard, date -> viewModel.pauseTimer(habitCard.id, date) },
+                    onResumeTimer = { habitCard, date -> viewModel.resumeTimer(habitCard.id, date) },
+                    onTaskCompleted = { habitId, date, completed ->
+                        viewModel.setTaskCompleted(habitId, date, completed)
                         if (completed) triggerConfetti = true
                     },
                     onHabitCardClick = onHabitClick
                 )
-
-                // Refined empty state handling
-                if (uiState.habits.isEmpty()) {
-                    val message = if (uiState.hasAnyHabits) {
-                        "No habits scheduled for this day!"
-                    } else {
-                        "Start by adding your first habit!"
-                    }
-                    EmptyStateMessage(paddingValues, message)
-                }
             }
         }
     }
