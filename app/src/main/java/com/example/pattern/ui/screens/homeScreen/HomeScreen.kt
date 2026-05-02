@@ -1,30 +1,31 @@
 package com.example.pattern.ui.screens.homeScreen
 
-
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.pattern.data.model.HabitCardModel
 import com.example.pattern.ui.components.ConfettiView
-import com.example.pattern.ui.screens.homeScreen.components.EmptyStateMessage
 import com.example.pattern.ui.screens.homeScreen.components.HabitCardsPager
 import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.utils.generateNext365Days
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
@@ -34,40 +35,57 @@ fun HomeScreen(
     onPremiumClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val dayList = remember { generateNext365Days() }
-    val scope = rememberCoroutineScope()
 
-    // Initial index for "today"
+    when (val state = uiState) {
+        is HomeUiState.Loading -> LoadingScreen()
+        is HomeUiState.Success -> HomeContent(
+            state = state,
+            onEvent = viewModel::onEvent,
+            onOpenMenuScreen = onOpenMenuScreen,
+            onSettingsClick = onSettingsClick,
+            onHabitClick = onHabitClick,
+            onPremiumClick = onPremiumClick
+        )
+        is HomeUiState.Error -> ErrorScreen(state.message)
+    }
+}
+
+@Composable
+private fun HomeContent(
+    state: HomeUiState.Success,
+    onEvent: (HomeUiEvent) -> Unit,
+    onOpenMenuScreen: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onHabitClick: (Int) -> Unit,
+    onPremiumClick: () -> Unit
+) {
+    val dayList = remember { generateNext365Days() }
+    
     val todayIndex = remember(dayList) {
         val today = LocalDate.now()
-        val index = dayList.indexOfFirst { it.date == today }
-        if (index != -1) index else dayList.size / 2
+        dayList.indexOfFirst { it.date == today }.let { if (it != -1) it else dayList.size / 2 }
     }
 
-    // Pager state for the calendar weeks
     val calendarPagerState = rememberPagerState(
         initialPage = todayIndex / 7,
         pageCount = { dayList.size / 7 }
     )
 
-    // Pager state for the habit cards (daily)
     val habitPagerState = rememberPagerState(
         initialPage = todayIndex,
         pageCount = { dayList.size }
     )
 
-    // Synchronize local selection index with ViewModel state
-    val selectedDayIndex = remember(uiState.selectedDate, dayList) {
-        dayList.indexOfFirst { it.date == uiState.selectedDate }.coerceAtLeast(0)
+    val selectedDayIndex = remember(state.selectedDate, dayList) {
+        dayList.indexOfFirst { it.date == state.selectedDate }.coerceAtLeast(0)
     }
 
-    // Update ViewModel and sync Calendar when Habit Pager changes
+    // Sync Pager -> ViewModel
     LaunchedEffect(habitPagerState.currentPage) {
         val selectedDate = dayList[habitPagerState.currentPage].date
-        if (selectedDate != uiState.selectedDate) {
-            viewModel.onDateSelected(selectedDate)
-
-            // Sync calendar week pager if needed
+        if (selectedDate != state.selectedDate) {
+            onEvent(HomeUiEvent.OnDateSelected(selectedDate))
+            
             val targetWeekPage = habitPagerState.currentPage / 7
             if (calendarPagerState.currentPage != targetWeekPage) {
                 calendarPagerState.animateScrollToPage(targetWeekPage)
@@ -75,28 +93,21 @@ fun HomeScreen(
         }
     }
 
-    // Sync Habit Pager when date is selected from Calendar
+    // Sync ViewModel -> Pager
     LaunchedEffect(selectedDayIndex) {
         if (habitPagerState.currentPage != selectedDayIndex) {
             habitPagerState.animateScrollToPage(selectedDayIndex)
         }
     }
 
-    // Confetti animation control
-    var explodeConfetti by remember { mutableStateOf(false) }
-    var triggerConfetti by remember { mutableStateOf(false) }
-
-    LaunchedEffect(triggerConfetti) {
-        if (triggerConfetti) {
-            delay(300)
-            explodeConfetti = true
-            delay(3000)
-            explodeConfetti = false
-            triggerConfetti = false
+    ConfettiView(explodeConfetti = state.explodeConfetti) {
+        if (state.explodeConfetti) {
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(3000)
+                onEvent(HomeUiEvent.OnConfettiAnimationShown)
+            }
         }
-    }
 
-    ConfettiView(explodeConfetti = explodeConfetti) {
         Scaffold(
             topBar = {
                 Column(
@@ -114,55 +125,41 @@ fun HomeScreen(
                         pagerState = calendarPagerState,
                         selectedDayIndex = selectedDayIndex,
                         onDaySelected = { index ->
-                            viewModel.onDateSelected(dayList[index].date)
+                            onEvent(HomeUiEvent.OnDateSelected(dayList[index].date))
                         },
                         dayList = dayList
                     )
                 }
             },
         ) { paddingValues ->
-            if (!uiState.isLoading) {
-                val onTimerFinished = remember {
-                    { habit: HabitCardModel, date: LocalDate ->
-                        viewModel.finishTimer(habit.id, date)
-                        triggerConfetti = true
-                    }
-                }
-                val onUnfinishTimer = remember {
-                    { id: Int, date: LocalDate -> viewModel.unfinishTimer(id, date) }
-                }
-                val onStartTimer = remember {
-                    { habit: HabitCardModel, date: LocalDate -> viewModel.startTimer(habit.id, date) }
-                }
-                val onPauseTimer = remember {
-                    { habit: HabitCardModel, date: LocalDate -> viewModel.pauseTimer(habit.id, date) }
-                }
-                val onResumeTimer = remember {
-                    { habit: HabitCardModel, date: LocalDate -> viewModel.resumeTimer(habit.id, date) }
-                }
-                val onTaskCompleted = remember {
-                    { id: Int, date: LocalDate, completed: Boolean ->
-                        viewModel.setTaskCompleted(id, date, completed)
-                        if (completed) triggerConfetti = true
-                    }
-                }
-                val onHabitClickInternal = remember(onHabitClick) { { id: Int -> onHabitClick(id) } }
-
-                HabitCardsPager(
-                    pagerState = habitPagerState,
-                    dayList = dayList,
-                    habitsByDate = uiState.habitsByDate,
-                    hasAnyHabits = uiState.hasAnyHabits,
-                    paddingValues = paddingValues,
-                    onTimerFinished = onTimerFinished,
-                    onUnfinishTimer = onUnfinishTimer,
-                    onStartTimer = onStartTimer,
-                    onPauseTimer = onPauseTimer,
-                    onResumeTimer = onResumeTimer,
-                    onTaskCompleted = onTaskCompleted,
-                    onHabitCardClick = onHabitClickInternal
-                )
-            }
+            HabitCardsPager(
+                pagerState = habitPagerState,
+                dayList = dayList,
+                habitsByDate = state.habitsByDate,
+                hasAnyHabits = state.hasAnyHabits,
+                paddingValues = paddingValues,
+                onTimerFinished = { habit, date -> onEvent(HomeUiEvent.OnTimerFinish(habit.id, date)) },
+                onUnfinishTimer = { id, date -> onEvent(HomeUiEvent.OnTimerUnfinish(id, date)) },
+                onStartTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerStart(habit.id, date)) },
+                onPauseTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerPause(habit.id, date)) },
+                onResumeTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerResume(habit.id, date)) },
+                onTaskCompleted = { id, date, completed -> onEvent(HomeUiEvent.OnTaskToggle(id, date, completed)) },
+                onHabitCardClick = onHabitClick
+            )
         }
     }
+}
+
+@Composable
+private fun LoadingScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
     }
+}
+
+@Composable
+private fun ErrorScreen(message: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = message, color = MaterialTheme.colorScheme.error)
+    }
+}
