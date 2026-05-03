@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.ui.navigation.BottomNavigationItem
+import com.example.pattern.ui.navigation.Screens
 
 @Composable
 fun CustomBottomBar(
@@ -31,7 +32,7 @@ fun CustomBottomBar(
         windowInsets = androidx.compose.material3.NavigationBarDefaults.windowInsets
     ) {
         items.forEach { item ->
-            val isSelected = currentRoute == item.route
+            val isSelected = Screens.isRouteSelected(currentRoute, item.route)
             
             StandardNavigationBarItem(
                 item = item,
