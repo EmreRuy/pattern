@@ -1,0 +1,37 @@
+package com.example.pattern.ui.screens.addHabitScreen
+
+import androidx.compose.runtime.Immutable
+import com.example.pattern.domain.model.HabitType
+import java.time.DayOfWeek
+
+@Immutable
+data class AddHabitUiState(
+    val currentStep: AddHabitStep = AddHabitStep.Main,
+    val habitName: String = "",
+    val habitType: String = "Grow",
+    val emoji: String = "🔥",
+    val motivation: String = "",
+    val buildHabitDays: List<DayOfWeek> = DayOfWeek.entries.toList(),
+    val durationHours: Int = 0,
+    val durationMinutes: Int = 30,
+    val selectedColor: String = "",
+    val reminderEnabled: Boolean = false,
+    val reminderTime: String = "09:00",
+    val showTimePicker: Boolean = false
+) {
+    val isNameValid: Boolean get() = habitName.isNotBlank()
+    val isColorValid: Boolean get() = selectedColor.isNotBlank()
+    val isDaysValid: Boolean get() = buildHabitDays.isNotEmpty()
+    val isEmojiValid: Boolean get() = emoji.isNotBlank()
+    
+    val isValid: Boolean get() = isNameValid && isColorValid && isDaysValid && isEmojiValid
+    
+    val screenTitle: String
+        get() = when (currentStep) {
+            AddHabitStep.Main -> "NEW PATTERN"
+            AddHabitStep.Category -> "CATEGORY"
+            AddHabitStep.Color -> "SELECT COLOR"
+            AddHabitStep.Emoji -> "CHOOSE ICON"
+            AddHabitStep.Motivation -> "MOTIVATION"
+        }
+}

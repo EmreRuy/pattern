@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.settings
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.Settings
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Immutable
 data class SettingsUiState(
     val settings: Settings = Settings(),
     val isLoading: Boolean = false

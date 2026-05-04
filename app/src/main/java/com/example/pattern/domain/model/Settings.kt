@@ -1,7 +1,9 @@
 package com.example.pattern.domain.model
 
+import androidx.compose.runtime.Immutable
 import java.time.LocalTime
 
+@Immutable
 data class Settings(
     val quietHoursEnabled: Boolean = false,
     val startTime: String = "22:00",

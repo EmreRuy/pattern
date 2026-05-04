@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -86,7 +85,6 @@ fun ExperienceLevelCard(
                         ),
                         color = Color.LightGray
                     )
-                   // Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = levelTitle,
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -118,13 +116,9 @@ fun ExperienceLevelCard(
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
-                    Text(
-                        text = "${(animatedProgress * 100).toInt()}%",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Black
-                        ),
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    
+                    // Isolated recomposition for percentage text
+                    AnimatedPercentageText(progress = animatedProgress)
                 }
 
                 // Polished Progress Bar
@@ -164,4 +158,15 @@ fun ExperienceLevelCard(
             }
         }
     }
+}
+
+@Composable
+private fun AnimatedPercentageText(progress: Float) {
+    Text(
+        text = "${(progress * 100).toInt()}%",
+        style = MaterialTheme.typography.titleLarge.copy(
+            fontWeight = FontWeight.Black
+        ),
+        color = MaterialTheme.colorScheme.primary
+    )
 }

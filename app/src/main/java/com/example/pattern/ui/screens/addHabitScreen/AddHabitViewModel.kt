@@ -7,7 +7,12 @@ import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import javax.inject.Inject
 
 @HiltViewModel
@@ -16,35 +21,77 @@ class AddHabitViewModel @Inject constructor(
     private val reminderManager: ReminderManager
 ) : ViewModel() {
 
-    fun saveNewHabit(
-        name: String,
-        type: HabitType,
-        durationHours: Int,
-        durationMinutes: Int,
-        selectedDays: List<Boolean>,
-        iconCode: String,
-        accentColorHex: String,
-        reminderTime: String? = null,
-        motivation: String? = null
-    ) {
-        if (name.isBlank()) return
-        
-        val totalDurationInMinutes = if (type == HabitType.BUILD) {
-            (durationHours * 60) + durationMinutes
+    private val _uiState = MutableStateFlow(AddHabitUiState())
+    val uiState: StateFlow<AddHabitUiState> = _uiState.asStateFlow()
+
+    fun onNameChange(name: String) {
+        _uiState.update { it.copy(habitName = name.take(20)) }
+    }
+
+    fun onTypeChange(type: String) {
+        _uiState.update { it.copy(habitType = type) }
+    }
+
+    fun onEmojiChange(emoji: String) {
+        _uiState.update { it.copy(emoji = emoji) }
+    }
+
+    fun onMotivationChange(motivation: String) {
+        _uiState.update { it.copy(motivation = motivation) }
+    }
+
+    fun onDaysChange(days: List<DayOfWeek>) {
+        _uiState.update { it.copy(buildHabitDays = days) }
+    }
+
+    fun onDurationChange(hours: Int, minutes: Int) {
+        _uiState.update { it.copy(durationHours = hours, durationMinutes = minutes) }
+    }
+
+    fun onColorChange(color: String) {
+        _uiState.update { it.copy(selectedColor = color) }
+    }
+
+    fun onReminderEnabledChange(enabled: Boolean) {
+        _uiState.update { it.copy(reminderEnabled = enabled) }
+    }
+
+    fun onReminderTimeChange(time: String) {
+        _uiState.update { it.copy(reminderTime = time) }
+    }
+
+    fun onStepChange(step: AddHabitStep) {
+        _uiState.update { it.copy(currentStep = step) }
+    }
+
+    fun onShowTimePickerChange(show: Boolean) {
+        _uiState.update { it.copy(showTimePicker = show) }
+    }
+
+    fun saveNewHabit(onSuccess: () -> Unit) {
+        val state = _uiState.value
+        if (!state.isValid) return
+
+        val totalDurationInMinutes = if (state.habitType == "Grow") {
+            (state.durationHours * 60) + state.durationMinutes
         } else {
             null
         }
 
         val newHabit = Habit(
             id = 0,
-            name = name.trim(),
-            type = type,
-            iconCode = iconCode,
+            name = state.habitName.trim(),
+            type = when (state.habitType) {
+                "Grow" -> HabitType.BUILD
+                "Drop" -> HabitType.QUIT
+                else -> HabitType.TASK
+            },
+            iconCode = state.emoji,
             durationInMinutes = totalDurationInMinutes,
-            selectedDays = selectedDays,
-            accentColorHex = accentColorHex,
-            reminderTime = reminderTime,
-            motivation = if (motivation.isNullOrBlank()) null else motivation.trim(),
+            selectedDays = DayOfWeek.entries.map { state.buildHabitDays.contains(it) },
+            accentColorHex = state.selectedColor,
+            reminderTime = if (state.reminderEnabled) state.reminderTime else null,
+            motivation = if (state.motivation.isBlank()) null else state.motivation.trim(),
             isCompleted = false,
             createdAt = System.currentTimeMillis(),
             timerStartTime = null,
@@ -54,6 +101,7 @@ class AddHabitViewModel @Inject constructor(
             try {
                 val id = repository.upsertHabit(newHabit)
                 reminderManager.scheduleReminder(newHabit.copy(id = id.toInt()))
+                onSuccess()
             } catch (e: Exception) {
                 // Handle error
             }
