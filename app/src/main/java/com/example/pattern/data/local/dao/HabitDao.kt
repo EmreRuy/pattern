@@ -66,6 +66,12 @@ interface HabitDao {
     fun getAllDailyStates(): Flow<List<HabitDailyState>>
 
     @Query("""
+        SELECT * FROM habit_daily_state 
+        WHERE date >= :startDate
+    """)
+    fun getDailyStatesFromDate(startDate: String): Flow<List<HabitDailyState>>
+
+    @Query("""
         SELECT * FROM habit_daily_state
         WHERE habitId = :habitId
         ORDER BY date DESC
