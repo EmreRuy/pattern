@@ -139,10 +139,7 @@ private fun HomeContent(
                     )
                     HomeCalendarSelector(
                         pagerState = calendarPagerState,
-                        selectedDate = state.selectedDate,
-                        onDateSelected = { date ->
-                            onEvent(HomeUiEvent.OnDateSelected(date))
-                        }
+                        selectedDate = state.selectedDate
                     )
                 }
             },

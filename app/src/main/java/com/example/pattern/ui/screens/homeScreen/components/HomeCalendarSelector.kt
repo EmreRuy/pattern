@@ -5,27 +5,18 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,11 +35,8 @@ import java.util.Locale
 fun HomeCalendarSelector(
     pagerState: PagerState,
     selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic = LocalHapticFeedback.current
-    
     // The central pivot is "This Week" (the week containing today).
     // pageIndex 25,000 corresponds to the week of LocalDate.now().
     val pivotDate = remember { 
@@ -96,13 +84,7 @@ fun HomeCalendarSelector(
                     CalendarItem(
                         isSelected = isSelected,
                         isToday = isToday,
-                        day = dayModel,
-                        onDayClick = {
-                            if (!isSelected) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onDateSelected(date)
-                            }
-                        }
+                        day = dayModel
                     )
                 }
             }
@@ -138,7 +120,6 @@ private fun CalendarItem(
     isSelected: Boolean,
     isToday: Boolean,
     day: CalendarDayModel,
-    onDayClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isWeekend = remember(day.date) {
@@ -157,13 +138,6 @@ private fun CalendarItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .semantics { role = Role.Button }
-            .clip(RoundedCornerShape(CalendarSelectorDefaults.ItemCornerRadius))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onDayClick
-            )
             .graphicsLayer {
                 // Subtle lift animation on selection using state value in lambda to avoid recomposition
                 translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgressState.value
@@ -285,7 +259,6 @@ private fun DayNumberCircle(
 }
 
 private object CalendarSelectorDefaults {
-    val ItemCornerRadius = 12.dp
     val NumberCircleSize = 40.dp
     val SelectionLift = 2.dp
     val HeaderSpacing = 8.dp
