@@ -38,17 +38,17 @@ fun HabitBuildCard(
         }
     }
 
+    // The derivedStateOf remains, but we will NOT destructure it at the top level.
     val timerData by remember(currentTime, habit.timerStartTime, habit.timerPauseTime, habit.isCompleted) {
         derivedStateOf {
             calculateTimerData(habit, totalMillis, currentTime)
         }
     }
 
-    val (remainingTime, formattedTime, progress) = timerData
     val showSuccess = remember { mutableStateOf(false) }
 
-    LaunchedEffect(remainingTime) {
-        if (!habit.isCompleted && remainingTime <= 0 && habit.timerStartTime != null) {
+    LaunchedEffect(timerData.first) { // remainingTime
+        if (!habit.isCompleted && timerData.first <= 0 && habit.timerStartTime != null) {
             showSuccess.value = true
             onTimerFinished(habit)
             delay(1200)
@@ -61,10 +61,11 @@ fun HabitBuildCard(
         onCardClick = onCardClick,
         subtitle = {
             if (totalMillis > 0) {
+                // Read formattedTime INSIDE the lambda to isolate recomposition
                 Text(
-                    text = if (habit.isCompleted) stringResource(R.string.habit_goal_reached) else formattedTime,
+                    text = if (habit.isCompleted) stringResource(R.string.habit_goal_reached) else timerData.second,
                     style = MaterialTheme.typography.labelMedium.copy(
-                        fontFeatureSettings = "tnum", // Tabular figures for stable timer width
+                        fontFeatureSettings = "tnum",
                         fontWeight = FontWeight.SemiBold
                     ),
                     color = Color.Gray,
@@ -75,7 +76,9 @@ fun HabitBuildCard(
         },
         action = { accentColor ->
             TimerRing(
-                progress = progress,
+                // Use a lambda if TimerRing is updated to support it, 
+                // or just read it here to keep recomposition inside this lambda block.
+                progress = timerData.third,
                 accentColor = accentColor,
                 isCompleted = habit.isCompleted,
                 isRunning = habit.timerStartTime != null && habit.timerPauseTime == null,

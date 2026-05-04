@@ -1,9 +1,10 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
-
 import java.time.LocalDate
 
+@Immutable
 data class HabitDetailsUi(
     val id: Int,
     val name: String,

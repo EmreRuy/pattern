@@ -25,11 +25,6 @@ import com.example.pattern.utils.ExperienceUtils
 @Composable
 fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
     val levelInfo = remember(habit.totalXP) { ExperienceUtils.getLevelInfo(habit.totalXP) }
-    val animatedXP by animateIntAsState(
-        targetValue = habit.totalXP,
-        animationSpec = tween(durationMillis = 1500),
-        label = "xpAnimation"
-    )
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -100,14 +95,7 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom
             ) {
-                Text(
-                    text = animatedXP.toString(),
-                    style = MaterialTheme.typography.displaySmall.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = (-1).sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                AnimatedXpText(targetXp = habit.totalXP)
                 Text(
                     text = " " + stringResource(R.string.detail_total_xp),
                     modifier = Modifier.padding(bottom = 6.dp, start = 4.dp),
@@ -155,4 +143,22 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
             }
         }
     }
+}
+
+@Composable
+private fun AnimatedXpText(targetXp: Int) {
+    val animatedXP by animateIntAsState(
+        targetValue = targetXp,
+        animationSpec = tween(durationMillis = 1500),
+        label = "xpAnimation"
+    )
+
+    Text(
+        text = animatedXP.toString(),
+        style = MaterialTheme.typography.displaySmall.copy(
+            fontWeight = FontWeight.Black,
+            letterSpacing = (-1).sp
+        ),
+        color = MaterialTheme.colorScheme.onSurface
+    )
 }
