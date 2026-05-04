@@ -2,9 +2,9 @@ package com.example.pattern.ui.screens.homeScreen.components
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitDailyState
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*

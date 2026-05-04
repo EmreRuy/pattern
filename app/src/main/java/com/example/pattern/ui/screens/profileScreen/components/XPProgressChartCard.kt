@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import java.util.Locale
 import kotlin.math.roundToInt
 
-data class XPDataPoint(val dayIndex: Int, val dateLabel: String, val xpValue: Float)
+import com.example.pattern.domain.model.XPDataPoint
 
 /**
  * A professional, borderless area chart interface card.

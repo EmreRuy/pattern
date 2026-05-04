@@ -23,8 +23,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.testTag
 import com.example.pattern.ui.screens.homeScreen.components.HabitListViewModel
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitDailyState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

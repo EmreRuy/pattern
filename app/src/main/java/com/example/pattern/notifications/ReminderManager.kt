@@ -2,7 +2,7 @@ package com.example.pattern.notifications
 
 import android.content.Context
 import androidx.work.*
-import com.example.pattern.data.local.entity.Habit
+import com.example.pattern.domain.model.Habit
 import com.example.pattern.data.worker.ReminderWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Duration

@@ -10,9 +10,9 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.pattern.MainActivity
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.SettingsEntity
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.Settings
+import com.example.pattern.domain.repository.HabitRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.time.LocalDate
@@ -58,7 +58,7 @@ class ReminderWorker @AssistedInject constructor(
             return Result.success() 
         }
 
-        val settings = repository.getSettingsOnce() ?: SettingsEntity()
+        val settings = repository.getSettingsOnce() ?: Settings()
         if (settings.isQuietTime()) {
             android.util.Log.d("ReminderWorker", "Currently in quiet hours, skipping notification")
             return Result.success()

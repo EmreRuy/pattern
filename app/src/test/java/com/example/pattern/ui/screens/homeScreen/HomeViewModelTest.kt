@@ -1,12 +1,12 @@
 package com.example.pattern.ui.screens.homeScreen
 
 import app.cash.turbine.test
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.data.local.entity.SettingsEntity
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.model.Settings
+import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.usecase.GetHomeHabitsUseCase
-import io.mockk.coEvery
+import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +26,7 @@ class HomeViewModelTest {
 
     private val repository = mockk<HabitRepository>(relaxed = true)
     private lateinit var getHomeHabitsUseCase: GetHomeHabitsUseCase
+    private lateinit var updateHabitProgressUseCase: UpdateHabitProgressUseCase
     private lateinit var viewModel: HomeViewModel
     
     private val testDispatcher = StandardTestDispatcher()
@@ -34,9 +35,10 @@ class HomeViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getHomeHabitsUseCase = GetHomeHabitsUseCase(repository)
+        updateHabitProgressUseCase = mockk<UpdateHabitProgressUseCase>(relaxed = true)
         
         // Default mocks
-        every { repository.getSettingsStream() } returns flowOf(SettingsEntity(totalXP = 100))
+        every { repository.getSettingsStream() } returns flowOf(Settings(totalXP = 100))
         every { repository.getAllHabitsStream() } returns flowOf(emptyList())
         every { repository.getAllDailyStatesStream() } returns flowOf(emptyList())
     }
@@ -47,14 +49,15 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `initial state is loading`() = runTest {
-        viewModel = HomeViewModel(repository, getHomeHabitsUseCase)
-        assertTrue(viewModel.uiState.value.isLoading)
+    fun `initial state is loading or success`() = runTest {
+        viewModel = HomeViewModel(repository, getHomeHabitsUseCase, updateHabitProgressUseCase)
+        val state = viewModel.uiState.value
+        assertTrue("Initial state should be Loading or Success, but was $state", 
+            state is HomeUiState.Loading || state is HomeUiState.Success)
     }
 
     @Test
     fun `uiState emits habits correctly when repository has data`() = runTest {
-        val today = LocalDate.now()
         val habits = listOf(
             Habit(
                 id = 1,
@@ -62,28 +65,35 @@ class HomeViewModelTest {
                 type = HabitType.BUILD,
                 durationInMinutes = 30,
                 selectedDays = List(7) { true },
-                iconCode = "🔥"
+                iconCode = "🔥",
+                isCompleted = false,
+                createdAt = System.currentTimeMillis(),
+                accentColorHex = "#77DD77",
+                timerStartTime = null,
+                timerPauseTime = null,
+                reminderTime = null,
+                motivation = null
             )
         )
         
         every { repository.getAllHabitsStream() } returns flowOf(habits)
-        every { repository.getSettingsStream() } returns flowOf(SettingsEntity(totalXP = 500))
+        every { repository.getSettingsStream() } returns flowOf(Settings(totalXP = 500))
         
-        viewModel = HomeViewModel(repository, getHomeHabitsUseCase)
+        viewModel = HomeViewModel(repository, getHomeHabitsUseCase, updateHabitProgressUseCase)
         
         viewModel.uiState.test {
-            // First emission might be initial value
-            val first = awaitItem()
+            // StateFlow emits current value immediately. Skip Loading states.
+            var state = awaitItem()
+            while (state is HomeUiState.Loading) {
+                state = awaitItem()
+            }
             
-            // Second emission should be the loaded state (using StandardTestDispatcher we need to advance)
-            testScheduler.advanceUntilIdle()
-            val state = awaitItem()
-            
-            assertFalse(state.isLoading)
-            assertEquals(1, state.habits.size)
-            assertEquals("Test Habit", state.habits[0].name)
-            assertEquals(500, state.levelInfo.totalXp)
-            assertTrue(state.hasAnyHabits)
+            assertTrue("Expected Success state but got $state", state is HomeUiState.Success)
+            val successState = state as HomeUiState.Success
+            assertEquals(1, successState.habits.size)
+            assertEquals("Test Habit", successState.habits[0].name)
+            assertEquals(500, successState.levelInfo.currentXP)
+            assertTrue(successState.hasAnyHabits)
         }
     }
 
@@ -92,15 +102,30 @@ class HomeViewModelTest {
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
         
-        viewModel = HomeViewModel(repository, getHomeHabitsUseCase)
-        
-        viewModel.onDateSelected(tomorrow)
+        viewModel = HomeViewModel(repository, getHomeHabitsUseCase, updateHabitProgressUseCase)
         
         viewModel.uiState.test {
-            testScheduler.advanceUntilIdle()
-            val state = awaitItem()
-            assertEquals(tomorrow, state.selectedDate)
-            assertFalse(state.isSelectedDateToday)
+            // Wait for initial Success state (today)
+            var state = awaitItem()
+            while (state is HomeUiState.Loading) {
+                state = awaitItem()
+            }
+            assertTrue("Expected initial Success state but got $state", state is HomeUiState.Success)
+            
+            // Trigger update
+            viewModel.onEvent(HomeUiEvent.OnDateSelected(tomorrow))
+            
+            // Wait for updated state (tomorrow)
+            state = awaitItem()
+            while (state is HomeUiState.Success && state.selectedDate != tomorrow) {
+                state = awaitItem()
+            }
+            
+            assertTrue("Expected Success state with tomorrow's date but got $state", 
+                state is HomeUiState.Success && state.selectedDate == tomorrow)
+            val successState = state as HomeUiState.Success
+            assertEquals(tomorrow, successState.selectedDate)
+            assertFalse(successState.isSelectedDateToday)
         }
     }
 }

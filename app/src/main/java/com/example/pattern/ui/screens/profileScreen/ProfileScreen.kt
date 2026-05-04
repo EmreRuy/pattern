@@ -60,14 +60,16 @@ fun ProfileScreen(
         } */
 
         // FREE CARD , Accessible to everyone
-        ExperienceLevelCard(
-            title = stringResource(R.string.profile_progress_score),
-            level = levelInfo.level,
-            levelTitle = levelInfo.title,
-            progress = levelInfo.progress,
-            totalXP = levelInfo.currentXP,
-            nextLevelXP = levelInfo.nextLevelXP
-        )
+        levelInfo?.let {
+            ExperienceLevelCard(
+                title = stringResource(R.string.profile_progress_score),
+                level = it.level,
+                levelTitle = it.title,
+                progress = it.progress,
+                totalXP = it.currentXP,
+                nextLevelXP = it.nextLevelXP
+            )
+        }
 
         XPProgressChartCard(
             title = "TOTAL XP GAINED",

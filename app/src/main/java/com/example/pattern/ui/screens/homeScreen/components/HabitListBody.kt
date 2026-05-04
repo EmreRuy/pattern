@@ -30,10 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitType
 import com.example.pattern.utils.ExperienceUtils
-import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.ui.screens.settings.MossGreen
 
 @Composable

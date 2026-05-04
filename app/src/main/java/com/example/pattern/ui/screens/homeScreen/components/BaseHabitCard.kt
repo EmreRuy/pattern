@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toColorInt
-import com.example.pattern.data.model.HabitCardModel
+import com.example.pattern.ui.model.HabitCardModel
 
 @Composable
 fun BaseHabitCard(

@@ -1,8 +1,8 @@
 package com.example.pattern.utils
 
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitDailyState
-import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.domain.model.Habit as DomainHabit
+import com.example.pattern.domain.model.HabitDailyState as DomainHabitDailyState
+import com.example.pattern.domain.model.HabitType
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDate
@@ -12,20 +12,26 @@ class StreakUtilsTest {
     private val everyDay = List(7) { true }
     private val weekDays = listOf(true, true, true, true, true, false, false)
 
-    private fun createHabit(selectedDays: List<Boolean> = everyDay): Habit {
-        return Habit(
+    private fun createHabit(selectedDays: List<Boolean> = everyDay): DomainHabit {
+        return DomainHabit(
             id = 1,
             name = "Test Habit",
             type = HabitType.BUILD,
             durationInMinutes = null,
             selectedDays = selectedDays,
             iconCode = "icon",
-            createdAt = System.currentTimeMillis()
+            isCompleted = false,
+            createdAt = 1704067200000L, // Jan 1st 2024
+            accentColorHex = "#77DD77",
+            timerStartTime = null,
+            timerPauseTime = null,
+            reminderTime = null,
+            motivation = null
         )
     }
 
-    private fun createState(date: LocalDate, isCompleted: Boolean = true): HabitDailyState {
-        return HabitDailyState(
+    private fun createState(date: LocalDate, isCompleted: Boolean = true): DomainHabitDailyState {
+        return DomainHabitDailyState(
             habitId = 1,
             date = date.toString(),
             isCompleted = isCompleted
@@ -35,7 +41,7 @@ class StreakUtilsTest {
     @Test
     fun `calculateStreak returns zero for no completions`() {
         val habit = createHabit()
-        val dailyStates = emptyList<HabitDailyState>()
+        val dailyStates = emptyList<DomainHabitDailyState>()
         
         val result = calculateStreak(habit, dailyStates)
         

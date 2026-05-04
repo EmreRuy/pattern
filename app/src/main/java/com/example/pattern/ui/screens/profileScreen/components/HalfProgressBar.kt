@@ -43,7 +43,7 @@ import java.util.Locale
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import com.example.pattern.ui.screens.profileScreen.HabitStat
+import com.example.pattern.domain.model.HabitStat
 
 
 import androidx.core.graphics.toColorInt

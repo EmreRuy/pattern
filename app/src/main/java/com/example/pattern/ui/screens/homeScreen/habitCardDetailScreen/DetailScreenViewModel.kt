@@ -5,10 +5,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.repository.HabitRepository
-import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateStreak
 import com.example.pattern.utils.toUiDate

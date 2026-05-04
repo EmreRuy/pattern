@@ -2,9 +2,9 @@ package com.example.pattern.ui.screens.addHabitScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -36,6 +36,7 @@ class AddHabitViewModel @Inject constructor(
         }
 
         val newHabit = Habit(
+            id = 0,
             name = name.trim(),
             type = type,
             iconCode = iconCode,
@@ -43,7 +44,11 @@ class AddHabitViewModel @Inject constructor(
             selectedDays = selectedDays,
             accentColorHex = accentColorHex,
             reminderTime = reminderTime,
-            motivation = if (motivation.isNullOrBlank()) null else motivation.trim()
+            motivation = if (motivation.isNullOrBlank()) null else motivation.trim(),
+            isCompleted = false,
+            createdAt = System.currentTimeMillis(),
+            timerStartTime = null,
+            timerPauseTime = null
         )
         viewModelScope.launch {
             try {

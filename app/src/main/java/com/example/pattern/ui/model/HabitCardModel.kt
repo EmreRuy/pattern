@@ -1,8 +1,8 @@
-package com.example.pattern.data.model
+package com.example.pattern.ui.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.domain.model.HabitType
 
 @Immutable
 data class HabitCardModel(

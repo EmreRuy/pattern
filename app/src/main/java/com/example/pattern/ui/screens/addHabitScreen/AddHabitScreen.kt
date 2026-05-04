@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.pattern.ui.screens.addHabitScreen.AddHabitViewModel
-import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.domain.model.HabitType
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import com.example.pattern.ui.screens.settings.PatternTimePickerDialog
 import java.time.DayOfWeek

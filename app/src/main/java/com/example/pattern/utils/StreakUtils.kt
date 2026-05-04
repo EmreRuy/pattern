@@ -1,7 +1,7 @@
 package com.example.pattern.utils
 
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitDailyState
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -22,52 +22,59 @@ fun calculateStreak(
     dailyStates: List<HabitDailyState>,
     today: LocalDate = LocalDate.now()
 ): StreakInfo {
-    // 1. Determine habit creation date to bound the search
+    val completedDateStrings = dailyStates
+        .filter { it.isCompleted || it.isTaskCompleted }
+        .map { it.date }
+        .toSet()
+    
+    return calculateStreakFromDates(habit, completedDateStrings, today)
+}
+
+/**
+ * Optimized version that accepts pre-calculated completed date strings.
+ */
+fun calculateStreakFromDates(
+    habit: Habit,
+    completedDateStrings: Set<String>,
+    today: LocalDate = LocalDate.now(),
+    totalCompletions: Int = completedDateStrings.size
+): StreakInfo {
     val creationDate = Instant.ofEpochMilli(habit.createdAt)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
 
-    // 2. Extract completed dates for O(1) lookups
-    val completedDates = dailyStates
-        .filter { it.isCompleted || it.isTaskCompleted }
-        .map { LocalDate.parse(it.date) }
-        .toSet()
-
-    if (completedDates.isEmpty()) {
+    if (completedDateStrings.isEmpty()) {
         return StreakInfo(0, 0)
     }
 
-    val totalCompletions = completedDates.size
-    
     var currentStreak = 0
     var checkDate = today
+    val todayStr = today.toString()
 
-    // 3. If today is not completed, we start checking from yesterday.
-    // This correctly handles the case where the user hasn't completed the habit yet today.
-    if (!completedDates.contains(today)) {
+    // If today is not completed, we start checking from yesterday.
+    if (!completedDateStrings.contains(todayStr)) {
         checkDate = today.minusDays(1)
     }
 
-    // 4. Backtrack until we reach the creation date or a break in the streak
-    // A streak is broken if a scheduled day is missed.
-    // A streak is PRESERVED if a non-scheduled day is missed.
+    // Backtrack until we reach the creation date or a break in the streak
     while (!checkDate.isBefore(creationDate)) {
-        val dayOfWeekIndex = checkDate.dayOfWeek.value - 1
-        val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
-        val isCompleted = completedDates.contains(checkDate)
+        val checkDateStr = checkDate.toString()
+        val isCompleted = completedDateStrings.contains(checkDateStr)
         
         if (isCompleted) {
             currentStreak++
-        } else if (isScheduled) {
-            // Gap in a scheduled day after creation - streak broken
-            break
+        } else {
+            val dayOfWeekIndex = checkDate.dayOfWeek.value - 1
+            val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+            if (isScheduled) {
+                // Gap in a scheduled day after creation - streak broken
+                break
+            }
         }
-        // Not completed and not scheduled - streak is preserved (skipping day)
         
         checkDate = checkDate.minusDays(1)
         
         // Safety bounds
-        if (checkDate.isBefore(LocalDate.ofEpochDay(0))) break 
         if (currentStreak > 10000) break
     }
 

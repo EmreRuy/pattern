@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.data.model.HabitCardModel
+import com.example.pattern.domain.model.HabitType
+import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.CalendarDayModel
 import java.time.LocalDate
 

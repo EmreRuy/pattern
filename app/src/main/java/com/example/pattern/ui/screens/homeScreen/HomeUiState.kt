@@ -1,6 +1,7 @@
 package com.example.pattern.ui.screens.homeScreen
 
-import com.example.pattern.data.model.HabitCardModel
+import com.example.pattern.ui.model.HabitCardModel
+import com.example.pattern.utils.CalendarDayModel
 import com.example.pattern.utils.LevelInfo
 import java.time.LocalDate
 
@@ -14,7 +15,8 @@ sealed interface HomeUiState {
         val habitsByDate: Map<LocalDate, List<HabitCardModel>> = emptyMap(),
         val hasAnyHabits: Boolean = false,
         val levelInfo: LevelInfo,
-        val explodeConfetti: Boolean = false
+        val explodeConfetti: Boolean = false,
+        val dayList: List<CalendarDayModel> = emptyList()
     ) : HomeUiState
 
     data class Error(val message: String) : HomeUiState

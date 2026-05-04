@@ -2,8 +2,8 @@ package com.example.pattern.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.data.local.entity.SettingsEntity
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.model.Settings
+import com.example.pattern.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val settings: SettingsEntity = SettingsEntity(),
+    val settings: Settings = Settings(),
     val isLoading: Boolean = false
 )
 
@@ -24,7 +24,7 @@ class SettingsViewModel @Inject constructor(
 
     val uiState: StateFlow<SettingsUiState> = repository.getSettingsStream()
         .map { settings ->
-            SettingsUiState(settings = settings ?: SettingsEntity(), isLoading = false)
+            SettingsUiState(settings = settings ?: Settings(), isLoading = false)
         }
         .stateIn(
             scope = viewModelScope,

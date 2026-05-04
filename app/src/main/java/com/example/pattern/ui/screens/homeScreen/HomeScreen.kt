@@ -23,7 +23,6 @@ import com.example.pattern.ui.components.ConfettiView
 import com.example.pattern.ui.screens.homeScreen.components.HabitCardsPager
 import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
-import com.example.pattern.utils.generateNext365Days
 import java.time.LocalDate
 
 @Composable
@@ -59,7 +58,7 @@ private fun HomeContent(
     onHabitClick: (Int) -> Unit,
     onPremiumClick: () -> Unit
 ) {
-    val dayList = remember { generateNext365Days() }
+    val dayList = state.dayList
     
     val todayIndex = remember(dayList) {
         val today = LocalDate.now()
@@ -82,8 +81,8 @@ private fun HomeContent(
 
     // Sync Pager -> ViewModel
     LaunchedEffect(habitPagerState.currentPage) {
-        val selectedDate = dayList[habitPagerState.currentPage].date
-        if (selectedDate != state.selectedDate) {
+        val selectedDate = dayList.getOrNull(habitPagerState.currentPage)?.date
+        if (selectedDate != null && selectedDate != state.selectedDate) {
             onEvent(HomeUiEvent.OnDateSelected(selectedDate))
             
             val targetWeekPage = habitPagerState.currentPage / 7

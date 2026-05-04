@@ -1,39 +1,58 @@
 package com.example.pattern.domain.usecase
 
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitDailyState
-import com.example.pattern.data.mapper.toCardModel
-import com.example.pattern.data.model.HabitCardModel
-import com.example.pattern.data.repository.HabitRepository
-import com.example.pattern.utils.calculateStreak
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.utils.calculateStreakFromDates
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 
 /**
+ * Domain model representing a habit with its status for a specific date.
+ * This replaces HabitCardModel in the Domain layer to avoid UI framework leakage.
+ */
+data class HabitWithStatus(
+    val habit: Habit,
+    val dailyState: HabitDailyState?,
+    val currentStreak: Int
+)
+
+/**
  * Use Case to retrieve and process habits for the Home Screen.
- * Encapsulates filtering by date and calculating streaks.
+ * Optimized for single-pass processing and off-main-thread execution.
  */
 class GetHomeHabitsUseCase @Inject constructor(
     private val repository: HabitRepository
 ) {
-    operator fun invoke(date: LocalDate): Flow<List<HabitCardModel>> {
-        val habitsFlow = repository.getAllHabitsStream()
-        val allDailyStatesFlow = repository.getAllDailyStatesStream()
-        
-        return combine(habitsFlow, allDailyStatesFlow) { habits, allStates ->
+    operator fun invoke(date: LocalDate): Flow<List<HabitWithStatus>> {
+        return combine(
+            repository.getAllHabitsStream(),
+            repository.getAllDailyStatesStream()
+        ) { habits, allStates ->
             val dateKey = date.toString()
             val today = LocalDate.now()
             val dayOfWeekIndex = date.dayOfWeek.value - 1
             
-            val statesByHabit = allStates.groupBy { it.habitId }
-            val dateStatesMap = allStates.filter { it.date == dateKey }
-                .associateBy { it.habitId }
+            // Single-pass: Group states by habitId and filter for current date
+            val statesMap = mutableMapOf<Int, MutableSet<String>>()
+            val dateStatesMap = mutableMapOf<Int, HabitDailyState>()
+            
+            for (state in allStates) {
+                if (state.isCompleted || state.isTaskCompleted) {
+                    statesMap.getOrPut(state.habitId) { mutableSetOf() }.add(state.date)
+                }
+                if (state.date == dateKey) {
+                    dateStatesMap[state.habitId] = state
+                }
+            }
 
-            habits.filter { habit ->
+            habits.mapNotNull { habit ->
                 val creationDate = Instant.ofEpochMilli(habit.createdAt)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
@@ -41,12 +60,21 @@ class GetHomeHabitsUseCase @Inject constructor(
                 val wasCreated = !date.isBefore(creationDate)
                 val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
                 
-                wasCreated && isScheduled
-            }.map { habit ->
-                val daily = dateStatesMap[habit.id]
-                val streak = calculateStreak(habit, statesByHabit[habit.id] ?: emptyList(), today).currentStreak
-                habit.toCardModel(daily, streak)
+                if (wasCreated && isScheduled) {
+                    val completedDates = statesMap[habit.id] ?: emptySet()
+                    
+                    // We need to pass the local Habit entity to StreakUtils if it hasn't been updated yet,
+                    // but I've updated StreakUtils to use domain Habit.
+                    val streakInfo = calculateStreakFromDates(habit, completedDates, today)
+                    HabitWithStatus(
+                        habit = habit,
+                        dailyState = dateStatesMap[habit.id],
+                        currentStreak = streakInfo.currentStreak
+                    )
+                } else {
+                    null
+                }
             }
-        }
+        }.flowOn(Dispatchers.Default)
     }
 }

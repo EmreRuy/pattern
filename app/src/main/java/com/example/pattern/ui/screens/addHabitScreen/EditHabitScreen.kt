@@ -26,9 +26,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import com.example.pattern.ui.screens.settings.PatternTimePickerDialog

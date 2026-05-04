@@ -2,14 +2,18 @@ package com.example.pattern.ui.screens.homeScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.usecase.GetHomeHabitsUseCase
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
+import com.example.pattern.ui.mapper.toCardModel
 import com.example.pattern.utils.ExperienceUtils
+import com.example.pattern.utils.generateNext365Days
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -23,18 +27,26 @@ class HomeViewModel @Inject constructor(
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     private val _explodeConfetti = MutableStateFlow(false)
+    
+    // Calculate dayList once on a background thread
+    private val _dayList = flow {
+        emit(withContext(Dispatchers.Default) { generateNext365Days() })
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
         _explodeConfetti,
         habitRepository.getSettingsStream().distinctUntilChanged(),
-        habitRepository.getAllHabitsStream().map { it.isNotEmpty() }.distinctUntilChanged()
-    ) { date, explode, settings, hasAnyHabits ->
+        habitRepository.getAllHabitsStream().map { it.isNotEmpty() }.distinctUntilChanged(),
+        _dayList
+    ) { date, explode, settings, hasAnyHabits, dayList ->
+        if (dayList.isEmpty()) return@combine flowOf(HomeUiState.Loading)
+        
         val dateWindow = listOf(date.minusDays(1), date, date.plusDays(1))
         
         combine(
             dateWindow.map { d ->
-                getHomeHabitsUseCase(d).map { habits -> d to habits }
+                getHomeHabitsUseCase(d).map { habits -> d to habits.map { it.toCardModel() } }
             }
         ) { results ->
             val habitsMap = results.toMap()
@@ -45,11 +57,12 @@ class HomeViewModel @Inject constructor(
                 habitsByDate = habitsMap,
                 hasAnyHabits = hasAnyHabits,
                 levelInfo = ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0),
-                explodeConfetti = explode
+                explodeConfetti = explode,
+                dayList = dayList
             )
         }
     }.flatMapLatest { it }
-        .map<HomeUiState, HomeUiState> { it }
+        .flowOn(Dispatchers.Default) // Ensure combining and mapping stays off main thread
         .catch { e -> emit(HomeUiState.Error(e.message ?: "Unknown Error")) }
         .stateIn(
             scope = viewModelScope,

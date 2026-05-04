@@ -1,8 +1,8 @@
 package com.example.pattern.utils
 
-import com.example.pattern.data.local.entity.Habit
-import com.example.pattern.data.local.entity.HabitDailyState
-import com.example.pattern.data.local.entity.HabitType
+import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.model.HabitType
 
 data class LevelInfo(
     val level: Int,

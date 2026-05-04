@@ -1,8 +1,8 @@
 package com.example.pattern.domain.usecase
 
-import com.example.pattern.data.local.entity.HabitDailyState
-import com.example.pattern.data.local.entity.HabitType
-import com.example.pattern.data.repository.HabitRepository
+import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
 import java.time.LocalDate
 import javax.inject.Inject
@@ -42,45 +42,51 @@ class UpdateHabitProgressUseCase @Inject constructor(
     }
 
     suspend fun finishTimer(habitId: Int, date: LocalDate) {
-        val dateStr = date.toString()
-        val habit = repository.getHabitOnce(habitId) ?: return
-        val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
-        if (currentDaily.isCompleted) return
-        
-        val updated = currentDaily.copy(isCompleted = true, timerStartTime = null, timerPauseTime = null)
-        repository.upsertDailyState(updated)
-        repository.addXP(ExperienceUtils.calculateHabitXP(habit, updated))
+        repository.withTransaction {
+            val dateStr = date.toString()
+            val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
+            if (currentDaily.isCompleted) return@withTransaction
+            
+            val updated = currentDaily.copy(isCompleted = true, timerStartTime = null, timerPauseTime = null)
+            repository.upsertDailyState(updated)
+            repository.addXP(ExperienceUtils.calculateHabitXP(habit, updated))
+        }
     }
 
     suspend fun unfinishTimer(habitId: Int, date: LocalDate) {
-        val dateStr = date.toString()
-        val habit = repository.getHabitOnce(habitId) ?: return
-        val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return
-        if (!currentDaily.isCompleted) return
-        
-        repository.upsertDailyState(currentDaily.copy(isCompleted = false))
-        repository.addXP(-ExperienceUtils.calculateHabitXP(habit, currentDaily))
+        repository.withTransaction {
+            val dateStr = date.toString()
+            val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return@withTransaction
+            if (!currentDaily.isCompleted) return@withTransaction
+            
+            repository.upsertDailyState(currentDaily.copy(isCompleted = false))
+            repository.addXP(-ExperienceUtils.calculateHabitXP(habit, currentDaily))
+        }
     }
 
     suspend fun toggleTask(habitId: Int, date: LocalDate, completed: Boolean) {
-        val dateStr = date.toString()
-        val habit = repository.getHabitOnce(habitId) ?: return
-        val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
-        
-        val wasCompleted = when(habit.type) {
-            HabitType.TASK, HabitType.QUIT -> currentDaily?.isTaskCompleted == true
-            HabitType.BUILD -> currentDaily?.isCompleted == true
+        repository.withTransaction {
+            val dateStr = date.toString()
+            val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
+            val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
+            
+            val wasCompleted = when(habit.type) {
+                HabitType.TASK, HabitType.QUIT -> currentDaily?.isTaskCompleted == true
+                HabitType.BUILD -> currentDaily?.isCompleted == true
+            }
+
+            if (wasCompleted == completed) return@withTransaction
+
+            val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
+                isTaskCompleted = completed,
+                isCompleted = completed 
+            )
+            repository.upsertDailyState(updatedState)
+
+            val xpChange = ExperienceUtils.calculateHabitXP(habit, updatedState)
+            repository.addXP(if (completed) xpChange else -xpChange)
         }
-
-        if (wasCompleted == completed) return
-
-        val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
-            isTaskCompleted = completed,
-            isCompleted = completed 
-        )
-        repository.upsertDailyState(updatedState)
-
-        val xpChange = ExperienceUtils.calculateHabitXP(habit, updatedState)
-        repository.addXP(if (completed) xpChange else -xpChange)
     }
 }

@@ -8,7 +8,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.pattern.R
-import com.example.pattern.data.model.HabitCardModel
+import com.example.pattern.ui.model.HabitCardModel
 
 @Composable
 fun HabitTaskCard(
