@@ -58,31 +58,34 @@ private fun HomeContent(
     onHabitClick: (Int) -> Unit,
     onPremiumClick: () -> Unit
 ) {
-    val dayList = state.dayList
-    
-    val todayIndex = remember(dayList) {
-        val today = LocalDate.now()
-        dayList.indexOfFirst { it.date == today }.let { if (it != -1) it else dayList.size / 2 }
+    val today = remember { LocalDate.now() }
+    val mondayOfThisWeek = remember(today) { 
+        today.minusDays((today.dayOfWeek.value - 1).toLong()) 
     }
+    
+    // Constants for the infinite pager
+    val weekPivotPage = 25000
+    val dayPivotIndex = weekPivotPage * 7
 
     val calendarPagerState = rememberPagerState(
-        initialPage = todayIndex / 7,
-        pageCount = { dayList.size / 7 }
+        initialPage = weekPivotPage,
+        pageCount = { 50000 }
     )
 
-    val habitPagerState = rememberPagerState(
-        initialPage = todayIndex,
-        pageCount = { dayList.size }
-    )
-
-    val selectedDayIndex = remember(state.selectedDate, dayList) {
-        dayList.indexOfFirst { it.date == state.selectedDate }.coerceAtLeast(0)
+    val initialHabitPage = remember(today, dayPivotIndex) {
+        dayPivotIndex + (today.dayOfWeek.value - 1)
     }
+    val habitPagerState = rememberPagerState(
+        initialPage = initialHabitPage,
+        pageCount = { 50000 * 7 }
+    )
 
     // Sync Pager -> ViewModel
     LaunchedEffect(habitPagerState.currentPage) {
-        val selectedDate = dayList.getOrNull(habitPagerState.currentPage)?.date
-        if (selectedDate != null && selectedDate != state.selectedDate) {
+        val offset = habitPagerState.currentPage - dayPivotIndex
+        val selectedDate = mondayOfThisWeek.plusDays(offset.toLong())
+        
+        if (selectedDate != state.selectedDate) {
             onEvent(HomeUiEvent.OnDateSelected(selectedDate))
             
             val targetWeekPage = habitPagerState.currentPage / 7
@@ -93,9 +96,23 @@ private fun HomeContent(
     }
 
     // Sync ViewModel -> Pager
-    LaunchedEffect(selectedDayIndex) {
-        if (habitPagerState.currentPage != selectedDayIndex) {
-            habitPagerState.animateScrollToPage(selectedDayIndex)
+    LaunchedEffect(state.selectedDate) {
+        val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(mondayOfThisWeek, state.selectedDate)
+        val targetHabitPage = dayPivotIndex + daysBetween.toInt()
+        
+        if (habitPagerState.currentPage != targetHabitPage) {
+            habitPagerState.animateScrollToPage(targetHabitPage)
+        }
+    }
+
+    // Sync Calendar Pager -> Habit Pager (when user swipes calendar)
+    LaunchedEffect(calendarPagerState.currentPage) {
+        val targetHabitWeekStart = calendarPagerState.currentPage * 7
+        val currentHabitWeekStart = (habitPagerState.currentPage / 7) * 7
+        if (targetHabitWeekStart != currentHabitWeekStart) {
+            // Maintain the same day of week when swiping weeks if possible
+            val dayOfWeekOffset = habitPagerState.currentPage % 7
+            habitPagerState.animateScrollToPage(targetHabitWeekStart + dayOfWeekOffset)
         }
     }
 
@@ -122,18 +139,16 @@ private fun HomeContent(
                     )
                     HomeCalendarSelector(
                         pagerState = calendarPagerState,
-                        selectedDayIndex = selectedDayIndex,
-                        onDaySelected = { index ->
-                            onEvent(HomeUiEvent.OnDateSelected(dayList[index].date))
-                        },
-                        dayList = dayList
+                        selectedDate = state.selectedDate,
+                        onDateSelected = { date ->
+                            onEvent(HomeUiEvent.OnDateSelected(date))
+                        }
                     )
                 }
             },
         ) { paddingValues ->
             HabitCardsPager(
                 pagerState = habitPagerState,
-                dayList = dayList,
                 habitsByDate = state.habitsByDate,
                 hasAnyHabits = state.hasAnyHabits,
                 paddingValues = paddingValues,

@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.ui.model.HabitCardModel
-import com.example.pattern.utils.CalendarDayModel
 import java.time.LocalDate
 
 /**
@@ -27,7 +26,6 @@ import java.time.LocalDate
 @Composable
 fun HabitCardsPager(
     pagerState: PagerState,
-    dayList: List<CalendarDayModel>,
     habitsByDate: Map<LocalDate, List<HabitCardModel>>,
     hasAnyHabits: Boolean,
     paddingValues: PaddingValues,
@@ -41,6 +39,10 @@ fun HabitCardsPager(
 ) {
     val haptic = LocalHapticFeedback.current
     val today = remember { LocalDate.now() }
+    
+    // The central pivot for days is today at the middle index
+    val pivotDate = remember { LocalDate.now() }
+    val pivotIndex = 25000 * 7 // Aligned with the week pager pivot
 
     // Haptic feedback when the user settles on a new page
     LaunchedEffect(pagerState) {
@@ -52,9 +54,12 @@ fun HabitCardsPager(
     HorizontalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        key = { index -> dayList.getOrNull(index)?.date?.toString() ?: index.toString() }
+        key = { it }
     ) { pageIndex ->
-        val date = dayList[pageIndex].date
+        val date = remember(pageIndex) {
+            val offset = pageIndex - (pivotIndex + (today.dayOfWeek.value - 1))
+            today.plusDays(offset.toLong())
+        }
         val habits = habitsByDate[date] ?: emptyList()
         val isToday = date == today
 

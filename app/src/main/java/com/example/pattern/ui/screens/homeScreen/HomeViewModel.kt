@@ -7,13 +7,11 @@ import com.example.pattern.domain.usecase.GetHomeHabitsUseCase
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.ui.mapper.toCardModel
 import com.example.pattern.utils.ExperienceUtils
-import com.example.pattern.utils.generateNext365Days
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -27,21 +25,13 @@ class HomeViewModel @Inject constructor(
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     private val _explodeConfetti = MutableStateFlow(false)
-    
-    // Calculate dayList once on a background thread
-    private val _dayList = flow {
-        emit(withContext(Dispatchers.Default) { generateNext365Days() })
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
         _explodeConfetti,
         habitRepository.getSettingsStream().distinctUntilChanged(),
-        habitRepository.getAllHabitsStream().map { it.isNotEmpty() }.distinctUntilChanged(),
-        _dayList
-    ) { date, explode, settings, hasAnyHabits, dayList ->
-        if (dayList.isEmpty()) return@combine flowOf(HomeUiState.Loading)
-        
+        habitRepository.getAllHabitsStream().map { it.isNotEmpty() }.distinctUntilChanged()
+    ) { date, explode, settings, hasAnyHabits ->
         val dateWindow = listOf(date.minusDays(1), date, date.plusDays(1))
         
         combine(
@@ -57,12 +47,11 @@ class HomeViewModel @Inject constructor(
                 habitsByDate = habitsMap,
                 hasAnyHabits = hasAnyHabits,
                 levelInfo = ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0),
-                explodeConfetti = explode,
-                dayList = dayList
-            )
+                explodeConfetti = explode
+            ) as HomeUiState
         }
     }.flatMapLatest { it }
-        .flowOn(Dispatchers.Default) // Ensure combining and mapping stays off main thread
+        .flowOn(Dispatchers.Default)
         .catch { e -> emit(HomeUiState.Error(e.message ?: "Unknown Error")) }
         .stateIn(
             scope = viewModelScope,

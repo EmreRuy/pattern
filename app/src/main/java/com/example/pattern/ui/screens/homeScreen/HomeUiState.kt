@@ -18,8 +18,7 @@ sealed interface HomeUiState {
         val habitsByDate: Map<LocalDate, List<HabitCardModel>> = emptyMap(),
         val hasAnyHabits: Boolean = false,
         val levelInfo: LevelInfo,
-        val explodeConfetti: Boolean = false,
-        val dayList: List<CalendarDayModel> = emptyList()
+        val explodeConfetti: Boolean = false
     ) : HomeUiState
 
     @Immutable

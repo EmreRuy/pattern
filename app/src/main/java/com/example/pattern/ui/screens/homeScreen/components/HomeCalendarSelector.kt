@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.utils.CalendarDayModel
+import com.example.pattern.utils.toCalendarDayModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -42,22 +43,26 @@ import java.util.Locale
 @Composable
 fun HomeCalendarSelector(
     pagerState: PagerState,
-    selectedDayIndex: Int,
-    onDaySelected: (Int) -> Unit,
-    dayList: List<CalendarDayModel>,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     
+    // The central pivot is "This Week" (the week containing today).
+    // pageIndex 25,000 corresponds to the week of LocalDate.now().
+    val pivotDate = remember { 
+        LocalDate.now().minusDays((LocalDate.now().dayOfWeek.value - 1).toLong()) 
+    }
+
     // Derived state for the month title to avoid unnecessary recompositions of the header
     val currentMonthTitle by remember {
         derivedStateOf {
-            val firstDayOfWeekIndex = pagerState.currentPage * 7
-            if (firstDayOfWeekIndex in dayList.indices) {
-                dayList[firstDayOfWeekIndex].date.format(
-                    DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-                )
-            } else ""
+            val weekOffset = pagerState.currentPage - 25000
+            val dateInWeek = pivotDate.plusWeeks(weekOffset.toLong())
+            dateInWeek.format(
+                DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            )
         }
     }
 
@@ -72,7 +77,8 @@ fun HomeCalendarSelector(
             beyondViewportPageCount = 1,
             key = { it } // Use page index as key for stability
         ) { weekIndex ->
-            val startDayIndex = remember(weekIndex) { weekIndex * 7 }
+            val weekOffset = weekIndex - 25000
+            val weekStartDate = remember(weekOffset) { pivotDate.plusWeeks(weekOffset.toLong()) }
             
             Row(
                 modifier = Modifier
@@ -82,24 +88,22 @@ fun HomeCalendarSelector(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 repeat(7) { i ->
-                    val dayIndex = startDayIndex + i
-                    if (dayIndex in dayList.indices) {
-                        val day = dayList[dayIndex]
-                        val isSelected = selectedDayIndex == dayIndex
-                        val isToday = remember(day.date) { day.date == LocalDate.now() }
-                        
-                        CalendarItem(
-                            isSelected = isSelected,
-                            isToday = isToday,
-                            day = day,
-                            onDayClick = {
-                                if (!isSelected) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onDaySelected(dayIndex)
-                                }
+                    val date = remember(weekStartDate) { weekStartDate.plusDays(i.toLong()) }
+                    val dayModel = remember(date) { date.toCalendarDayModel() }
+                    val isSelected = selectedDate == date
+                    val isToday = remember(date) { date == LocalDate.now() }
+                    
+                    CalendarItem(
+                        isSelected = isSelected,
+                        isToday = isToday,
+                        day = dayModel,
+                        onDayClick = {
+                            if (!isSelected) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onDateSelected(date)
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }
