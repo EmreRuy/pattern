@@ -73,6 +73,7 @@ fun ProfileScreen(
 
         XPProgressChartCard(
             title = "TOTAL XP GAINED",
+            weeklyDataPoints = uiState.weeklyXpHistory,
             monthlyDataPoints = uiState.xpHistory,
             yearlyDataPoints = uiState.yearlyXpHistory
         )

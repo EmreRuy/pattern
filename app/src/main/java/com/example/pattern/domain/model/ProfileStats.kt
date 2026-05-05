@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class ProfileStats(
     val levelInfo: LevelInfo,
+    val weeklyXpHistory: List<XPDataPoint>,
     val xpHistory: List<XPDataPoint>,
     val yearlyXpHistory: List<XPDataPoint>,
     val doneCount: Int,

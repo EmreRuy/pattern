@@ -39,11 +39,12 @@ import com.example.pattern.domain.model.XPDataPoint
 fun XPProgressChartCard(
     modifier: Modifier = Modifier,
     title: String = "XP PROGRESS",
+    weeklyDataPoints: List<XPDataPoint> = emptyList(),
     monthlyDataPoints: List<XPDataPoint> = emptyList(),
     yearlyDataPoints: List<XPDataPoint> = emptyList(),
     accentColor: Color = Color(0xFF386641)
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(pageCount = { 3 })
 
     // Borderless Card Container - Clean flat white background
     Box(
@@ -79,7 +80,11 @@ fun XPProgressChartCard(
                         label = "TitleAnim"
                     ) { page ->
                         Text(
-                            text = if (page == 0) "Monthly Progress" else "Yearly Progress",
+                            text = when (page) {
+                                0 -> "Weekly Progress"
+                                1 -> "Monthly Progress"
+                                else -> "Yearly Progress"
+                            },
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -92,7 +97,7 @@ fun XPProgressChartCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    repeat(2) { index ->
+                    repeat(3) { index ->
                         val isSelected = pagerState.currentPage == index
                         val dotWidth by animateDpAsState(
                             targetValue = if (isSelected) 18.dp else 6.dp,
@@ -120,7 +125,11 @@ fun XPProgressChartCard(
                 userScrollEnabled = true,
                 pageSpacing = 16.dp
             ) { page ->
-                val currentData = if (page == 0) monthlyDataPoints else yearlyDataPoints
+                val currentData = when (page) {
+                    0 -> weeklyDataPoints
+                    1 -> monthlyDataPoints
+                    else -> yearlyDataPoints
+                }
                 ChartPage(
                     dataPoints = currentData,
                     accentColor = accentColor
