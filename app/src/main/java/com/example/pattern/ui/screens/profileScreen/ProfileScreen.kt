@@ -22,7 +22,6 @@ import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.profileScreen.components.ExperienceLevelCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileExtraCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileStatCard
-import com.example.pattern.ui.screens.profileScreen.components.SuccessDashboardUiState
 import com.example.pattern.ui.screens.profileScreen.components.XPProgressChartCard
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
@@ -82,16 +81,7 @@ fun ProfileScreen(
         // LOCKED CARDS , Wrapped in the Pro logic
 
         // Success Score Card - Premium
-        ProfileExtraCard(
-            uiState = SuccessDashboardUiState(
-                title = "Success Score",
-                doneCount = uiState.doneCount,
-                missedCount = uiState.missedCount,
-                xpPoints = uiState.totalXp,
-                topDoneHabits = uiState.topDoneHabits,
-                topMissedHabits = uiState.topMissedHabits
-            )
-        )
+        ProfileExtraCard(uiState = uiState.successDashboard)
 
 
             ProfileStatCard(

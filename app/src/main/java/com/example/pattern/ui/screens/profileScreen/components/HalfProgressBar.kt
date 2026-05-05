@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -54,64 +56,13 @@ data class SuccessDashboardUiState(
     val title: String = "Success Score",
     val doneCount: Int = 0,
     val missedCount: Int = 0,
+    val successRate: Float = 0f,
+    val statusText: String = "",
     val xpPoints: Int = 0,
     val topDoneHabits: List<HabitStat> = emptyList(),
-    val topMissedHabits: List<HabitStat> = emptyList()
-) {
-    /**
-     * Perfect math for Success Rate.
-     * Calculated as: done / (done + missed)
-     * Handles division by zero for stability.
-     */
-    val successRate: Float = if (doneCount + missedCount > 0) {
-        doneCount.toFloat() / (doneCount + missedCount)
-    } else 0f
-
-    val statusText: String = when {
-        successRate >= 0.9f -> "ELITE"
-        successRate >= 0.75f -> "OPTIMAL"
-        successRate >= 0.5f -> "STABLE"
-        successRate >= 0.25f -> "GAINING"
-        else -> "STARTING"
-    }
-
-    val insight: InsightData = when {
-        topDoneHabits.isNotEmpty() && topMissedHabits.isEmpty() -> {
-            InsightData(
-                title = "UNSTOPPABLE",
-                message = "Your consistency is legendary. You've mastered your current routine.",
-                action = "Time to level up? Consider adding a small, high-impact habit to your morning.",
-                emoji = "🔥"
-            )
-        }
-        topDoneHabits.isNotEmpty() -> {
-            val bestHabit = topDoneHabits.first().name
-            val toughHabit = topMissedHabits.firstOrNull()?.name ?: "Consistency"
-            InsightData(
-                title = "MOMENTUM & FRICTION",
-                message = "You're crushing '$bestHabit', but '$toughHabit' seems to be a hurdle lately.",
-                action = "Try the '2-minute rule' for $toughHabit: make it so easy you can't say no.",
-                emoji = "⚖️"
-            )
-        }
-        topMissedHabits.isNotEmpty() -> {
-            InsightData(
-                title = "FRESH START",
-                message = "The first step is always the hardest. Don't let the misses define you.",
-                action = "Pick one habit for tomorrow and focus only on showing up. Just 1% better.",
-                emoji = "🌱"
-            )
-        }
-        else -> {
-            InsightData(
-                title = "YOUR JOURNEY",
-                message = "Every master was once a beginner. Start small, stay consistent.",
-                action = "Track your first habit today to unlock personalized insights.",
-                emoji = "✨"
-            )
-        }
-    }
-}
+    val topMissedHabits: List<HabitStat> = emptyList(),
+    val insight: InsightData = InsightData("", "", "", "")
+)
 
 @Immutable
 data class InsightData(
@@ -325,17 +276,20 @@ private fun TopHabitsList(
         modifier = Modifier
             .fillMaxWidth()
             .height(260.dp)
-            .padding(24.dp),
+            .padding(horizontal = 24.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Section Header without accent line
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Black,
-                letterSpacing = 1.5.sp
+                letterSpacing = 2.sp,
+                fontSize = 11.sp
             ),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
         )
+        
         Spacer(modifier = Modifier.height(24.dp))
 
         if (habits.isEmpty()) {
@@ -347,23 +301,45 @@ private fun TopHabitsList(
                 )
             }
         } else {
+            // High-performance list rendering
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                habits.take(3).forEach { habit ->
+                val top3 = remember(habits) { habits.take(3) }
+
+                top3.forEachIndexed { index, habit ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // Rank Indicator with consistent width
+                        Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.CenterStart) {
+                            val rankColor = if (title.contains("MISSED", ignoreCase = true)) {
+                                MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                            } else {
+                                Color(0xFF588157).copy(alpha = 0.6f)
+                            }
+                            Text(
+                                text = "#${index + 1}",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Black,
+                                    color = rankColor
+                                )
+                            )
+                        }
+
+                        // Icon Backdrop
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(
                                     try { Color(habit.colorHex.toColorInt()).copy(alpha = 0.12f) }
-                                    catch (_: Exception) { MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) }
+                                    catch (_: Exception) { MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) }
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
@@ -373,20 +349,23 @@ private fun TopHabitsList(
                             )
                         }
 
+                        // Text Content
                         Text(
                             text = habit.name,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium,
-                                letterSpacing = 0.2.sp
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.1.sp
                             ),
                             color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
                             modifier = Modifier.weight(1f)
                         )
 
+                        // Numeric Count
                         Text(
                             text = habit.count.toString(),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.ExtraBold,
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         )
@@ -410,44 +389,74 @@ private fun HabitInsights(insight: InsightData) {
         modifier = Modifier
             .fillMaxWidth()
             .height(260.dp)
-            .padding(horizontal = 32.dp, vertical = 24.dp),
+            .padding(horizontal = 24.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
     ) {
-        Text(
-            text = "${insight.emoji} ${insight.title}",
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp
-            ),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = insight.message,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Medium,
-                lineHeight = 24.sp,
-                letterSpacing = 0.2.sp
-            ),
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(20.dp))
+        // Decorative Emoji Header
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
+            contentAlignment = Alignment.Center
         ) {
+            Text(
+                text = insight.emoji,
+                fontSize = 32.sp
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = insight.title,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.5.sp,
+                    fontSize = 12.sp
+                ),
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            Text(
+                text = insight.message,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 26.sp,
+                    letterSpacing = 0.2.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
+
+        // Action Coaching - Refined (Removed tinted background)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(4.dp, 24.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+            )
             Text(
                 text = insight.action,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontWeight = FontWeight.SemiBold,
-                    lineHeight = 18.sp
+                    lineHeight = 18.sp,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                 ),
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                modifier = Modifier.weight(1f)
             )
         }
     }
