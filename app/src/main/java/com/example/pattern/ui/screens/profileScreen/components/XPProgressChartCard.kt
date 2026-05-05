@@ -81,9 +81,9 @@ fun XPProgressChartCard(
                     ) { page ->
                         Text(
                             text = when (page) {
-                                0 -> "Weekly Progress"
-                                1 -> "Monthly Progress"
-                                else -> "Yearly Progress"
+                                0 -> "Weekly"
+                                1 -> "Monthly"
+                                else -> "Yearly"
                             },
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                             color = MaterialTheme.colorScheme.onSurface
@@ -106,11 +106,11 @@ fun XPProgressChartCard(
                         )
                         Box(
                             modifier = Modifier
-                                .height(6.dp)
+                                .height(4.dp)
                                 .width(dotWidth)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isSelected) accentColor else Color.LightGray.copy(alpha = 0.3f)
+                                    if (isSelected) Color.Black else Color.LightGray.copy(alpha = 0.3f)
                                 )
                         )
                     }
