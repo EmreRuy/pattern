@@ -9,6 +9,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -87,14 +89,26 @@ fun XPDistributionCard(
         Column(
             modifier = Modifier.padding(24.dp)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.5.sp
-                ),
-                color = Color.LightGray
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.5.sp
+                    ),
+                    color = Color.LightGray
+                )
+                Icon(
+                    imageVector = Icons.Rounded.PieChart,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
             
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -102,12 +116,13 @@ fun XPDistributionCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Spacer(modifier = Modifier.width(16.dp))
                 // Optimized Ring Chart using drawWithCache
                 Box(
                     modifier = Modifier
                         .size(150.dp)
                         .drawWithCache {
-                            val strokeWidth = 18.dp.toPx()
+                            val strokeWidth = 14.dp.toPx()
                             val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
                             val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
 

@@ -2,9 +2,7 @@ package com.example.pattern.ui.screens.profileScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,22 +10,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.res.stringResource
-import com.example.pattern.R
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 
 import com.example.pattern.ui.screens.profileScreen.components.ActiveDaysAnalysisCard
-import com.example.pattern.ui.screens.profileScreen.components.ExperienceLevelCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileExtraCard
-import com.example.pattern.ui.screens.profileScreen.components.ProfileStatCard
 import com.example.pattern.ui.screens.profileScreen.components.StreakPerformanceCard
 import com.example.pattern.ui.screens.profileScreen.components.XPDistributionCard
 import com.example.pattern.ui.screens.profileScreen.components.XPProgressChartCard
-import com.example.pattern.ui.screens.proLocked.LockedProWrapper
-import com.example.pattern.ui.screens.proLocked.PatternProBanner
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @Preview
@@ -77,7 +68,7 @@ fun ProfileScreen(
 
         // LOCKED CARDS , Wrapped in the Pro logic
             Column {
-                // Success Score Card - Premium
+                // Success Card - Premium
                 ProfileExtraCard(uiState = uiState.successDashboard)
 
                 StreakPerformanceCard(
