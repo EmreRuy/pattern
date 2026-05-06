@@ -16,7 +16,21 @@ data class ProfileStats(
     val topDoneHabits: List<HabitStat>,
     val topMissedHabits: List<HabitStat>,
     val bestStreaks: List<StreakStat> = emptyList(),
-    val xpDistribution: XPDistribution = XPDistribution()
+    val xpDistribution: XPDistribution = XPDistribution(),
+    val activeDaysAnalysis: ActiveDaysAnalysis = ActiveDaysAnalysis(emptyList())
+)
+
+@Immutable
+data class ActiveDaysAnalysis(
+    val dailyRates: List<DayCompletionRate>,
+    val insightMessage: String? = null,
+    val worstDay: Int? = null // 1..7
+)
+
+@Immutable
+data class DayCompletionRate(
+    val dayOfWeek: Int, // 1 (Mon) to 7 (Sun)
+    val rate: Float
 )
 
 @Immutable
@@ -38,20 +52,6 @@ data class XPDistribution(
     val quitPercentage: Float get() = if (totalXP > 0) quitXP.toFloat() / totalXP else 0f
     val taskPercentage: Float get() = if (totalXP > 0) taskXP.toFloat() / totalXP else 0f
 }
-
-@Immutable
-data class HabitStatsSummary(
-    val levelInfo: LevelInfo,
-    val doneCount: Int,
-    val missedCount: Int,
-    val successRate: Float,
-    val totalXp: Int,
-    val totalHabits: Int,
-    val topDoneHabits: List<HabitStat>,
-    val topMissedHabits: List<HabitStat>,
-    val bestStreaks: List<StreakStat> = emptyList(),
-    val xpDistribution: XPDistribution = XPDistribution()
-)
 
 @Immutable
 data class LevelInfo(

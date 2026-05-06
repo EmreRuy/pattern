@@ -23,6 +23,7 @@ data class ProfileUiState(
     val successRate: Float = 0f,
     val bestStreaks: List<StreakStat> = emptyList(),
     val streakInsight: InsightData? = null,
+    val activeDaysAnalysis: ActiveDaysAnalysis = ActiveDaysAnalysis(emptyList()),
     val isLoading: Boolean = false
 )
 
@@ -44,6 +45,7 @@ class ProfileViewModel @Inject constructor(
                 successRate = stats.successRate,
                 bestStreaks = stats.bestStreaks,
                 streakInsight = calculateStreakInsight(stats.bestStreaks),
+                activeDaysAnalysis = stats.activeDaysAnalysis,
                 isLoading = false
             )
         }

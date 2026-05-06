@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import com.example.pattern.R
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 
+import com.example.pattern.ui.screens.profileScreen.components.ActiveDaysAnalysisCard
 import com.example.pattern.ui.screens.profileScreen.components.ExperienceLevelCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileExtraCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileStatCard
@@ -80,7 +81,6 @@ fun ProfileScreen(
             monthlyDataPoints = uiState.xpHistory,
             yearlyDataPoints = uiState.yearlyXpHistory
         )
-
         // LOCKED CARDS , Wrapped in the Pro logic
             Column {
                 // Success Score Card - Premium
@@ -91,16 +91,9 @@ fun ProfileScreen(
                     insight = uiState.streakInsight
                 )
 
+                ActiveDaysAnalysisCard(analysis = uiState.activeDaysAnalysis)
+
                 XPDistributionCard(distribution = uiState.xpDistribution)
             }
-
-
-        ProfileStatCard(
-            title = "Overall Discipline",
-            percentage = uiState.successRate,
-            number = uiState.totalHabits,
-            label = stringResource(R.string.profile_total_habits)
-        )
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }

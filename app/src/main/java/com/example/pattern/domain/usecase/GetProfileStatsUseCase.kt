@@ -132,6 +132,8 @@ class GetProfileStatsUseCase @Inject constructor(
                 .take(3)
                 .map { StreakStat(it.first.first.name, it.second.longestStreak, it.first.first.iconCode, it.first.first.accentColorHex) }
 
+            val activeDaysAnalysis = calculateActiveDaysAnalysis(habits, allStates, today)
+
             ProfileStats(
                 levelInfo = levelInfo,
                 weeklyXpHistory = weeklyXpHistory,
@@ -150,9 +152,79 @@ class GetProfileStatsUseCase @Inject constructor(
                     quitXP = quitXP,
                     taskXP = taskXP,
                     totalXP = currentTotalXp
-                )
+                ),
+                activeDaysAnalysis = activeDaysAnalysis
             )
         }
+    }
+
+    private fun calculateActiveDaysAnalysis(
+        habits: List<Habit>,
+        allStates: List<HabitDailyState>,
+        today: LocalDate
+    ): ActiveDaysAnalysis {
+        val scheduledCounts = IntArray(7) { 0 }
+        val completedCounts = IntArray(7) { 0 }
+        
+        val stateMap = allStates.groupBy { it.habitId to it.date }
+
+        habits.forEach { habit ->
+            val startDate = Instant.ofEpochMilli(habit.createdAt)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+            
+            var checkDate = startDate
+            while (!checkDate.isAfter(today)) {
+                val dayOfWeekIndex = checkDate.dayOfWeek.value - 1 // 0 (Mon) to 6 (Sun)
+                val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+                
+                if (isScheduled) {
+                    scheduledCounts[dayOfWeekIndex]++
+                    val state = stateMap[habit.id to checkDate.toString()]?.firstOrNull()
+                    val isDone = state?.let {
+                        when (habit.type) {
+                            HabitType.BUILD -> it.isCompleted
+                            HabitType.TASK, HabitType.QUIT -> it.isTaskCompleted
+                        }
+                    } ?: false
+                    
+                    if (isDone) {
+                        completedCounts[dayOfWeekIndex]++
+                    }
+                }
+                checkDate = checkDate.plusDays(1)
+            }
+        }
+
+        val dailyRates = (0..6).map { i ->
+            val rate = if (scheduledCounts[i] > 0) {
+                completedCounts[i].toFloat() / scheduledCounts[i]
+            } else 0f
+            DayCompletionRate(i + 1, rate)
+        }
+
+        // Find the worst day (minimum rate among scheduled days)
+        val worstDayIndex = scheduledCounts.indices
+            .filter { scheduledCounts[it] > 0 }
+            .minByOrNull { i -> completedCounts[i].toFloat() / scheduledCounts[i] }
+
+        val insight = worstDayIndex?.let { idx ->
+            val rate = if (scheduledCounts[idx] > 0) completedCounts[idx].toFloat() / scheduledCounts[idx] else 1f
+            if (rate < 0.9f) { // Only show insight if there's actually a dip
+                val dayName = LocalDate.now().with(java.time.DayOfWeek.of(idx + 1)).format(DateTimeFormatter.ofPattern("EEEE"))
+                val avgRate = dailyRates.map { it.rate }.average().toFloat()
+                val diff = (avgRate - rate) * 100
+                if (diff > 10) {
+                    "You are ${diff.toInt()}% more likely to miss habits on ${dayName}s."
+                } else null
+            } else null
+        }
+
+        return ActiveDaysAnalysis(
+            dailyRates = dailyRates,
+            insightMessage = insight,
+            worstDay = worstDayIndex?.plus(1)
+        )
     }
 
     private fun calculateMissedCount(habit: Habit, completionDates: Set<String>, today: LocalDate): Int {
