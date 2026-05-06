@@ -64,7 +64,7 @@ fun ProfileScreen(
 
 
         // FREE CARD , Accessible to everyone
-        levelInfo?.let {
+     /*   levelInfo?.let {
             ExperienceLevelCard(
                 title = stringResource(R.string.profile_progress_score),
                 level = it.level,
@@ -73,14 +73,8 @@ fun ProfileScreen(
                 totalXP = it.currentXP,
                 nextLevelXP = it.nextLevelXP
             )
-        }
+        } */
 
-        XPProgressChartCard(
-            title = "TOTAL XP GAINED",
-            weeklyDataPoints = uiState.weeklyXpHistory,
-            monthlyDataPoints = uiState.xpHistory,
-            yearlyDataPoints = uiState.yearlyXpHistory
-        )
         // LOCKED CARDS , Wrapped in the Pro logic
             Column {
                 // Success Score Card - Premium
@@ -95,5 +89,12 @@ fun ProfileScreen(
 
                 XPDistributionCard(distribution = uiState.xpDistribution)
             }
+
+        XPProgressChartCard(
+            title = "TOTAL XP GAINED",
+            weeklyDataPoints = uiState.weeklyXpHistory,
+            monthlyDataPoints = uiState.xpHistory,
+            yearlyDataPoints = uiState.yearlyXpHistory
+        )
     }
 }
