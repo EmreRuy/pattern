@@ -3,6 +3,7 @@ package com.example.pattern.domain.usecase
 import com.example.pattern.domain.model.*
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
+import com.example.pattern.utils.calculateStreakFromDates
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.Instant
@@ -61,10 +62,12 @@ class GetProfileStatsUseCase @Inject constructor(
                 }
 
                 val habitMissed = calculateMissedCount(habit, completionDates, today)
-                Triple(habit, habitDone, habitMissed)
+                val streakInfo = calculateStreakFromDates(habit, completionDates, today)
+                
+                Triple(habit, habitDone, habitMissed) to streakInfo
             }
 
-            val totalMissed = habitStatsList.sumOf { it.third }
+            val totalMissed = habitStatsList.sumOf { it.first.third }
             val totalAttempts = totalDone + totalMissed
             val successRate = if (totalAttempts > 0) totalDone.toFloat() / totalAttempts else 0f
 
@@ -112,16 +115,22 @@ class GetProfileStatsUseCase @Inject constructor(
 
             // 3. Extract Rankings
             val topDone = habitStatsList
-                .filter { it.second > 0 }
-                .sortedByDescending { it.second }
+                .filter { it.first.second > 0 }
+                .sortedByDescending { it.first.second }
                 .take(3)
-                .map { HabitStat(it.first.name, it.second, it.first.iconCode, it.first.accentColorHex) }
+                .map { HabitStat(it.first.first.name, it.first.second, it.first.first.iconCode, it.first.first.accentColorHex) }
 
             val topMissed = habitStatsList
-                .filter { it.third > 0 }
-                .sortedByDescending { it.third }
+                .filter { it.first.third > 0 }
+                .sortedByDescending { it.first.third }
                 .take(3)
-                .map { HabitStat(it.first.name, it.third, it.first.iconCode, it.first.accentColorHex) }
+                .map { HabitStat(it.first.first.name, it.first.third, it.first.first.iconCode, it.first.first.accentColorHex) }
+
+            val bestStreaks = habitStatsList
+                .filter { it.second.longestStreak > 0 }
+                .sortedByDescending { it.second.longestStreak }
+                .take(3)
+                .map { StreakStat(it.first.first.name, it.second.longestStreak, it.first.first.iconCode, it.first.first.accentColorHex) }
 
             ProfileStats(
                 levelInfo = levelInfo,
@@ -135,6 +144,7 @@ class GetProfileStatsUseCase @Inject constructor(
                 totalHabits = habits.size,
                 topDoneHabits = topDone,
                 topMissedHabits = topMissed,
+                bestStreaks = bestStreaks,
                 xpDistribution = XPDistribution(
                     buildXP = buildXP,
                     quitXP = quitXP,

@@ -21,6 +21,8 @@ data class ProfileUiState(
     val xpDistribution: XPDistribution = XPDistribution(),
     val totalHabits: Int = 0,
     val successRate: Float = 0f,
+    val bestStreaks: List<StreakStat> = emptyList(),
+    val streakInsight: InsightData? = null,
     val isLoading: Boolean = false
 )
 
@@ -40,6 +42,8 @@ class ProfileViewModel @Inject constructor(
                 xpDistribution = stats.xpDistribution,
                 totalHabits = stats.totalHabits,
                 successRate = stats.successRate,
+                bestStreaks = stats.bestStreaks,
+                streakInsight = calculateStreakInsight(stats.bestStreaks),
                 isLoading = false
             )
         }
@@ -137,5 +141,37 @@ class ProfileViewModel @Inject constructor(
             topMissedHabits = stats.topMissedHabits,
             insight = insight
         )
+    }
+
+    private fun calculateStreakInsight(bestStreaks: List<StreakStat>): InsightData? {
+        val topStreak = bestStreaks.firstOrNull()?.streakCount ?: 0
+        if (topStreak == 0) return null
+
+        return when {
+            topStreak >= 66 -> InsightData(
+                title = "AUTOMATICITY REACHED",
+                message = "You've surpassed the 66-day threshold for '${bestStreaks.first().name}'. This habit is now neurologically encoded.",
+                action = "You no longer need willpower for this. Redirect that focus to your next big challenge.",
+                emoji = "🧬"
+            )
+            topStreak >= 21 -> InsightData(
+                title = "HABIT FORMATION",
+                message = "Your 21-day consistency has built a strong neural pathway. Resistance is starting to fade.",
+                action = "Don't break the chain now. You're in the 'Valley of Latent Potential'. Keep pushing.",
+                emoji = "🏗️"
+            )
+            topStreak >= 7 -> InsightData(
+                title = "MOMENTUM GAINED",
+                message = "A full week of consistency! You've successfully transitioned from 'trying' to 'doing'.",
+                action = "Prepare for tomorrow's friction. The second week is often where motivation dips.",
+                emoji = "🔥"
+            )
+            else -> InsightData(
+                title = "SPARK IGNITED",
+                message = "Every legend starts with a few days. You are currently building the foundation of discipline.",
+                action = "Focus on just showing up. The quality of work matters less than the act of showing up.",
+                emoji = "🌱"
+            )
+        }
     }
 }

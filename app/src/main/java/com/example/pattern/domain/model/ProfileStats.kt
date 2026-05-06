@@ -15,7 +15,16 @@ data class ProfileStats(
     val totalHabits: Int,
     val topDoneHabits: List<HabitStat>,
     val topMissedHabits: List<HabitStat>,
+    val bestStreaks: List<StreakStat> = emptyList(),
     val xpDistribution: XPDistribution = XPDistribution()
+)
+
+@Immutable
+data class StreakStat(
+    val name: String,
+    val streakCount: Int,
+    val iconCode: String,
+    val colorHex: String
 )
 
 @Immutable
@@ -40,6 +49,7 @@ data class HabitStatsSummary(
     val totalHabits: Int,
     val topDoneHabits: List<HabitStat>,
     val topMissedHabits: List<HabitStat>,
+    val bestStreaks: List<StreakStat> = emptyList(),
     val xpDistribution: XPDistribution = XPDistribution()
 )
 

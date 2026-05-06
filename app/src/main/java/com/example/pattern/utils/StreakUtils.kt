@@ -8,6 +8,7 @@ import java.time.ZoneId
 
 data class StreakInfo(
     val currentStreak: Int,
+    val longestStreak: Int,
     val totalCompletions: Int
 )
 
@@ -44,19 +45,18 @@ fun calculateStreakFromDates(
         .toLocalDate()
 
     if (completedDateStrings.isEmpty()) {
-        return StreakInfo(0, 0)
+        return StreakInfo(0, 0, 0)
     }
 
+    // 1. Calculate Current Streak
     var currentStreak = 0
     var checkDate = today
     val todayStr = today.toString()
 
-    // If today is not completed, we start checking from yesterday.
     if (!completedDateStrings.contains(todayStr)) {
         checkDate = today.minusDays(1)
     }
 
-    // Backtrack until we reach the creation date or a break in the streak
     while (!checkDate.isBefore(creationDate)) {
         val checkDateStr = checkDate.toString()
         val isCompleted = completedDateStrings.contains(checkDateStr)
@@ -66,17 +66,32 @@ fun calculateStreakFromDates(
         } else {
             val dayOfWeekIndex = checkDate.dayOfWeek.value - 1
             val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
-            if (isScheduled) {
-                // Gap in a scheduled day after creation - streak broken
-                break
-            }
+            if (isScheduled) break
         }
-        
         checkDate = checkDate.minusDays(1)
-        
-        // Safety bounds
-        if (currentStreak > 10000) break
     }
 
-    return StreakInfo(currentStreak, totalCompletions)
+    // 2. Calculate Longest Streak
+    var longestStreak = 0
+    var tempStreak = 0
+    var scanDate = creationDate
+    
+    while (!scanDate.isAfter(today)) {
+        val scanDateStr = scanDate.toString()
+        val isCompleted = completedDateStrings.contains(scanDateStr)
+        
+        if (isCompleted) {
+            tempStreak++
+            if (tempStreak > longestStreak) longestStreak = tempStreak
+        } else {
+            val dayOfWeekIndex = scanDate.dayOfWeek.value - 1
+            val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+            if (isScheduled) {
+                tempStreak = 0
+            }
+        }
+        scanDate = scanDate.plusDays(1)
+    }
+
+    return StreakInfo(currentStreak, longestStreak, totalCompletions)
 }

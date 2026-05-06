@@ -36,7 +36,7 @@ import com.example.pattern.R
 
 
 @Composable
-fun PatternProBanner() {
+fun PatternProBanner(onClick: () -> Unit) {
     val primary = MaterialTheme.colorScheme.primary
     val tertiary = MaterialTheme.colorScheme.tertiary
 
@@ -50,6 +50,7 @@ fun PatternProBanner() {
     }
 
     Surface(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 10.dp),

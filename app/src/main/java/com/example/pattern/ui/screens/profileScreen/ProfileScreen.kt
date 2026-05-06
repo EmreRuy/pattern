@@ -22,8 +22,11 @@ import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.profileScreen.components.ExperienceLevelCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileExtraCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileStatCard
+import com.example.pattern.ui.screens.profileScreen.components.StreakPerformanceCard
 import com.example.pattern.ui.screens.profileScreen.components.XPDistributionCard
 import com.example.pattern.ui.screens.profileScreen.components.XPProgressChartCard
+import com.example.pattern.ui.screens.proLocked.LockedProWrapper
+import com.example.pattern.ui.screens.proLocked.PatternProBanner
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @Preview
@@ -56,9 +59,8 @@ fun ProfileScreen(
             onSettingsClick = onOpenSettings,
             onPremiumClick = onPremiumClick
         )
-      /*  if (!isPro) {
-            PatternProBanner()
-        } */
+
+
 
         // FREE CARD , Accessible to everyone
         levelInfo?.let {
@@ -80,11 +82,18 @@ fun ProfileScreen(
         )
 
         // LOCKED CARDS , Wrapped in the Pro logic
+            Column {
+                // Success Score Card - Premium
+                ProfileExtraCard(uiState = uiState.successDashboard)
 
-        // Success Score Card - Premium
-        ProfileExtraCard(uiState = uiState.successDashboard)
+                StreakPerformanceCard(
+                    bestStreaks = uiState.bestStreaks,
+                    insight = uiState.streakInsight
+                )
 
-        XPDistributionCard(distribution = uiState.xpDistribution)
+                XPDistributionCard(distribution = uiState.xpDistribution)
+            }
+
 
         ProfileStatCard(
             title = "Overall Discipline",
