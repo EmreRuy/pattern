@@ -22,6 +22,7 @@ import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.profileScreen.components.ExperienceLevelCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileExtraCard
 import com.example.pattern.ui.screens.profileScreen.components.ProfileStatCard
+import com.example.pattern.ui.screens.profileScreen.components.XPDistributionCard
 import com.example.pattern.ui.screens.profileScreen.components.XPProgressChartCard
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
@@ -83,21 +84,14 @@ fun ProfileScreen(
         // Success Score Card - Premium
         ProfileExtraCard(uiState = uiState.successDashboard)
 
+        XPDistributionCard(distribution = uiState.xpDistribution)
 
-            ProfileStatCard(
-                title = "Total Completed Tasks",
-                percentage = 1f,
-                number = 200,
-                label = stringResource(R.string.profile_total_habits)
-            )
-
-
-            ProfileStatCard(
-                title = "",
-                percentage = 0.9f,
-                number = 100,
-                label = stringResource(R.string.profile_success_score)
-            )
+        ProfileStatCard(
+            title = "Overall Discipline",
+            percentage = uiState.successRate,
+            number = uiState.totalHabits,
+            label = stringResource(R.string.profile_total_habits)
+        )
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

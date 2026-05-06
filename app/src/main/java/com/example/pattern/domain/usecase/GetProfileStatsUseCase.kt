@@ -31,6 +31,9 @@ class GetProfileStatsUseCase @Inject constructor(
             // 1. Calculate Core Metrics & Success Rates
             var totalDone = 0
             var currentTotalXp = 0
+            var buildXP = 0
+            var quitXP = 0
+            var taskXP = 0
 
             val habitStatsList = habits.map { habit ->
                 val states = stateMap[habit.id] ?: emptyList()
@@ -46,7 +49,14 @@ class GetProfileStatsUseCase @Inject constructor(
                         completionDates.add(state.date)
                         habitDone++
                         totalDone++
-                        currentTotalXp += ExperienceUtils.calculateHabitXP(habit, state)
+                        val xpGained = ExperienceUtils.calculateHabitXP(habit, state)
+                        currentTotalXp += xpGained
+                        
+                        when (habit.type) {
+                            HabitType.BUILD -> buildXP += xpGained
+                            HabitType.QUIT -> quitXP += xpGained
+                            HabitType.TASK -> taskXP += xpGained
+                        }
                     }
                 }
 
@@ -124,7 +134,13 @@ class GetProfileStatsUseCase @Inject constructor(
                 totalXp = currentTotalXp,
                 totalHabits = habits.size,
                 topDoneHabits = topDone,
-                topMissedHabits = topMissed
+                topMissedHabits = topMissed,
+                xpDistribution = XPDistribution(
+                    buildXP = buildXP,
+                    quitXP = quitXP,
+                    taskXP = taskXP,
+                    totalXP = currentTotalXp
+                )
             )
         }
     }

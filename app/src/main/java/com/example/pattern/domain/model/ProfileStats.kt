@@ -14,8 +14,21 @@ data class ProfileStats(
     val totalXp: Int,
     val totalHabits: Int,
     val topDoneHabits: List<HabitStat>,
-    val topMissedHabits: List<HabitStat>
+    val topMissedHabits: List<HabitStat>,
+    val xpDistribution: XPDistribution = XPDistribution()
 )
+
+@Immutable
+data class XPDistribution(
+    val buildXP: Int = 0,
+    val quitXP: Int = 0,
+    val taskXP: Int = 0,
+    val totalXP: Int = 0
+) {
+    val buildPercentage: Float get() = if (totalXP > 0) buildXP.toFloat() / totalXP else 0f
+    val quitPercentage: Float get() = if (totalXP > 0) quitXP.toFloat() / totalXP else 0f
+    val taskPercentage: Float get() = if (totalXP > 0) taskXP.toFloat() / totalXP else 0f
+}
 
 @Immutable
 data class HabitStatsSummary(
@@ -26,7 +39,8 @@ data class HabitStatsSummary(
     val totalXp: Int,
     val totalHabits: Int,
     val topDoneHabits: List<HabitStat>,
-    val topMissedHabits: List<HabitStat>
+    val topMissedHabits: List<HabitStat>,
+    val xpDistribution: XPDistribution = XPDistribution()
 )
 
 @Immutable

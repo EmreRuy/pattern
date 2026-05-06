@@ -18,6 +18,9 @@ data class ProfileUiState(
     val xpHistory: List<XPDataPoint> = emptyList(),
     val yearlyXpHistory: List<XPDataPoint> = emptyList(),
     val successDashboard: SuccessDashboardUiState = SuccessDashboardUiState(),
+    val xpDistribution: XPDistribution = XPDistribution(),
+    val totalHabits: Int = 0,
+    val successRate: Float = 0f,
     val isLoading: Boolean = false
 )
 
@@ -34,6 +37,9 @@ class ProfileViewModel @Inject constructor(
                 xpHistory = stats.xpHistory,
                 yearlyXpHistory = stats.yearlyXpHistory,
                 successDashboard = calculateSuccessDashboard(stats),
+                xpDistribution = stats.xpDistribution,
+                totalHabits = stats.totalHabits,
+                successRate = stats.successRate,
                 isLoading = false
             )
         }
