@@ -1,6 +1,10 @@
 package com.example.pattern.ui.screens.profileScreen.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,7 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -20,28 +26,43 @@ import com.example.pattern.domain.model.StreakStat
 import androidx.core.graphics.toColorInt
 
 /**
- * Top-tier Product Design Implementation.
- * DNA: Minimalist, Bold Hierarchy, Behavioral Focus.
- * Inspired by high-end performance dashboards (Apple Health, Strava).
+ * Premium Streak Performance Implementation.
+ * Consistent with XPDistributionCard's high-fidelity DNA.
  */
 @Composable
 fun StreakPerformanceCard(
     modifier: Modifier = Modifier,
     bestStreaks: List<StreakStat>,
-    insight: InsightData? = null,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest
+    insight: InsightData? = null
 ) {
-    Card(
+    // Tap interaction for premium micro-interaction
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 1.02f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "scale"
+    )
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .scale(scale)
+            .background(Color.White, RoundedCornerShape(28.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = { /* Action on tap */ }
+            )
     ) {
         Column(
             modifier = Modifier.padding(24.dp)
         ) {
-            // Section Header: Refined Typography
+            // Header consistent with XPDistributionCard
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -51,10 +72,9 @@ fun StreakPerformanceCard(
                     text = "STREAK PERFORMANCE",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp,
-                        fontSize = 11.sp
+                        letterSpacing = 1.5.sp
                     ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    color = Color.LightGray
                 )
                 Icon(
                     imageVector = Icons.Rounded.LocalFireDepartment,
@@ -77,7 +97,7 @@ fun StreakPerformanceCard(
                 }
             }
             
-            // Integrated Insight: The "Reflection" Block
+            // Integrated Insight: Consistency with XPDistribution's InsightBanner
             insight?.let {
                 Spacer(modifier = Modifier.height(32.dp))
                 StreakReflectionBlock(it)
@@ -159,72 +179,40 @@ private fun StreakItem(streak: StreakStat) {
 
 @Composable
 private fun StreakReflectionBlock(insight: InsightData) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f))
-            .padding(20.dp)
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = insight.emoji, fontSize = 18.sp)
-            }
-            Text(
-                text = insight.title,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.5.sp,
-                    color = MaterialTheme.colorScheme.primary
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = insight.emoji, fontSize = 16.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = insight.title,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = insight.message,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = insight.message,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                lineHeight = 22.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.1.sp
-            ),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Behavioral Anchor Callout
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(3.dp, 28.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
-            )
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = insight.action,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp,
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                modifier = Modifier.weight(1f)
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             )
         }
     }
