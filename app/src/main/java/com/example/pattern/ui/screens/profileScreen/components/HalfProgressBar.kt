@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -166,14 +164,6 @@ private fun SuccessScoreOverview(
     missedCount: Int,
     xpPoints: Int
 ) {
-    // Lead Engineer Note: Hoisting animation to ensure synchronized motion between Gauge and Text.
-    // Specifying a duration of 1800ms with FastOutSlowInEasing for a premium, non-linear feel.
-    val animatedPercentage by animateFloatAsState(
-        targetValue = percentage,
-        animationSpec = tween(durationMillis = 1800, easing = FastOutSlowInEasing),
-        label = "SuccessScoreAnimation"
-    )
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -206,7 +196,7 @@ private fun SuccessScoreOverview(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp),
+                .height(130.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             SuccessInstrumentGauge(
@@ -219,11 +209,11 @@ private fun SuccessScoreOverview(
                 modifier = Modifier.padding(bottom = 8.dp)
             ) {
                 Text(
-                    text = "${(animatedPercentage * 100).toInt()}%",
+                    text = "${(percentage * 100).toInt()}%",
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Black,
                         letterSpacing = (-1).sp,
-                        fontSize = 32.sp
+                        fontSize = 24.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -510,13 +500,11 @@ fun SuccessInstrumentGauge(
     LaunchedEffect(percentage) {
         animationTarget = percentage.coerceIn(0f, 1f)
     }
-
     val tickCount = 20
-
     Canvas(
         modifier = modifier
-            .fillMaxWidth(0.8f)
-            .height(110.dp)
+            .fillMaxWidth(0.85f)
+            .height(120.dp)
     ) {
         val strokeWidthPx = 10.dp.toPx()
         val tickPaddingPx = 10.dp.toPx()
