@@ -79,7 +79,6 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.hilt.android.testing)
-    androidTestImplementation(libs.androidx.work.testing)
     kspAndroidTest(libs.hilt.compiler)
 
     // Debug dependencies
@@ -111,8 +110,6 @@ dependencies {
     implementation(libs.google.play.review)
 
     // WorkManager & Hilt Integration (Notifications)
-    implementation(libs.androidx.work.runtime)
-    implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.datastore.preferences)
 
     ksp(libs.androidx.hilt.compiler)

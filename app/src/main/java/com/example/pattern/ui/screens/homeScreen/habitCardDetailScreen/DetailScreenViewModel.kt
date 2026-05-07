@@ -71,6 +71,7 @@ class HabitDetailsViewModel @Inject constructor(
             createdOn = createdAt.toUiDate(),
             createdAtLocalDate = Instant.ofEpochMilli(createdAt).atZone(ZoneId.systemDefault()).toLocalDate(),
             totalXP = totalXP,
+            reminderTime = reminderTime,
             motivation = motivation,
             completedDates = dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toSet()
         )

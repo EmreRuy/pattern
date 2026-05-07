@@ -17,6 +17,7 @@ data class HabitDetailsUi(
     val createdOn: String,
     val createdAtLocalDate: LocalDate,
     val totalXP: Int,
+    val reminderTime: String? = null,
     val motivation: String? = null,
     val completedDates: Set<String> = emptySet()
 )

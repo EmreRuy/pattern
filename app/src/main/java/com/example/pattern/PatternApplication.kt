@@ -3,23 +3,10 @@ package com.example.pattern
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import androidx.hilt.work.HiltWorkerFactory
-import androidx.work.Configuration // <--- MUST BE THIS ONE, NOT android.content.res
 import dagger.hilt.android.HiltAndroidApp
-import javax.inject.Inject
 
 @HiltAndroidApp
-class PatternApplication : Application(), Configuration.Provider {
-
-    @Inject
-    lateinit var workerFactory: HiltWorkerFactory
-
-    // Modern Kotlin property override for Configuration.Provider
-    override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .setMinimumLoggingLevel(android.util.Log.INFO)
-            .build()
+class PatternApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
@@ -27,14 +14,14 @@ class PatternApplication : Application(), Configuration.Provider {
     }
 
     private fun createNotificationChannel() {
-        // No need for Build.VERSION check in 2026 as minSDK is usually 26+
         val name = "Habit Reminders"
         val importance = NotificationManager.IMPORTANCE_HIGH
-        val channel = NotificationChannel("habit_channel", name, importance).apply {
+        // Note: The AlarmReceiver also ensures this channel exists, 
+        // but creating it at App startup is good practice.
+        val channel = NotificationChannel("habit_reminders", name, importance).apply {
             description = "Notifications for your daily habits and goals"
         }
 
-        // Modern way to get system service without "as" casting
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager?.createNotificationChannel(channel)
     }

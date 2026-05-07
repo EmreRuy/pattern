@@ -27,10 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.StarOutline
 import androidx.compose.material3.*
@@ -262,9 +262,9 @@ fun HabitCardDetailsScreen(
                             habit.frequency
                         )
                         DetailRow(
-                            Icons.Rounded.BarChart,
-                            stringResource(R.string.detail_label_total),
-                            habit.totalCompletions.toString()
+                            Icons.Rounded.Notifications,
+                            stringResource(R.string.detail_label_reminder),
+                            habit.reminderTime ?: stringResource(R.string.detail_no_reminder)
                         )
                         DetailRow(
                             Icons.Rounded.CalendarToday,
