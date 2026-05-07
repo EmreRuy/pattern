@@ -3,7 +3,7 @@ package com.example.pattern.ui.screens.homeScreen
 import androidx.compose.runtime.Immutable
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.CalendarDayModel
-import com.example.pattern.utils.LevelInfo
+import com.example.pattern.domain.model.LevelInfo
 import java.time.LocalDate
 
 @Immutable

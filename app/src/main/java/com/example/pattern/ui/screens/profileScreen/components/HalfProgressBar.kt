@@ -43,6 +43,7 @@ import java.util.Locale
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import com.example.pattern.domain.model.InsightData
 import com.example.pattern.domain.model.HabitStat
 import androidx.core.graphics.toColorInt
 import kotlin.math.cos
@@ -62,14 +63,6 @@ data class SuccessDashboardUiState(
     val insight: InsightData = InsightData("", "", "", "")
 )
 
-@Immutable
-data class InsightData(
-    val title: String,
-    val message: String,
-    val action: String,
-    val emoji: String
-)
-
 @Composable
 fun ProfileExtraCard(
     uiState: SuccessDashboardUiState,
@@ -80,9 +73,10 @@ fun ProfileExtraCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -178,7 +172,7 @@ private fun SuccessScoreOverview(
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF588157))
+                    .background(MaterialTheme.colorScheme.primary)
             )
             Text(
                 text = title.uppercase(),
@@ -201,7 +195,7 @@ private fun SuccessScoreOverview(
         ) {
             SuccessInstrumentGauge(
                 percentage = percentage, // Internal gauge uses its own matching animation
-                primaryColor = Color(0xFF588157)
+                primaryColor = MaterialTheme.colorScheme.primary
             )
 
             Column(
@@ -224,7 +218,7 @@ private fun SuccessScoreOverview(
                         letterSpacing = 1.2.sp,
                         fontSize = 10.sp
                     ),
-                    color = Color(0xFF588157).copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                 )
             }
         }
@@ -238,7 +232,7 @@ private fun SuccessScoreOverview(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            StatItem(label = "Done", value = doneCount.toString(), color = Color(0xFF386641))
+            StatItem(label = "Done", value = doneCount.toString(), color = MaterialTheme.colorScheme.primary)
             VerticalDivider()
             StatItem(label = "Missed", value = missedCount.toString(), color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
             VerticalDivider()
@@ -311,7 +305,7 @@ private fun TopHabitsList(
                             val rankColor = if (title.contains("MISSED", ignoreCase = true)) {
                                 MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
                             } else {
-                                Color(0xFF588157).copy(alpha = 0.6f)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                             }
                             Text(
                                 text = "#${index + 1}",

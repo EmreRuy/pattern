@@ -29,7 +29,7 @@ object DatabaseModule {
             "habit_database"
         )
             .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-            .fallbackToDestructiveMigration(true)
+            // .fallbackToDestructiveMigration() // Staff Note: Destructive migrations are prohibited in Tier-1 production environments to prevent data loss.
             .build()
     }
 

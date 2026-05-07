@@ -14,9 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.domain.model.ActiveDaysAnalysis
@@ -29,15 +29,16 @@ import com.example.pattern.domain.model.DayCompletionRate
 @Composable
 fun ActiveDaysAnalysisCard(
     modifier: Modifier = Modifier,
-    analysis: ActiveDaysAnalysis,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest
+    analysis: ActiveDaysAnalysis
 ) {
-    Card(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        tonalElevation = 2.dp,
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier.padding(24.dp)
@@ -52,10 +53,9 @@ fun ActiveDaysAnalysisCard(
                     text = "ACTIVE DAYS ANALYSIS",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp,
-                        fontSize = 11.sp
+                        letterSpacing = 1.5.sp
                     ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
                 Icon(
                     imageVector = Icons.Rounded.BarChart,
@@ -137,23 +137,30 @@ private fun BarItem(
             // Background track
             Box(
                 modifier = Modifier
-                    .width(12.dp)
+                    .width(10.dp)
                     .fillMaxHeight()
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
             )
             
             // Progress Bar
+            val barColor = if (isWorst && rate < 0.6f) 
+                MaterialTheme.colorScheme.error 
+            else 
+                MaterialTheme.colorScheme.primary
+
             Box(
                 modifier = Modifier
-                    .width(12.dp)
+                    .width(10.dp)
                     .fillMaxHeight(animatedProgress.coerceIn(0.05f, 1f))
                     .clip(CircleShape)
                     .background(
-                        if (isWorst && rate < 0.8f) 
-                            MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                        else 
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                barColor.copy(alpha = 0.7f),
+                                barColor
+                            )
+                        )
                     )
             )
         }
@@ -163,11 +170,13 @@ private fun BarItem(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (isWorst) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 10.sp
+                fontWeight = if (isWorst) FontWeight.Black else FontWeight.Bold,
+                fontSize = 11.sp
             ),
-            color = if (isWorst) 
-                MaterialTheme.colorScheme.onSurface 
+            color = if (isWorst && rate < 0.6f) 
+                MaterialTheme.colorScheme.error 
+            else if (isWorst)
+                MaterialTheme.colorScheme.onSurface
             else 
                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
         )
@@ -177,7 +186,7 @@ private fun BarItem(
 @Composable
 private fun BehavioralInsightBlock(message: String) {
     Surface(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -188,16 +197,16 @@ private fun BehavioralInsightBlock(message: String) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.errorContainer),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Info,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp)
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
                 )
             }
             
@@ -207,7 +216,7 @@ private fun BehavioralInsightBlock(message: String) {
                     lineHeight = 18.sp,
                     fontWeight = FontWeight.Medium
                 ),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f)
             )
         }

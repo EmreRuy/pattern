@@ -2,6 +2,7 @@ package com.example.pattern.domain.usecase
 
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.calculateStreakFromDates
 import kotlinx.coroutines.Dispatchers
@@ -12,16 +13,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
-
-/**
- * Domain model representing a habit with its status for a specific date.
- * This replaces HabitCardModel in the Domain layer to avoid UI framework leakage.
- */
-data class HabitWithStatus(
-    val habit: Habit,
-    val dailyState: HabitDailyState?,
-    val currentStreak: Int
-)
 
 /**
  * Use Case to retrieve and process habits for the Home Screen.
@@ -63,8 +54,6 @@ class GetHomeHabitsUseCase @Inject constructor(
                 if (wasCreated && isScheduled) {
                     val completedDates = statesMap[habit.id] ?: emptySet()
                     
-                    // We need to pass the local Habit entity to StreakUtils if it hasn't been updated yet,
-                    // but I've updated StreakUtils to use domain Habit.
                     val streakInfo = calculateStreakFromDates(habit, completedDates, today)
                     HabitWithStatus(
                         habit = habit,

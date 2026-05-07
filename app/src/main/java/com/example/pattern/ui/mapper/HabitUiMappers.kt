@@ -5,7 +5,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import com.example.pattern.domain.model.HabitType
-import com.example.pattern.domain.usecase.HabitWithStatus
+import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.ui.model.HabitCardModel
 
 fun HabitWithStatus.toCardModel(): HabitCardModel {

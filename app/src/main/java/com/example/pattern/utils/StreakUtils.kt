@@ -2,15 +2,10 @@ package com.example.pattern.utils
 
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.model.StreakInfo
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-
-data class StreakInfo(
-    val currentStreak: Int,
-    val longestStreak: Int,
-    val totalCompletions: Int
-)
 
 /**
  * Calculates streak information with senior-level precision.

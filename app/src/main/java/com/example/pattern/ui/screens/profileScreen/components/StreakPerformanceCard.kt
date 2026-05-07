@@ -2,7 +2,6 @@ package com.example.pattern.ui.screens.profileScreen.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -23,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.domain.model.StreakStat
+import com.example.pattern.domain.model.InsightData
 import androidx.core.graphics.toColorInt
 
 /**
@@ -47,17 +47,17 @@ fun StreakPerformanceCard(
         label = "scale"
     )
 
-    Box(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .scale(scale)
-            .background(Color.White, RoundedCornerShape(28.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = { /* Action on tap */ }
-            )
+            .scale(scale),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        tonalElevation = 2.dp,
+        shadowElevation = 0.dp,
+        onClick = { /* Action on tap */ },
+        interactionSource = interactionSource
     ) {
         Column(
             modifier = Modifier.padding(24.dp)
@@ -74,12 +74,12 @@ fun StreakPerformanceCard(
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.5.sp
                     ),
-                    color = Color.LightGray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
                 Icon(
                     imageVector = Icons.Rounded.LocalFireDepartment,
                     contentDescription = null,
-                    tint = Color(0xFFFF5722).copy(alpha = 0.8f),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -180,23 +180,24 @@ private fun StreakItem(streak: StreakStat) {
 @Composable
 private fun StreakReflectionBlock(insight: InsightData) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = insight.emoji, fontSize = 16.sp)
-                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = insight.emoji, fontSize = 18.sp)
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = insight.title,
                     style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = insight.message,
                 style = MaterialTheme.typography.bodySmall.copy(
@@ -205,15 +206,24 @@ private fun StreakReflectionBlock(insight: InsightData) {
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = insight.action,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(4.dp, 16.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
                 )
-            )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = insight.action,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                )
+            }
         }
     }
 }

@@ -3,7 +3,6 @@ package com.example.pattern.ui.screens.profileScreen.components
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -34,7 +33,7 @@ fun XPDistributionCard(
     distribution: XPDistribution,
     title: String = "XP DISTRIBUTION"
 ) {
-    val growColor = Color(0xFF22C55E)
+    val buildColor = Color(0xFF22C55E)
     val quitColor = Color(0xFFFB7185)
     val taskColor = Color(0xFF6366F1)
 
@@ -74,17 +73,17 @@ fun XPDistributionCard(
         )
     }
 
-    Box(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .scale(scale)
-            .background(Color.White, RoundedCornerShape(28.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = { /* Action on tap */ }
-            )
+            .scale(scale),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        tonalElevation = 2.dp,
+        shadowElevation = 0.dp,
+        onClick = { /* Action on tap */ },
+        interactionSource = interactionSource
     ) {
         Column(
             modifier = Modifier.padding(24.dp)
@@ -100,7 +99,7 @@ fun XPDistributionCard(
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.5.sp
                     ),
-                    color = Color.LightGray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
                 Icon(
                     imageVector = Icons.Rounded.PieChart,
@@ -110,17 +109,16 @@ fun XPDistributionCard(
                 )
             }
             
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.width(16.dp))
                 // Optimized Ring Chart using drawWithCache
                 Box(
                     modifier = Modifier
-                        .size(150.dp)
+                        .size(140.dp)
                         .drawWithCache {
                             val strokeWidth = 14.dp.toPx()
                             val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
@@ -128,7 +126,7 @@ fun XPDistributionCard(
 
                             onDrawBehind {
                                 drawCircle(
-                                    color = Color(0xFFF8F9FA),
+                                    color = Color.Black.copy(alpha = 0.03f),
                                     radius = (size.minDimension - strokeWidth) / 2,
                                     center = center,
                                     style = Stroke(width = strokeWidth)
@@ -136,12 +134,12 @@ fun XPDistributionCard(
 
                                 var currentStartAngle = -90f
                                 
-                                val growSweep = 360f * buildProgress.value
-                                if (growSweep > 0) {
+                                val buildSweep = 360f * buildProgress.value
+                                if (buildSweep > 0) {
                                     drawArc(
-                                        color = growColor,
+                                        color = buildColor,
                                         startAngle = currentStartAngle,
-                                        sweepAngle = growSweep,
+                                        sweepAngle = buildSweep,
                                         useCenter = false,
                                         style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
                                         size = arcSize,
@@ -183,33 +181,34 @@ fun XPDistributionCard(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         RollingNumberTicker(
                             value = distribution.totalXP,
-                            style = MaterialTheme.typography.headlineMedium.copy(
+                            style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Black
                             )
                         )
                         Text(
-                            text = "TOTAL XP",
+                            text = "XP",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp
                             ),
-                            color = Color.LightGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(36.dp))
+                Spacer(modifier = Modifier.width(32.dp))
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    LegendItem(color = growColor, label = "Grow", percentage = distribution.buildPercentage)
-                    LegendItem(color = quitColor, label = "Quit", percentage = distribution.quitPercentage)
-                    LegendItem(color = taskColor, label = "Task", percentage = distribution.taskPercentage)
+                    LegendItem(color = buildColor, label = "Growth", percentage = distribution.buildPercentage)
+                    LegendItem(color = quitColor, label = "Quitting", percentage = distribution.quitPercentage)
+                    LegendItem(color = taskColor, label = "Daily Tasks", percentage = distribution.taskPercentage)
                 }
             }
             
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             
             InsightBanner(distribution)
         }
@@ -281,15 +280,17 @@ private fun LegendItem(color: Color, label: String, percentage: Float) {
         Column {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge.copy(
+                style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = "${(percentage * 100).toInt()}%",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
         }
     }

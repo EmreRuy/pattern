@@ -77,7 +77,6 @@ fun NavHost(
 
         composable(Screens.Profile.route) {
             ProfileScreen(
-                isPro = isPro,
                 onOpenMenuSheet = { actions.navigateToHabitList() },
                 onOpenSettings = { actions.navigateToSettings() },
                 onPremiumClick = { actions.navigateToPremium() }

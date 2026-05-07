@@ -3,14 +3,7 @@ package com.example.pattern.utils
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
-
-data class LevelInfo(
-    val level: Int,
-    val title: String,
-    val currentXP: Int,
-    val nextLevelXP: Int,
-    val progress: Float
-)
+import com.example.pattern.domain.model.LevelInfo
 
 object ExperienceUtils {
     // XP Rewards

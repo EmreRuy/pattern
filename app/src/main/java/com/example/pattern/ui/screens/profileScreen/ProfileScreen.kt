@@ -1,35 +1,22 @@
 package com.example.pattern.ui.screens.profileScreen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
-import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
-
-import com.example.pattern.ui.screens.profileScreen.components.ActiveDaysAnalysisCard
-import com.example.pattern.ui.screens.profileScreen.components.ProfileExtraCard
-import com.example.pattern.ui.screens.profileScreen.components.StreakPerformanceCard
-import com.example.pattern.ui.screens.profileScreen.components.XPDistributionCard
-import com.example.pattern.ui.screens.profileScreen.components.XPProgressChartCard
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-
-@Preview
-@Composable
-fun ProfileScreenPreview() {
-    //ProfileScreen()
-}
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.pattern.R
+import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
+import com.example.pattern.ui.screens.profileScreen.components.*
 
 @Composable
 fun ProfileScreen(
-    isPro: Boolean = false, // This should come from  ViewModel/User State
     viewModel: ProfileViewModel = hiltViewModel(),
     onOpenMenuSheet: () -> Unit,
     onPremiumClick: () -> Unit,
@@ -37,7 +24,6 @@ fun ProfileScreen(
 ) {
     val scroll = rememberScrollState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val levelInfo = uiState.levelInfo
 
     Column(
         modifier = Modifier
@@ -52,40 +38,32 @@ fun ProfileScreen(
             onPremiumClick = onPremiumClick
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
 
+        // 2. Behavioral Analysis Group
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Success Card - Premium Behavioral Insight
+            ProfileExtraCard(uiState = uiState.successDashboard)
 
-        // FREE CARD , Accessible to everyone
-     /*   levelInfo?.let {
-            ExperienceLevelCard(
-                title = stringResource(R.string.profile_progress_score),
-                level = it.level,
-                levelTitle = it.title,
-                progress = it.progress,
-                totalXP = it.currentXP,
-                nextLevelXP = it.nextLevelXP
+            StreakPerformanceCard(
+                bestStreaks = uiState.bestStreaks,
+                insight = uiState.streakInsight
             )
-        } */
 
-        // LOCKED CARDS , Wrapped in the Pro logic
-            Column {
-                // Success Card - Premium
-                ProfileExtraCard(uiState = uiState.successDashboard)
+            ActiveDaysAnalysisCard(analysis = uiState.activeDaysAnalysis)
+            
+            XPDistributionCard(distribution = uiState.xpDistribution)
+        }
 
-                StreakPerformanceCard(
-                    bestStreaks = uiState.bestStreaks,
-                    insight = uiState.streakInsight
-                )
-
-                ActiveDaysAnalysisCard(analysis = uiState.activeDaysAnalysis)
-
-                XPDistributionCard(distribution = uiState.xpDistribution)
-            }
-
+        // 3. Historical Data Visualization
         XPProgressChartCard(
             title = "TOTAL XP GAINED",
             weeklyDataPoints = uiState.weeklyXpHistory,
             monthlyDataPoints = uiState.xpHistory,
             yearlyDataPoints = uiState.yearlyXpHistory
         )
+        
+        // Bottom padding for comfortable scrolling
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

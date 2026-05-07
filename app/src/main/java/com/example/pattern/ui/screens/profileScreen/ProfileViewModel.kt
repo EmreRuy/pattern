@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.*
 import com.example.pattern.domain.usecase.GetProfileStatsUseCase
-import com.example.pattern.ui.screens.profileScreen.components.InsightData
 import com.example.pattern.ui.screens.profileScreen.components.SuccessDashboardUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
