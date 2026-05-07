@@ -171,8 +171,8 @@ private fun ChartPage(
         }
     } else {
         Column {
-            val currentMax = dataPoints.maxOfOrNull { it.xpValue }?.toInt() ?: 0
-            val maxYValue = (dataPoints.maxOfOrNull { it.xpValue } ?: 0f).coerceAtLeast(100f) * 1.3f
+            val currentMax = remember(dataPoints) { dataPoints.maxOfOrNull { it.xpValue }?.toInt() ?: 0 }
+            val maxYValue = remember(dataPoints) { (dataPoints.maxOfOrNull { it.xpValue } ?: 0f).coerceAtLeast(100f) * 1.3f }
 
             // Tooltip / Stat Row
             Box(
@@ -303,6 +303,9 @@ private fun ChartDrawing(
     val density = LocalDensity.current
     val paddingPx = with(density) { 16.dp.toPx() } // Internal padding to prevent point clipping
 
+    val fillPath = remember { Path() }
+    val strokePath = remember { Path() }
+
     Canvas(
         modifier = Modifier
             .fillMaxSize()
@@ -356,6 +359,8 @@ private fun ChartDrawing(
 
         if (dataPoints.size < 2) return@Canvas
 
+        // Optimization: Avoid list allocation in draw loop
+        // We still need the points for interaction and pulse, but we can avoid mapping the whole list twice
         val points = dataPoints.mapIndexed { index, point ->
             Offset(
                 x = paddingPx + (index / divisor) * drawableWidth,
@@ -364,29 +369,27 @@ private fun ChartDrawing(
         }
 
         // Area Fill
-        val fillPath = Path().apply {
-            moveTo(points.first().x, height - paddingPx)
-            for (i in 0 until points.size) {
-                val current = points[i]
-                if (i == 0) lineTo(current.x, current.y)
-                else {
-                    val prev = points[i - 1]
-                    cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
-                }
+        fillPath.reset()
+        fillPath.moveTo(points.first().x, height - paddingPx)
+        for (i in 0 until points.size) {
+            val current = points[i]
+            if (i == 0) fillPath.lineTo(current.x, current.y)
+            else {
+                val prev = points[i - 1]
+                fillPath.cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
             }
-            lineTo(points.last().x, height - paddingPx)
-            close()
         }
+        fillPath.lineTo(points.last().x, height - paddingPx)
+        fillPath.close()
         drawPath(fillPath, Brush.verticalGradient(listOf(accentColor.copy(alpha = 0.2f), Color.Transparent)))
 
         // Main Line
-        val strokePath = Path().apply {
-            moveTo(points.first().x, points.first().y)
-            for (i in 1 until points.size) {
-                val prev = points[i - 1]
-                val current = points[i]
-                cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
-            }
+        strokePath.reset()
+        strokePath.moveTo(points.first().x, points.first().y)
+        for (i in 1 until points.size) {
+            val prev = points[i - 1]
+            val current = points[i]
+            strokePath.cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
         }
         drawPath(strokePath, accentColor, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
 

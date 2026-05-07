@@ -240,15 +240,25 @@ private fun RollingNumberTicker(value: Int, style: TextStyle) {
 
 @Composable
 private fun InsightBanner(distribution: XPDistribution) {
-    val topCategory = when {
-        distribution.buildPercentage >= distribution.quitPercentage && 
-                distribution.buildPercentage >= distribution.taskPercentage -> "Growth"
-        distribution.quitPercentage >= distribution.buildPercentage && 
-                distribution.quitPercentage >= distribution.taskPercentage -> "Quitting"
-        else -> "Daily Tasks"
+    val insight = remember(distribution) {
+        val topCategory = when {
+            distribution.buildPercentage >= distribution.quitPercentage &&
+                    distribution.buildPercentage >= distribution.taskPercentage -> "Growth"
+
+            distribution.quitPercentage >= distribution.buildPercentage &&
+                    distribution.quitPercentage >= distribution.taskPercentage -> "Quitting"
+
+            else -> "Daily Tasks"
+        }
+
+        val topPercent = (maxOf(
+            distribution.buildPercentage,
+            distribution.quitPercentage,
+            distribution.taskPercentage
+        ) * 100).toInt()
+        
+        "$topPercent% of your XP comes from $topCategory habits. Your journey is leaning towards systemic improvement."
     }
-    
-    val topPercent = (maxOf(distribution.buildPercentage, distribution.quitPercentage, distribution.taskPercentage) * 100).toInt()
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
@@ -256,7 +266,7 @@ private fun InsightBanner(distribution: XPDistribution) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "$topPercent% of your XP comes from $topCategory habits. Your journey is leaning towards systemic improvement.",
+            text = insight,
             style = MaterialTheme.typography.bodySmall.copy(
                 lineHeight = 18.sp,
                 fontWeight = FontWeight.Medium

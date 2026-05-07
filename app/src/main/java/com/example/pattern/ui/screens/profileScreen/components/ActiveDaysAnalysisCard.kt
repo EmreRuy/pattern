@@ -87,7 +87,7 @@ private fun ActiveDaysBarChart(
     dailyRates: List<DayCompletionRate>,
     worstDay: Int?
 ) {
-    val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
+    val dayLabels = remember { listOf("M", "T", "W", "T", "F", "S", "S") }
     
     Row(
         modifier = Modifier
