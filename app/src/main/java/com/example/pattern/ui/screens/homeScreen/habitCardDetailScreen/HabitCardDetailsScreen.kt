@@ -129,57 +129,7 @@ fun HabitCardDetailsScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // 🔥 STREAK CARD
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(32.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    tonalElevation = 2.dp
-                ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(accentColor.copy(alpha = 0.15f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = habit.icon ?: "⭐",
-                                fontSize = 36.sp
-                            )
-                        }
-
-                        Spacer(Modifier.height(20.dp))
-
-                        Text(
-                            text = habit.currentStreak.toString(),
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = (-2).sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Spacer(Modifier.height(4.dp))
-
-                        Surface(
-                            color = accentColor.copy(alpha = 0.2f),
-                            shape = CircleShape
-                        ) {
-                            Text(
-                                text = stringResource(R.string.detail_day_streak),
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = 1.sp
-                                ),
-                                color = accentColor
-                            )
-                        }
-                    }
-                }
+                StreakCard(currentStreak = habit.currentStreak)
 
                 Spacer(Modifier.height(24.dp))
 
