@@ -6,18 +6,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -33,14 +34,23 @@ import com.example.pattern.R
 import kotlin.math.cos
 import kotlin.math.sin
 
+/**
+ * Optimized Streak Branding Colors
+ */
+private object StreakDesign {
+    val BrandOrange = Color(0xFFFF5722)
+    val MilestoneGold = Color(0xFFFFD600)
+    val InactiveGray = Color(0xFFDDE1E6)
+    val TextPrimary = Color(0xFF212121)
+    val TextSecondary = Color(0xFF9E9E9E)
+}
+
 @Composable
 fun StreakCard(
     currentStreak: Int,
     modifier: Modifier = Modifier
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surfaceContainerLowest
-    val brandOrange = Color(0xFFFF5722)
-    val brandGold = Color(0xFFFFD600)
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -59,41 +69,45 @@ fun StreakCard(
                 modifier = Modifier
                     .size(160.dp)
                     .drawBehind {
-                        // Sophisticated multi-layered glow for a premium feel
                         drawCircle(
                             brush = Brush.radialGradient(
-                                0.0f to brandOrange.copy(alpha = 0.18f),
-                                0.6f to brandOrange.copy(alpha = 0.04f),
+                                0.0f to StreakDesign.BrandOrange.copy(alpha = 0.15f),
+                                0.6f to StreakDesign.BrandOrange.copy(alpha = 0.04f),
                                 1.0f to Color.Transparent,
                             ),
                             radius = size.maxDimension / 1.2f
                         )
                     }
             ) {
-                // Symmetrical Refined Flame Icon for a more professional look
                 Icon(
-                    imageVector = Icons.Rounded.LocalFireDepartment,
+                    imageVector = if (currentStreak >= 30) Icons.Rounded.EmojiEvents else Icons.Rounded.LocalFireDepartment,
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(120.dp),
-                    tint = brandOrange
+                    modifier = Modifier.size(120.dp),
+                    tint = if (currentStreak >= 30) StreakDesign.MilestoneGold else StreakDesign.BrandOrange
                 )
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // Premium Typography: "12 day streak"
+            // Premium Typography: "12 day streak" with pluralization logic
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Black)) {
                         append(currentStreak.toString())
                     }
                     append(" ")
-                    append(stringResource(R.string.detail_day_streak).lowercase())
+                    val streakSuffix = if (currentStreak == 1) {
+                         stringResource(R.string.detail_day_streak).lowercase()
+                    } else {
+                        // Simple fallback for pluralization if resource doesn't handle it
+                        val base = stringResource(R.string.detail_day_streak).lowercase()
+                        if (base.endsWith("s")) base else "${base}s"
+                    }
+                    append(streakSuffix)
                 },
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF212121), // High-contrast for premium look
+                    color = StreakDesign.TextPrimary,
                     letterSpacing = (-0.8).sp,
                     fontSize = 34.sp
                 )
@@ -102,7 +116,7 @@ fun StreakCard(
             Text(
                 text = "YOUR CONSISTENCY IS UNSTOPPABLE",
                 style = MaterialTheme.typography.labelMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    color = StreakDesign.TextSecondary.copy(alpha = 0.6f),
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp
                 ),
@@ -111,48 +125,56 @@ fun StreakCard(
 
             Spacer(Modifier.height(56.dp))
 
-            // Senior Level Milestone Timeline
+            // Professional Sliding Timeline
             StreakTimeline(currentStreak = currentStreak)
         }
     }
 }
 
+@Immutable
+private data class TimelineDayState(
+    val day: Int,
+    val isAchieved: Boolean,
+    val isTarget: Boolean,
+    val isMilestone: Boolean
+)
+
 @Composable
 private fun StreakTimeline(currentStreak: Int) {
-    val days = listOf(1, 2, currentStreak, currentStreak + 1, currentStreak + 2, currentStreak + 3)
-        .distinct()
-        .sorted()
-        .take(6)
+    // Sliding window logic: shows 5 days, centered around current streak where possible
+    val days = remember(currentStreak) {
+        val startDay = (currentStreak - 2).coerceAtLeast(1)
+        (startDay until startDay + 5).map { day ->
+            TimelineDayState(
+                day = day,
+                isAchieved = day <= currentStreak,
+                isTarget = day == currentStreak + 1,
+                isMilestone = isMilestoneDay(day)
+            )
+        }
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        days.forEachIndexed { index, day ->
-            val isCompleted = day < currentStreak
-            val isCurrent = day == currentStreak
-            val isSpecial = day % 10 == 0 || day == 2 || (isCurrent && day > 1)
-            
-            TimelineNode(
-                day = day,
-                isCompleted = isCompleted,
-                isCurrent = isCurrent,
-                isSpecial = isSpecial
-            )
+        days.forEachIndexed { index, state ->
+            TimelineNode(state = state)
 
             if (index < days.size - 1) {
-                val nextDay = days[index + 1]
-                val lineActive = isCompleted || (isCurrent && nextDay == currentStreak + 1)
+                val nextState = days[index + 1]
+                // Line is active if it connects two achieved days or leads to the target
+                val isLineActive = state.isAchieved && (nextState.isAchieved || nextState.isTarget)
                 
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(3.dp)
-                        .padding(horizontal = 4.dp)
+                        .padding(horizontal = 6.dp)
                         .background(
-                            if (lineActive) Color(0xFFFF9100) else Color(0xFFDDE1E6).copy(alpha = 0.6f),
-                            CircleShape
+                            color = if (isLineActive) StreakDesign.BrandOrange else StreakDesign.InactiveGray.copy(alpha = 0.5f),
+                            shape = CircleShape
                         )
                 )
             }
@@ -161,39 +183,47 @@ private fun StreakTimeline(currentStreak: Int) {
 }
 
 @Composable
-private fun TimelineNode(
-    day: Int,
-    isCompleted: Boolean,
-    isCurrent: Boolean,
-    isSpecial: Boolean
-) {
-    val activeColor = if (isSpecial) Color(0xFFFFA000) else Color(0xFFFF5722)
-    val inactiveColor = Color(0xFFDDE1E6)
+private fun TimelineNode(state: TimelineDayState) {
+    val nodeColor = when {
+        state.isAchieved && state.isMilestone -> StreakDesign.MilestoneGold
+        state.isAchieved -> StreakDesign.BrandOrange
+        else -> StreakDesign.InactiveGray
+    }
     
+    val icon = when {
+        state.day >= 30 && state.isAchieved -> Icons.Rounded.EmojiEvents
+        state.isMilestone && state.isAchieved -> Icons.Rounded.Bolt
+        else -> Icons.Rounded.LocalFireDepartment
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(52.dp)) {
-            if (isSpecial) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
+            if (state.isMilestone) {
                 LaurelWreath(
                     modifier = Modifier.fillMaxSize(),
-                    color = activeColor.copy(alpha = if (isCompleted || isCurrent) 1f else 0.25f)
+                    color = when {
+                        state.isAchieved -> StreakDesign.MilestoneGold
+                        state.isTarget -> StreakDesign.MilestoneGold.copy(alpha = 0.15f)
+                        else -> StreakDesign.InactiveGray.copy(alpha = 0.1f)
+                    }
                 )
             }
 
             Surface(
                 modifier = Modifier.size(38.dp),
                 shape = CircleShape,
-                color = if (isCompleted || isCurrent) activeColor else inactiveColor,
-                shadowElevation = if (isCurrent) 8.dp else 0.dp
+                color = nodeColor,
+                shadowElevation = if (state.isAchieved && !state.isMilestone) 4.dp else 0.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = if (isSpecial && isCurrent) Icons.Rounded.Bolt else Icons.Rounded.LocalFireDepartment,
+                        imageVector = icon,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
-                        tint = if (isCompleted || isCurrent) Color.White else Color.White.copy(alpha = 0.8f)
+                        tint = if (state.isAchieved) Color.White else Color.White.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -202,43 +232,57 @@ private fun TimelineNode(
         Spacer(Modifier.height(10.dp))
         
         Text(
-            text = "D$day",
+            text = "D${state.day}",
             style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (isCurrent) FontWeight.Black else FontWeight.Bold,
-                color = if (isCompleted || isCurrent) activeColor else Color.Gray.copy(alpha = 0.5f),
-                fontSize = 10.sp
+                fontWeight = if (state.isAchieved) FontWeight.Black else FontWeight.Bold,
+                color = if (state.isAchieved) StreakDesign.BrandOrange else StreakDesign.TextSecondary.copy(alpha = 0.5f),
+                fontSize = 11.sp
             )
         )
     }
 }
 
+private fun isMilestoneDay(day: Int): Boolean {
+    val keyMilestones = setOf(2, 7, 14, 30, 50, 100, 365)
+    return day in keyMilestones || (day > 0 && day % 50 == 0)
+}
+
 @Composable
 private fun LaurelWreath(modifier: Modifier, color: Color) {
     androidx.compose.foundation.Canvas(modifier = modifier) {
-        val strokeWidth = 1.2.dp.toPx()
+        val strokeWidth = 1.dp.toPx()
         val radius = (size.minDimension / 2) - 4.dp.toPx()
         
-        val arcPathLeft = Path().apply {
-            addArc(
-                oval = Rect(Offset(4.dp.toPx(), 4.dp.toPx()), Size(size.width - 8.dp.toPx(), size.height - 8.dp.toPx())),
-                startAngleDegrees = 100f,
-                sweepAngleDegrees = 140f
-            )
-        }
-        val arcPathRight = Path().apply {
-            addArc(
-                oval = Rect(Offset(4.dp.toPx(), 4.dp.toPx()), Size(size.width - 8.dp.toPx(), size.height - 8.dp.toPx())),
-                startAngleDegrees = 300f,
-                sweepAngleDegrees = 140f
-            )
-        }
-        
-        drawPath(arcPathLeft, color, style = Stroke(width = strokeWidth))
-        drawPath(arcPathRight, color, style = Stroke(width = strokeWidth))
+        // Refined arc sizing for a more open, high-end feel
+        val arcSize = Size(size.width - 10.dp.toPx(), size.height - 10.dp.toPx())
+        val arcOffset = Offset(5.dp.toPx(), 5.dp.toPx())
 
+        // Left Arc - subtly open at the top
+        drawArc(
+            color = color,
+            startAngle = 105f,
+            sweepAngle = 135f,
+            useCenter = false,
+            topLeft = arcOffset,
+            size = arcSize,
+            style = Stroke(width = strokeWidth)
+        )
+
+        // Right Arc
+        drawArc(
+            color = color,
+            startAngle = 300f,
+            sweepAngle = 135f,
+            useCenter = false,
+            topLeft = arcOffset,
+            size = arcSize,
+            style = Stroke(width = strokeWidth)
+        )
+
+        // Optimized Leaf Density
         for (i in 0..6) {
-            val angleLeft = 100f + (i * 23f)
-            val angleRight = 300f + (i * 23f)
+            val angleLeft = 110f + (i * 22f)
+            val angleRight = 305f + (i * 22f)
             drawLeaf(angleLeft, radius, color)
             drawLeaf(angleRight, radius, color)
         }
@@ -255,18 +299,18 @@ private fun DrawScope.drawLeaf(angleDeg: Float, radius: Float, color: Color) {
     rotate(degrees = angleDeg + 90f, pivot = Offset(x, y)) {
         drawOval(
             color = color,
-            topLeft = Offset(x - 2.dp.toPx(), y - 4.dp.toPx()),
-            size = Size(4.dp.toPx(), 8.dp.toPx())
+            topLeft = Offset(x - 2.dp.toPx(), y - 3.dp.toPx()),
+            size = Size(4.dp.toPx(), 7.dp.toPx())
         )
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 private fun StreakCardPreview() {
     MaterialTheme {
-        Box(Modifier.padding(16.dp)) {
-            StreakCard(currentStreak = 12)
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            StreakCard(currentStreak = 10)
         }
     }
 }
