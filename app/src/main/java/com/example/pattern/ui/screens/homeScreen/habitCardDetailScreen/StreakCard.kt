@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.*
@@ -19,7 +18,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.stringResource
@@ -141,10 +139,10 @@ private data class TimelineDayState(
 
 @Composable
 private fun StreakTimeline(currentStreak: Int) {
-    // Sliding window logic: shows 5 days, centered around current streak where possible
+    // Sliding window: 4 days starting from one day before current streak (e.g., if streak is 1, show D1-D4)
     val days = remember(currentStreak) {
-        val startDay = (currentStreak - 2).coerceAtLeast(1)
-        (startDay until startDay + 5).map { day ->
+        val startDay = (currentStreak - 1).coerceAtLeast(1)
+        (startDay until startDay + 4).map { day ->
             TimelineDayState(
                 day = day,
                 isAchieved = day <= currentStreak,
@@ -155,7 +153,9 @@ private fun StreakTimeline(currentStreak: Int) {
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -163,18 +163,16 @@ private fun StreakTimeline(currentStreak: Int) {
             TimelineNode(state = state)
 
             if (index < days.size - 1) {
-                val nextState = days[index + 1]
-                // Line is active if it connects two achieved days or leads to the target
-                val isLineActive = state.isAchieved && (nextState.isAchieved || nextState.isTarget)
+                // Line is active if the current node is achieved
+                val isLineActive = state.isAchieved
                 
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(3.dp)
-                        .padding(horizontal = 6.dp)
+                        .width(28.dp)
+                        .height(4.dp)
                         .background(
-                            color = if (isLineActive) StreakDesign.BrandOrange else StreakDesign.InactiveGray.copy(alpha = 0.5f),
-                            shape = CircleShape
+                            color = if (isLineActive) StreakDesign.BrandOrange else StreakDesign.InactiveGray.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(2.dp)
                         )
                 )
             }
@@ -184,59 +182,46 @@ private fun StreakTimeline(currentStreak: Int) {
 
 @Composable
 private fun TimelineNode(state: TimelineDayState) {
-    val nodeColor = when {
-        state.isAchieved && state.isMilestone -> StreakDesign.MilestoneGold
-        state.isAchieved -> StreakDesign.BrandOrange
-        else -> StreakDesign.InactiveGray
-    }
+    val nodeColor = if (state.isAchieved) StreakDesign.BrandOrange else StreakDesign.InactiveGray.copy(alpha = 0.5f)
+    val textColor = if (state.isAchieved) StreakDesign.BrandOrange else StreakDesign.TextSecondary.copy(alpha = 0.4f)
     
-    val icon = when {
-        state.day >= 30 && state.isAchieved -> Icons.Rounded.EmojiEvents
-        state.isMilestone && state.isAchieved -> Icons.Rounded.Bolt
-        else -> Icons.Rounded.LocalFireDepartment
-    }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
             if (state.isMilestone) {
-                LaurelWreath(
+                MilestoneHalo(
                     modifier = Modifier.fillMaxSize(),
-                    color = when {
-                        state.isAchieved -> StreakDesign.MilestoneGold
-                        state.isTarget -> StreakDesign.MilestoneGold.copy(alpha = 0.15f)
-                        else -> StreakDesign.InactiveGray.copy(alpha = 0.1f)
-                    }
+                    color = StreakDesign.MilestoneGold.copy(alpha = 0.6f)
                 )
             }
 
             Surface(
-                modifier = Modifier.size(38.dp),
+                modifier = Modifier.size(40.dp),
                 shape = CircleShape,
                 color = nodeColor,
-                shadowElevation = if (state.isAchieved && !state.isMilestone) 4.dp else 0.dp
+                shadowElevation = if (state.isAchieved) 8.dp else 0.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = icon,
+                        imageVector = Icons.Rounded.LocalFireDepartment,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = if (state.isAchieved) Color.White else Color.White.copy(alpha = 0.8f)
+                        modifier = Modifier.size(22.dp),
+                        tint = Color.White
                     )
                 }
             }
         }
         
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         
         Text(
             text = "D${state.day}",
             style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (state.isAchieved) FontWeight.Black else FontWeight.Bold,
-                color = if (state.isAchieved) StreakDesign.BrandOrange else StreakDesign.TextSecondary.copy(alpha = 0.5f),
-                fontSize = 11.sp
+                fontWeight = FontWeight.Bold,
+                color = textColor,
+                fontSize = 12.sp
             )
         )
     }
@@ -248,60 +233,28 @@ private fun isMilestoneDay(day: Int): Boolean {
 }
 
 @Composable
-private fun LaurelWreath(modifier: Modifier, color: Color) {
+private fun MilestoneHalo(modifier: Modifier, color: Color) {
     androidx.compose.foundation.Canvas(modifier = modifier) {
-        val strokeWidth = 1.dp.toPx()
-        val radius = (size.minDimension / 2) - 4.dp.toPx()
+        val centerX = size.width / 2
+        val centerY = size.height / 2
+        val radius = 24.dp.toPx()
+        val count = 20
         
-        // Refined arc sizing for a more open, high-end feel
-        val arcSize = Size(size.width - 10.dp.toPx(), size.height - 10.dp.toPx())
-        val arcOffset = Offset(5.dp.toPx(), 5.dp.toPx())
-
-        // Left Arc - subtly open at the top
-        drawArc(
-            color = color,
-            startAngle = 105f,
-            sweepAngle = 135f,
-            useCenter = false,
-            topLeft = arcOffset,
-            size = arcSize,
-            style = Stroke(width = strokeWidth)
-        )
-
-        // Right Arc
-        drawArc(
-            color = color,
-            startAngle = 300f,
-            sweepAngle = 135f,
-            useCenter = false,
-            topLeft = arcOffset,
-            size = arcSize,
-            style = Stroke(width = strokeWidth)
-        )
-
-        // Optimized Leaf Density
-        for (i in 0..6) {
-            val angleLeft = 110f + (i * 22f)
-            val angleRight = 305f + (i * 22f)
-            drawLeaf(angleLeft, radius, color)
-            drawLeaf(angleRight, radius, color)
+        for (i in 0 until count) {
+            val angle = i * (360f / count)
+            val angleRad = Math.toRadians(angle.toDouble())
+            
+            val x = centerX + radius * cos(angleRad).toFloat()
+            val y = centerY + radius * sin(angleRad).toFloat()
+            
+            rotate(degrees = angle + 90f, pivot = Offset(x, y)) {
+                drawOval(
+                    color = color,
+                    topLeft = Offset(x - 1.dp.toPx(), y - 3.dp.toPx()),
+                    size = Size(2.dp.toPx(), 6.dp.toPx())
+                )
+            }
         }
-    }
-}
-
-private fun DrawScope.drawLeaf(angleDeg: Float, radius: Float, color: Color) {
-    val angleRad = Math.toRadians(angleDeg.toDouble())
-    val centerX = size.width / 2
-    val centerY = size.height / 2
-    val x = centerX + radius * cos(angleRad).toFloat()
-    val y = centerY + radius * sin(angleRad).toFloat()
-    
-    rotate(degrees = angleDeg + 90f, pivot = Offset(x, y)) {
-        drawOval(
-            color = color,
-            topLeft = Offset(x - 2.dp.toPx(), y - 3.dp.toPx()),
-            size = Size(4.dp.toPx(), 7.dp.toPx())
-        )
     }
 }
 
@@ -310,7 +263,7 @@ private fun DrawScope.drawLeaf(angleDeg: Float, radius: Float, color: Color) {
 private fun StreakCardPreview() {
     MaterialTheme {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            StreakCard(currentStreak = 10)
+            StreakCard(currentStreak = 1)
         }
     }
 }
