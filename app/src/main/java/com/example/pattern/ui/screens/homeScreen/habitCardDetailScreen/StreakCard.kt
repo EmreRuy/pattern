@@ -190,7 +190,7 @@ private fun TimelineNode(state: TimelineDayState) {
         verticalArrangement = Arrangement.Center
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
-            if (state.isMilestone) {
+            if (state.isMilestone && state.isAchieved) {
                 MilestoneHalo(
                     modifier = Modifier.fillMaxSize(),
                     color = StreakDesign.MilestoneGold.copy(alpha = 0.6f)
