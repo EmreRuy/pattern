@@ -82,7 +82,8 @@ fun ColorSelector(
     onOpen: () -> Unit
 ) {
     val color = remember(selectedColor) {
-        try { Color(selectedColor.toColorInt()) } catch (_: Exception) { Color(0xFF77DD77) }
+        try { Color(selectedColor.toColorInt()) } catch (_: Exception) { Color(0xFF6366F1)
+        }
     }
     HabitSelectionCard(
         label = "Color",
@@ -90,7 +91,7 @@ fun ColorSelector(
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(38.dp)
                 .clip(CircleShape)
                 .background(color)
         )
@@ -120,7 +121,6 @@ fun EmojiSelector(
 
 @Composable
 fun MotivationCard(
-    motivation: String,
     onOpen: () -> Unit
 ) {
     HabitSelectionCard(

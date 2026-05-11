@@ -28,9 +28,8 @@ fun ColorPickerView(
         "#264653", "#2A9D8F", "#E9C46A", "#F4A261",
         "#E76F51", "#6D597A", "#4A4E69", "#1D3557",
         "#5A7D9A", "#6A8E7F", "#A67F5B", "#8C5E7A",
-        "#4F6F52", "#8A8F9E", "#B06C5B", "#7C8C4C"
+        "#4F6F52", "#8A8F9E", "#B06C5B", "#7C8C4C","#6366F1"
     )
-
     Column(
         modifier = Modifier
             .fillMaxSize()

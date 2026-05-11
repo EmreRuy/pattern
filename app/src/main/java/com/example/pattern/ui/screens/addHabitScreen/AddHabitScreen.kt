@@ -164,21 +164,7 @@ fun AddHabitScreenContent(
                             },
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            text = buildAnnotatedString {
-                                append("Create ")
-                                withStyle(style = SpanStyle(fontWeight = FontWeight.Black)) {
-                                    append("Habit")
-                                }
-                            },
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 36.sp,
-                                letterSpacing = (-1.5).sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
-                        )
+                        SectionHeader("The Basics")
                         
                         HabitNameCard(
                             name = uiState.habitName,
@@ -212,7 +198,6 @@ fun AddHabitScreenContent(
                         SectionHeader("Mindset")
 
                         MotivationCard(
-                            motivation = uiState.motivation,
                             onOpen = { onStepChange(AddHabitStep.Motivation) }
                         )
 

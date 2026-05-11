@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -290,7 +289,6 @@ fun EditHabitScreen(
                         SectionHeader("Mindset")
 
                         MotivationCard(
-                            motivation = motivation,
                             onOpen = { currentStep = AddHabitStep.Motivation }
                         )
 
