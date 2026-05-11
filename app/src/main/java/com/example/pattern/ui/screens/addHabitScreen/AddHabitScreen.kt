@@ -3,29 +3,25 @@ package com.example.pattern.ui.screens.addHabitScreen
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoGraph
-import androidx.compose.material.icons.filled.ChangeCircle
-import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -168,59 +164,42 @@ fun AddHabitScreenContent(
                             },
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        SectionHeader("The Basics")
+                        Text(
+                            text = buildAnnotatedString {
+                                append("Create ")
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.Black)) {
+                                    append("Habit")
+                                }
+                            },
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 36.sp,
+                                letterSpacing = (-1.5).sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
+                        )
                         
-                        HabitNameInput(
+                        HabitNameCard(
                             name = uiState.habitName,
                             onNameChange = onNameChange
                         )
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                EmojiSelector(
-                                    selectedEmoji = uiState.emoji,
-                                    onOpen = { onStepChange(AddHabitStep.Emoji) }
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1f)) {
-                                ColorSelector(
-                                    selectedColor = uiState.selectedColor,
-                                    onOpen = { onStepChange(AddHabitStep.Color) }
-                                )
-                            }
-                        }
+                        EmojiSelector(
+                            selectedEmoji = uiState.emoji,
+                            onOpen = { onStepChange(AddHabitStep.Emoji) }
+                        )
+
+                        ColorSelector(
+                            selectedColor = uiState.selectedColor,
+                            onOpen = { onStepChange(AddHabitStep.Color) }
+                        )
 
                         SectionHeader("Structure")
                         
-                        val (categoryIcon, categoryIconColor) = when (uiState.habitType) {
-                            "Grow" -> Icons.Default.AutoGraph to Color(0xFF22C55E)
-                            "Drop" -> Icons.Default.RemoveCircleOutline to Color(0xFFFB7185)
-                            else -> Icons.Default.ChangeCircle to Color(0xFF6366F1)
-                        }
-
-                        HabitSelectionCard(
-                            label = "Category",
-                            value = uiState.habitType,
-                            onClick = { onStepChange(AddHabitStep.Category) },
-                            leadingContent = {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(categoryIconColor.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = categoryIcon,
-                                        contentDescription = null,
-                                        tint = categoryIconColor,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
+                        HabitTypeSelectorCard(
+                            selectedType = uiState.habitType,
+                            onOpen = { onStepChange(AddHabitStep.Category) }
                         )
                         
                         HabitReminderCard(
@@ -314,74 +293,5 @@ fun AddHabitScreenContent(
             },
             onDismiss = { onShowTimePickerChange(false) }
         )
-    }
-}
-
-@Composable
-private fun HabitNameInput(
-    name: String,
-    onNameChange: (String) -> Unit
-) {
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceContainerHigh else Color.White,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                val initial = name.trim().take(1).uppercase().ifBlank { "?" }
-                Text(
-                    text = initial,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                )
-            }
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Habit Name",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                )
-                BasicTextField(
-                    value = name,
-                    onValueChange = onNameChange,
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.labelMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Medium
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    decorationBox = { innerTextField ->
-                        if (name.isEmpty()) {
-                            Text(
-                                text = "What's the goal?",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                        }
-                        innerTextField()
-                    }
-                )
-            }
-        }
     }
 }
