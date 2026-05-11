@@ -3,7 +3,6 @@ package com.example.pattern.ui.screens.addHabitScreen
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -248,7 +247,10 @@ fun EditHabitScreen(
                     ) {
                         SectionHeader("The Basics")
                         
-                        HabitNameCard(habitName = habitName, onOpen = { /* In-place edit for now */ })
+                        HabitNameCard(
+                            name = habitName,
+                            onNameChange = { habitName = it }
+                        )
                         
                         // We could also reuse the inline editor from AddHabitScreen or keep it simple
                         // For consistency, let's use a similar layout

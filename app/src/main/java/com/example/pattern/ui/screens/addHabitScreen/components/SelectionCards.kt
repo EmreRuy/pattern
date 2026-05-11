@@ -5,10 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.ChangeCircle
@@ -18,10 +18,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
@@ -29,95 +29,51 @@ import androidx.core.graphics.toColorInt
 @Composable
 fun HabitSelectionCard(
     label: String,
-    value: String,
     modifier: Modifier = Modifier,
-    leadingContent: @Composable () -> Unit,
-    trailingContent: @Composable (() -> Unit)? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "pressScale")
     
-    val isDark = isSystemInDarkTheme()
-    val containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else Color.White
+    // Optimization: Use graphicsLayer for animations to avoid recomposition
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        label = "pressScale"
+    )
 
     Surface(
         modifier = modifier
-            .scale(scale)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             ),
         shape = RoundedCornerShape(28.dp),
-        color = containerColor,
-        shadowElevation = 0.dp,
-        border = null
+        color = MaterialTheme.colorScheme.surfaceContainerLowest
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 24.dp, vertical = 14.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            leadingContent()
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Medium
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            if (trailingContent != null) {
-                trailingContent()
-            }
+            )
+            content()
         }
     }
-}
-
-@Composable
-fun HabitNameCard(
-    habitName: String,
-    onOpen: () -> Unit
-) {
-    val initial = habitName.trim().take(1).uppercase().ifBlank { "?" }
-    HabitSelectionCard(
-        label = "Habit Name",
-        value = habitName.ifBlank { "What's the goal?" },
-        onClick = onOpen,
-        leadingContent = {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = initial,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                )
-            }
-        }
-    )
 }
 
 @Composable
@@ -130,18 +86,15 @@ fun ColorSelector(
     }
     HabitSelectionCard(
         label = "Color",
-        value = "Set the vibe",
-        onClick = onOpen,
-        modifier = Modifier.fillMaxWidth(),
-        leadingContent = {
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(color)
-            )
-        }
-    )
+        onClick = onOpen
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+    }
 }
 
 @Composable
@@ -151,55 +104,18 @@ fun EmojiSelector(
 ) {
     HabitSelectionCard(
         label = "Icon",
-        value = "Add a touch",
-        onClick = onOpen,
-        modifier = Modifier.fillMaxWidth(),
-        leadingContent = {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = selectedEmoji, fontSize = 24.sp)
-            }
+        onClick = onOpen
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = selectedEmoji, fontSize = 20.sp)
         }
-    )
-}
-
-@Composable
-fun HabitTypeSelectorCard(
-    selectedType: String,
-    onOpen: () -> Unit
-) {
-    val (icon, iconColor) = when (selectedType) {
-        "Grow" -> Icons.Default.AutoGraph to Color(0xFF22C55E)
-        "Drop" -> Icons.Default.RemoveCircleOutline to Color(0xFFFB7185)
-        else -> Icons.Default.ChangeCircle to Color(0xFF6366F1)
     }
-    
-    HabitSelectionCard(
-        label = "Category",
-        value = selectedType,
-        onClick = onOpen,
-        leadingContent = {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(iconColor.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    )
 }
 
 @Composable
@@ -209,21 +125,95 @@ fun MotivationCard(
 ) {
     HabitSelectionCard(
         label = "Motivation",
-        value = motivation.ifBlank { "Why this habit?" },
-        onClick = onOpen,
-        leadingContent = {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "🎯",
-                    fontSize = 20.sp
-                )
-            }
+        onClick = onOpen
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "🎯",
+                fontSize = 18.sp
+            )
         }
-    )
+    }
+}
+
+@Composable
+fun HabitNameCard(
+    name: String,
+    onNameChange: (String) -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        BasicTextField(
+            value = name,
+            onValueChange = onNameChange,
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            ),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            decorationBox = { innerTextField ->
+                if (name.isEmpty()) {
+                    Text(
+                        text = "Title",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+                innerTextField()
+            }
+        )
+    }
+}
+
+@Composable
+fun HabitTypeSelectorCard(
+    selectedType: String,
+    onOpen: () -> Unit
+) {
+    // Optimization: Memoize the configuration to avoid re-calculation during recomposition
+    val config = remember(selectedType) {
+        when (selectedType) {
+            "Grow" -> Icons.Default.AutoGraph to Color(0xFF22C55E)
+            "Drop" -> Icons.Default.RemoveCircleOutline to Color(0xFFFB7185)
+            else -> Icons.Default.ChangeCircle to Color(0xFF6366F1)
+        }
+    }
+    val (categoryIcon, categoryIconColor) = config
+
+    HabitSelectionCard(
+        label = "Category",
+        onClick = onOpen
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(categoryIconColor.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = categoryIcon,
+                contentDescription = null,
+                tint = categoryIconColor,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
 }
