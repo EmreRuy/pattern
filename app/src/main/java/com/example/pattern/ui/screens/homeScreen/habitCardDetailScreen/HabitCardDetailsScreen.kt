@@ -1,6 +1,5 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -139,36 +138,17 @@ fun HabitCardDetailsScreen(
                 // ⚡ PROGRESS / XP CARD
                 HabitProgressCard(habit, accentColor)
 
-                Spacer(Modifier.height(32.dp))
-
-                SectionHeader(stringResource(R.string.detail_section_activity))
-
-                Spacer(Modifier.height(16.dp))
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                ) {
-                    HabitHeatMap(
-                        completedDates = habit.completedDates,
-                        accentColor = accentColor,
-                        createdAt = habit.createdAtLocalDate,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
                 if (!habit.motivation.isNullOrBlank()) {
                     Spacer(Modifier.height(32.dp))
-                    SectionHeader(stringResource(R.string.detail_section_motivation))
-                    Spacer(Modifier.height(16.dp))
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 120.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    DetailsSection(
+                        title = stringResource(R.string.detail_section_motivation),
+                        modifier = Modifier.heightIn(min = 180.dp)
                     ) {
                         Box(
-                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 32.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -190,42 +170,46 @@ fun HabitCardDetailsScreen(
                     }
                 }
 
-                Spacer(Modifier.height(32.dp))
+            //    SectionHeader(stringResource(R.string.detail_section_activity))
 
-                SectionHeader(stringResource(R.string.detail_section_management))
-
-                Spacer(Modifier.height(16.dp))
-
+                Spacer(Modifier.height(24.dp))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
                 ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    ) {
-                        DetailRow(
-                            Icons.Rounded.StarOutline,
-                            stringResource(R.string.detail_label_goal),
-                            habit.goal
-                        )
-                        DetailRow(
-                            Icons.Rounded.Repeat,
-                            stringResource(R.string.detail_label_frequency),
-                            habit.frequency
-                        )
-                        DetailRow(
-                            Icons.Rounded.Notifications,
-                            stringResource(R.string.detail_label_reminder),
-                            habit.reminderTime ?: stringResource(R.string.detail_no_reminder)
-                        )
-                        DetailRow(
-                            Icons.Rounded.CalendarToday,
-                            stringResource(R.string.detail_label_created),
-                            habit.createdOn,
-                            isLast = true
-                        )
-                    }
+                    HabitHeatMap(
+                        completedDates = habit.completedDates,
+                        accentColor = accentColor,
+                        createdAt = habit.createdAtLocalDate,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(32.dp))
+
+                DetailsSection(title = stringResource(R.string.detail_section_management)) {
+                    DetailRow(
+                        Icons.Rounded.StarOutline,
+                        stringResource(R.string.detail_label_goal),
+                        habit.goal
+                    )
+                    DetailRow(
+                        Icons.Rounded.Repeat,
+                        stringResource(R.string.detail_label_frequency),
+                        habit.frequency
+                    )
+                    DetailRow(
+                        Icons.Rounded.Notifications,
+                        stringResource(R.string.detail_label_reminder),
+                        habit.reminderTime ?: stringResource(R.string.detail_no_reminder)
+                    )
+                    DetailRow(
+                        Icons.Rounded.CalendarToday,
+                        stringResource(R.string.detail_label_created),
+                        habit.createdOn,
+                        isLast = true
+                    )
                 }
 
                 Spacer(Modifier.height(40.dp))
@@ -254,6 +238,30 @@ fun HabitCardDetailsScreen(
 }
 
 @Composable
+private fun DetailsSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    ) {
+        Column(
+            modifier = Modifier.padding(top = 28.dp, bottom = 28.dp)
+        ) {
+            SectionHeader(
+                title = title,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+            Spacer(Modifier.height(20.dp))
+            content()
+        }
+    }
+}
+
+@Composable
 private fun DetailRow(
     icon: ImageVector,
     label: String,
@@ -263,7 +271,7 @@ private fun DetailRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -301,7 +309,7 @@ private fun DetailRow(
 
     if (!isLast) {
         HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 20.dp),
+            modifier = Modifier.padding(horizontal = 24.dp),
             thickness = 0.5.dp,
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f)
         )

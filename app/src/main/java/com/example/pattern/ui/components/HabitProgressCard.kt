@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.pattern.R
+import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsUi
 import com.example.pattern.utils.ExperienceUtils
 
@@ -32,7 +33,7 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Column(
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier.padding(top = 28.dp, bottom = 28.dp, start = 24.dp, end = 24.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -40,15 +41,10 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(
-                        text = stringResource(R.string.detail_mastery_progress),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    SectionHeader(
+                        title = stringResource(R.string.detail_mastery_progress),
                     )
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(20.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(2.dp)

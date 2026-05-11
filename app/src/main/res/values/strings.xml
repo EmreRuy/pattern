@@ -37,8 +37,10 @@
     <string name="detail_no_reminder">No reminder set</string>
     <string name="detail_label_total">Total Completions</string>
     <string name="detail_label_created">Created on</string>
-    <string name="detail_delete_confirmation">Delete permanently?</string>
-    <string name="detail_delete_keep">Keep habit</string>
+    <string name="detail_delete_title">DELETE HABIT?</string>
+    <string name="detail_delete_warning">This will remove your streak, progress, and history permanently. This action cannot be undone.</string>
+    <string name="detail_delete_confirm">Delete Permanently</string>
+    <string name="detail_delete_keep">Keep Habit</string>
     <string name="detail_edit_desc">Edit habit details</string>
     <string name="detail_delete_desc">Delete this habit</string>
 

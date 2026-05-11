@@ -118,7 +118,7 @@ fun HabitHeatMap(
                                 isBeforeCreation -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                                 isCompleted -> accentColor
                                 isToday -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                                else -> MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+                                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                             }
 
                             val animatedColor by animateColorAsState(
