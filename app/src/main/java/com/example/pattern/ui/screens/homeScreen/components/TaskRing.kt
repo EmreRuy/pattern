@@ -25,12 +25,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 @Composable
 fun TaskRing(
     checked: Boolean,
-    accentColor: Color,
     onToggle: () -> Unit
 ) {
-    val ringSize = 36.dp
-    val iconSize = 22.dp
-    val strokeWidthDp = 4.dp
+    val ringSize = 32.dp
+    val iconSize = 20.dp
+    val strokeWidthDp = 3.5.dp
     val progress by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = tween(500, easing = FastOutSlowInEasing),
@@ -46,6 +45,7 @@ fun TaskRing(
         label = "taskScale"
     )
     val backgroundRingColor = MaterialTheme.colorScheme.surfaceVariant
+    val primaryColor = MaterialTheme.colorScheme.primary
     Box(
         modifier = Modifier
             .size(ringSize)
@@ -77,7 +77,7 @@ fun TaskRing(
                             style = stroke
                         )
                         drawArc(
-                            color = accentColor,
+                            color = primaryColor,
                             startAngle = 270f,
                             sweepAngle = progress * 360f,
                             useCenter = false,
@@ -90,7 +90,7 @@ fun TaskRing(
         Icon(
             imageVector = Icons.Default.Check,
             contentDescription = null,
-            tint = accentColor.copy(alpha = iconAlpha),
+            tint = primaryColor.copy(alpha = iconAlpha),
             modifier = Modifier.size(iconSize)
         )
     }

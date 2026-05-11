@@ -74,12 +74,11 @@ fun HabitBuildCard(
                 )
             }
         },
-        action = { accentColor ->
+        action = {
             TimerRing(
                 // Use a lambda if TimerRing is updated to support it, 
                 // or just read it here to keep recomposition inside this lambda block.
                 progress = timerData.third,
-                accentColor = accentColor,
                 isCompleted = habit.isCompleted,
                 isRunning = habit.timerStartTime != null && habit.timerPauseTime == null,
                 isPaused = habit.timerStartTime != null && habit.timerPauseTime != null,

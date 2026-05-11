@@ -89,7 +89,6 @@ dependencies {
     //hilt Nav Compose
     implementation(libs.androidx.hilt.navigation.compose)
 
-    implementation(libs.konfetti.compose)
     implementation(libs.androidx.material.icons.extended)
 
     // Room Runtime

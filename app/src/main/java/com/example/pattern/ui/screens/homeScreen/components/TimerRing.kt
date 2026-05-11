@@ -33,19 +33,18 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun TimerRing(
     progress: Float,
-    accentColor: Color,
     isCompleted: Boolean,
     isRunning: Boolean,
     isPaused: Boolean,
     showSuccess: Boolean,
     onClick: () -> Unit
 ) {
-    val ringSize = 36.dp
-    val iconSize = 22.dp
-    val strokeWidthDp = 4.dp
+    val ringSize = 32.dp
+    val iconSize = 20.dp
+    val strokeWidthDp = 3.5.dp
     // Theme color capture
     val backgroundRingColor = MaterialTheme.colorScheme.surfaceVariant
-    val completedColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     //Progress Animation
     val animatedProgress by animateFloatAsState(
@@ -100,9 +99,9 @@ fun TimerRing(
                             style = stroke
                         )
                         val arcColor = when {
-                            isCompleted -> completedColor
-                            isPaused -> accentColor.copy(alpha = 0.6f)
-                            else -> accentColor
+                            isCompleted -> primaryColor
+                            isPaused -> primaryColor.copy(alpha = 0.6f)
+                            else -> primaryColor
                         }
                         drawArc(
                             color = arcColor,
@@ -124,7 +123,7 @@ fun TimerRing(
             imageVector = icon,
             contentDescription = null,
             tint = if (isCompleted) {
-                completedColor.copy(alpha = iconAlpha)
+                primaryColor.copy(alpha = iconAlpha)
             } else {
                 MaterialTheme.colorScheme.onSurface
             },

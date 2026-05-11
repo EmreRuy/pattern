@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.pattern.ui.components.ConfettiView
 import com.example.pattern.ui.screens.homeScreen.components.HabitCardsPager
 import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
@@ -116,48 +115,39 @@ private fun HomeContent(
         }
     }
 
-    ConfettiView(explodeConfetti = state.explodeConfetti) {
-        if (state.explodeConfetti) {
-            LaunchedEffect(Unit) {
-                kotlinx.coroutines.delay(3000)
-                onEvent(HomeUiEvent.OnConfettiAnimationShown)
+    Scaffold(
+        topBar = {
+            Column(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .statusBarsPadding()
+                    .fillMaxWidth()
+            ) {
+                HomeTopBar(
+                    onMenuClick = onOpenMenuScreen,
+                    onSettingsClick = onSettingsClick,
+                    onPremiumClick = onPremiumClick
+                )
+                HomeCalendarSelector(
+                    pagerState = calendarPagerState,
+                    selectedDate = state.selectedDate
+                )
             }
-        }
-
-        Scaffold(
-            topBar = {
-                Column(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .statusBarsPadding()
-                        .fillMaxWidth()
-                ) {
-                    HomeTopBar(
-                        onMenuClick = onOpenMenuScreen,
-                        onSettingsClick = onSettingsClick,
-                        onPremiumClick = onPremiumClick
-                    )
-                    HomeCalendarSelector(
-                        pagerState = calendarPagerState,
-                        selectedDate = state.selectedDate
-                    )
-                }
-            },
-        ) { paddingValues ->
-            HabitCardsPager(
-                pagerState = habitPagerState,
-                habitsByDate = state.habitsByDate,
-                hasAnyHabits = state.hasAnyHabits,
-                paddingValues = paddingValues,
-                onTimerFinished = { habit, date -> onEvent(HomeUiEvent.OnTimerFinish(habit.id, date)) },
-                onUnfinishTimer = { id, date -> onEvent(HomeUiEvent.OnTimerUnfinish(id, date)) },
-                onStartTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerStart(habit.id, date)) },
-                onPauseTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerPause(habit.id, date)) },
-                onResumeTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerResume(habit.id, date)) },
-                onTaskCompleted = { id, date, completed -> onEvent(HomeUiEvent.OnTaskToggle(id, date, completed)) },
-                onHabitCardClick = onHabitClick
-            )
-        }
+        },
+    ) { paddingValues ->
+        HabitCardsPager(
+            pagerState = habitPagerState,
+            habitsByDate = state.habitsByDate,
+            hasAnyHabits = state.hasAnyHabits,
+            paddingValues = paddingValues,
+            onTimerFinished = { habit, date -> onEvent(HomeUiEvent.OnTimerFinish(habit.id, date)) },
+            onUnfinishTimer = { id, date -> onEvent(HomeUiEvent.OnTimerUnfinish(id, date)) },
+            onStartTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerStart(habit.id, date)) },
+            onPauseTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerPause(habit.id, date)) },
+            onResumeTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerResume(habit.id, date)) },
+            onTaskCompleted = { id, date, completed -> onEvent(HomeUiEvent.OnTaskToggle(id, date, completed)) },
+            onHabitCardClick = onHabitClick
+        )
     }
 }
 

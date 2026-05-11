@@ -36,7 +36,6 @@ import com.example.pattern.R
  * These centralize the design language for the special Streak experience.
  */
 private object StreakTokens {
-    val MilestoneGold = Color(0xFFFFD600)
     val InactiveGray = Color(0xFFDDE1E6)
     val TextPrimary = Color(0xFF212121)
     val TextSecondary = Color(0xFF9E9E9E)
@@ -55,9 +54,6 @@ fun StreakCard(
     accentColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val isMilestoneActive = remember(currentStreak) { currentStreak >= 30 }
-    val primaryColor = if (isMilestoneActive) StreakTokens.MilestoneGold else accentColor
-
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(32.dp),
@@ -71,7 +67,7 @@ fun StreakCard(
         ) {
             StreakIconCenterpiece(
                 streakCount = currentStreak,
-                accentColor = primaryColor
+                accentColor = accentColor
             )
 
             Spacer(Modifier.height(16.dp))
@@ -130,10 +126,7 @@ private fun StreakIconCenterpiece(
             imageVector = if (isElite) Icons.Rounded.EmojiEvents else Icons.Rounded.LocalFireDepartment,
             contentDescription = null,
             modifier = Modifier
-                .size(120.dp)
-                .graphicsLayer {
-                    // Optional: Add scale or rotation effects for high-level streaks
-                },
+                .size(120.dp),
             tint = accentColor
         )
     }
@@ -231,9 +224,8 @@ private fun StreakTimeline(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 24.dp),
+        verticalAlignment = Alignment.Top
     ) {
         days.forEachIndexed { index, state ->
             TimelineNode(
@@ -243,8 +235,11 @@ private fun StreakTimeline(
 
             if (index < days.size - 1) {
                 TimelineConnector(
-                    isActive = state.isAchieved,
-                    activeColor = accentColor
+                    isActive = state.isAchieved && days[index + 1].isAchieved,
+                    activeColor = accentColor,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(top = 18.dp)
                 )
             }
         }
@@ -254,15 +249,14 @@ private fun StreakTimeline(
 @Composable
 private fun TimelineConnector(
     isActive: Boolean,
-    activeColor: Color
+    activeColor: Color,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
-            .width(28.dp)
+        modifier = modifier
             .height(4.dp)
             .background(
-                color = if (isActive) activeColor else StreakTokens.InactiveGray.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(2.dp)
+                color = if (isActive) activeColor else StreakTokens.InactiveGray.copy(alpha = 0.4f)
             )
     )
 }
@@ -277,14 +271,14 @@ private fun TimelineNode(
     
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier.width(40.dp)
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = CircleShape,
                 color = nodeColor,
-                shadowElevation = if (state.isAchieved) 8.dp else 0.dp
+                shadowElevation = if (state.isAchieved) 6.dp else 0.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -351,6 +345,6 @@ private fun StreakCardActivePreview() {
 @Composable
 private fun StreakCardElitePreview() {
     MaterialTheme {
-        StreakCard(currentStreak = 30, accentColor = Color(0xFFFF5722))
+        StreakCard(currentStreak = 365, accentColor = Color(0xFFFF5722))
     }
 }

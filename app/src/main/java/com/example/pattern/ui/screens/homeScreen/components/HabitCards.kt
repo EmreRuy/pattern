@@ -105,7 +105,7 @@ private fun HabitList(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = paddingValues,
-            verticalArrangement = Arrangement.spacedBy(1.dp)
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             items(
                 items = habits,

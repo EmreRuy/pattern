@@ -17,8 +17,7 @@ sealed interface HomeUiState {
         val habits: List<HabitCardModel> = emptyList(),
         val habitsByDate: Map<LocalDate, List<HabitCardModel>> = emptyMap(),
         val hasAnyHabits: Boolean = false,
-        val levelInfo: LevelInfo,
-        val explodeConfetti: Boolean = false
+        val levelInfo: LevelInfo
     ) : HomeUiState
 
     @Immutable
@@ -33,5 +32,4 @@ sealed interface HomeUiEvent {
     data class OnTimerFinish(val habitId: Int, val date: LocalDate) : HomeUiEvent
     data class OnTimerUnfinish(val habitId: Int, val date: LocalDate) : HomeUiEvent
     data class OnTaskToggle(val habitId: Int, val date: LocalDate, val completed: Boolean) : HomeUiEvent
-    data object OnConfettiAnimationShown : HomeUiEvent
 }

@@ -24,14 +24,12 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
-    private val _explodeConfetti = MutableStateFlow(false)
 
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
-        _explodeConfetti,
         habitRepository.getSettingsStream().distinctUntilChanged(),
         habitRepository.getAllHabitsStream().map { it.isNotEmpty() }.distinctUntilChanged()
-    ) { date, explode, settings, hasAnyHabits ->
+    ) { date, settings, hasAnyHabits ->
         val dateWindow = listOf(date.minusDays(1), date, date.plusDays(1))
         
         combine(
@@ -46,8 +44,7 @@ class HomeViewModel @Inject constructor(
                 habits = habitsMap[date] ?: emptyList(),
                 habitsByDate = habitsMap,
                 hasAnyHabits = hasAnyHabits,
-                levelInfo = ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0),
-                explodeConfetti = explode
+                levelInfo = ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0)
             ) as HomeUiState
         }
     }.flatMapLatest { it }
@@ -73,20 +70,13 @@ class HomeViewModel @Inject constructor(
             }
             is HomeUiEvent.OnTimerFinish -> viewModelScope.launch {
                 updateHabitProgressUseCase.finishTimer(event.habitId, event.date)
-                triggerConfetti()
             }
             is HomeUiEvent.OnTimerUnfinish -> viewModelScope.launch {
                 updateHabitProgressUseCase.unfinishTimer(event.habitId, event.date)
             }
             is HomeUiEvent.OnTaskToggle -> viewModelScope.launch {
                 updateHabitProgressUseCase.toggleTask(event.habitId, event.date, event.completed)
-                if (event.completed) triggerConfetti()
             }
-            HomeUiEvent.OnConfettiAnimationShown -> _explodeConfetti.value = false
         }
-    }
-
-    private fun triggerConfetti() {
-        _explodeConfetti.value = true
     }
 }

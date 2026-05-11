@@ -64,13 +64,13 @@ fun BaseHabitCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 12.dp)
-            .clip(RoundedCornerShape(32.dp))
+            .padding(vertical = 3.dp, horizontal = 12.dp)
+            .clip(RoundedCornerShape(26.dp))
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) { onCardClick(habit.id) },
-        shape = RoundedCornerShape(32.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isDark)
                 MaterialTheme.colorScheme.surfaceContainerLow
@@ -81,13 +81,13 @@ fun BaseHabitCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(start = 6.dp, end = 14.dp, top = 6.dp, bottom = 6.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Icon Section
             Box(
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(52.dp)
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -100,7 +100,7 @@ fun BaseHabitCard(
                 ) {
                     Text(
                         text = habit.iconEmoji.orEmpty(),
-                        fontSize = 28.sp,
+                        fontSize = 24.sp,
                     )
                 }
 
@@ -123,7 +123,6 @@ fun BaseHabitCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
             ) {
                 Text(
                     text = habit.name.replaceFirstChar { it.uppercase() },
@@ -132,12 +131,14 @@ fun BaseHabitCard(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = onSurface.copy(alpha = 0.9f),
-                        fontSize = 17.sp,
+                        fontSize = 16.sp,
                         letterSpacing = (-0.5).sp
                     )
                 )
                 subtitle()
             }
+            
+            Spacer(Modifier.width(12.dp))
             
             // Action Section
             action(accentColor)

@@ -31,10 +31,9 @@ fun HabitTaskCard(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        action = { accentColor ->
+        action = {
             TaskRing(
                 checked = habit.isTaskChecked,
-                accentColor = accentColor,
                 onToggle = {
                     if (isToday) {
                         onTaskCompleted(habit.id, !habit.isTaskChecked)
