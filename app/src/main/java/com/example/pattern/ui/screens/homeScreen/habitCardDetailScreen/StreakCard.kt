@@ -18,8 +18,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -29,14 +27,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.R
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * Optimized Streak Branding Colors
  */
 private object StreakDesign {
-    val BrandOrange = Color(0xFFFF5722)
     val MilestoneGold = Color(0xFFFFD600)
     val InactiveGray = Color(0xFFDDE1E6)
     val TextPrimary = Color(0xFF212121)
@@ -46,6 +41,7 @@ private object StreakDesign {
 @Composable
 fun StreakCard(
     currentStreak: Int,
+    accentColor: Color,
     modifier: Modifier = Modifier
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -69,8 +65,8 @@ fun StreakCard(
                     .drawBehind {
                         drawCircle(
                             brush = Brush.radialGradient(
-                                0.0f to StreakDesign.BrandOrange.copy(alpha = 0.15f),
-                                0.6f to StreakDesign.BrandOrange.copy(alpha = 0.04f),
+                                0.0f to accentColor.copy(alpha = 0.15f),
+                                0.6f to accentColor.copy(alpha = 0.04f),
                                 1.0f to Color.Transparent,
                             ),
                             radius = size.maxDimension / 1.2f
@@ -81,7 +77,7 @@ fun StreakCard(
                     imageVector = if (currentStreak >= 30) Icons.Rounded.EmojiEvents else Icons.Rounded.LocalFireDepartment,
                     contentDescription = null,
                     modifier = Modifier.size(120.dp),
-                    tint = if (currentStreak >= 30) StreakDesign.MilestoneGold else StreakDesign.BrandOrange
+                    tint = if (currentStreak >= 30) StreakDesign.MilestoneGold else accentColor
                 )
             }
 
@@ -124,7 +120,7 @@ fun StreakCard(
             Spacer(Modifier.height(56.dp))
 
             // Professional Sliding Timeline
-            StreakTimeline(currentStreak = currentStreak)
+            StreakTimeline(currentStreak = currentStreak, accentColor = accentColor)
         }
     }
 }
@@ -138,7 +134,7 @@ private data class TimelineDayState(
 )
 
 @Composable
-private fun StreakTimeline(currentStreak: Int) {
+private fun StreakTimeline(currentStreak: Int, accentColor: Color) {
     // Sliding window: 4 days starting from one day before current streak (e.g., if streak is 1, show D1-D4)
     val days = remember(currentStreak) {
         val startDay = (currentStreak - 1).coerceAtLeast(1)
@@ -160,7 +156,7 @@ private fun StreakTimeline(currentStreak: Int) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         days.forEachIndexed { index, state ->
-            TimelineNode(state = state)
+            TimelineNode(state = state, accentColor = accentColor)
 
             if (index < days.size - 1) {
                 // Line is active if the current node is achieved
@@ -171,7 +167,7 @@ private fun StreakTimeline(currentStreak: Int) {
                         .width(28.dp)
                         .height(4.dp)
                         .background(
-                            color = if (isLineActive) StreakDesign.BrandOrange else StreakDesign.InactiveGray.copy(alpha = 0.4f),
+                            color = if (isLineActive) accentColor else StreakDesign.InactiveGray.copy(alpha = 0.4f),
                             shape = RoundedCornerShape(2.dp)
                         )
                 )
@@ -181,22 +177,15 @@ private fun StreakTimeline(currentStreak: Int) {
 }
 
 @Composable
-private fun TimelineNode(state: TimelineDayState) {
-    val nodeColor = if (state.isAchieved) StreakDesign.BrandOrange else StreakDesign.InactiveGray.copy(alpha = 0.5f)
-    val textColor = if (state.isAchieved) StreakDesign.BrandOrange else StreakDesign.TextSecondary.copy(alpha = 0.4f)
+private fun TimelineNode(state: TimelineDayState, accentColor: Color) {
+    val nodeColor = if (state.isAchieved) accentColor else StreakDesign.InactiveGray.copy(alpha = 0.5f)
+    val textColor = if (state.isAchieved) accentColor else StreakDesign.TextSecondary.copy(alpha = 0.4f)
     
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
-            if (state.isMilestone && state.isAchieved) {
-                MilestoneHalo(
-                    modifier = Modifier.fillMaxSize(),
-                    color = StreakDesign.MilestoneGold.copy(alpha = 0.6f)
-                )
-            }
-
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = CircleShape,
@@ -205,7 +194,7 @@ private fun TimelineNode(state: TimelineDayState) {
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Rounded.LocalFireDepartment,
+                        imageVector = if (state.isMilestone) Icons.Rounded.EmojiEvents else Icons.Rounded.LocalFireDepartment,
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
                         tint = Color.White
@@ -232,38 +221,14 @@ private fun isMilestoneDay(day: Int): Boolean {
     return day in keyMilestones || (day > 0 && day % 50 == 0)
 }
 
-@Composable
-private fun MilestoneHalo(modifier: Modifier, color: Color) {
-    androidx.compose.foundation.Canvas(modifier = modifier) {
-        val centerX = size.width / 2
-        val centerY = size.height / 2
-        val radius = 24.dp.toPx()
-        val count = 20
-        
-        for (i in 0 until count) {
-            val angle = i * (360f / count)
-            val angleRad = Math.toRadians(angle.toDouble())
-            
-            val x = centerX + radius * cos(angleRad).toFloat()
-            val y = centerY + radius * sin(angleRad).toFloat()
-            
-            rotate(degrees = angle + 90f, pivot = Offset(x, y)) {
-                drawOval(
-                    color = color,
-                    topLeft = Offset(x - 1.dp.toPx(), y - 3.dp.toPx()),
-                    size = Size(2.dp.toPx(), 6.dp.toPx())
-                )
-            }
-        }
-    }
-}
+
 
 @Preview(showBackground = true)
 @Composable
 private fun StreakCardPreview() {
     MaterialTheme {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            StreakCard(currentStreak = 1)
+            StreakCard(currentStreak = 30, accentColor = Color(0xFFFF5722))
         }
     }
 }

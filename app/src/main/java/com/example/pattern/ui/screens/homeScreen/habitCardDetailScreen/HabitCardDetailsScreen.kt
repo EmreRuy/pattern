@@ -129,7 +129,10 @@ fun HabitCardDetailsScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // 🔥 STREAK CARD
-                StreakCard(currentStreak = habit.currentStreak)
+                StreakCard(
+                    currentStreak = habit.currentStreak,
+                    accentColor = accentColor
+                )
 
                 Spacer(Modifier.height(24.dp))
 
