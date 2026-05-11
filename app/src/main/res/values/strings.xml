@@ -42,6 +42,18 @@
     <string name="detail_edit_desc">Edit habit details</string>
     <string name="detail_delete_desc">Delete this habit</string>
 
+    <!-- Streak Motivations -->
+    <string name="streak_motivation_0">BEGIN YOUR TRANSFORMATION</string>
+    <string name="streak_motivation_1">THE JOURNEY HAS BEGUN</string>
+    <string name="streak_motivation_2_3">STRENGTHENING THE FOUNDATION</string>
+    <string name="streak_motivation_4_6">MOMENTUM IS BUILDING</string>
+    <string name="streak_motivation_7_13">ONE WEEK OF DEDICATION</string>
+    <string name="streak_motivation_14_20">CONSISTENCY IS YOUR STRENGTH</string>
+    <string name="streak_motivation_21_29">ELITE HABIT IN THE MAKING</string>
+    <string name="streak_motivation_30_49">MASTERY OF THE CRAFT</string>
+    <string name="streak_motivation_50_99">THE POWER OF DISCIPLINE</string>
+    <string name="streak_motivation_100_plus">ARCHITECT OF EXCELLENCE</string>
+
     <!-- Settings Screen -->
     <string name="settings_title">SETTINGS</string>
     <string name="settings_section_preferences">App Preferences</string>
