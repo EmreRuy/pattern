@@ -82,8 +82,7 @@ fun StreakCard(
             )
 
             StreakMotivationBadge(
-                currentStreak = currentStreak,
-                accentColor = primaryColor
+                currentStreak = currentStreak
             )
 
             Spacer(Modifier.height(56.dp))
@@ -179,11 +178,9 @@ private fun StreakCounter(
 
 @Composable
 private fun StreakMotivationBadge(
-    currentStreak: Int,
-    accentColor: Color
+    currentStreak: Int
 ) {
     val motivationResId = remember(currentStreak) { getStreakMotivationResId(currentStreak) }
-    val isSignificant = remember(currentStreak) { isMilestoneDay(currentStreak) || currentStreak >= 7 }
 
     AnimatedContent(
         targetState = motivationResId,
@@ -196,7 +193,7 @@ private fun StreakMotivationBadge(
         Text(
             text = stringResource(targetResId),
             style = MaterialTheme.typography.labelMedium.copy(
-                color = if (isSignificant) accentColor else StreakTokens.TextSecondary.copy(alpha = 0.6f),
+                color = StreakTokens.TextSecondary.copy(alpha = 0.7f),
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 1.5.sp
             ),
