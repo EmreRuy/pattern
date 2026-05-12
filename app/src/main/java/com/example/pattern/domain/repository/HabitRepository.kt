@@ -2,12 +2,14 @@ package com.example.pattern.domain.repository
 
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
 
 interface HabitRepository {
     fun getAllHabitsStream(): Flow<List<Habit>>
     fun getHabitStream(id: Int): Flow<Habit?>
+    fun getHabitWithHistoryStream(id: Int): Flow<HabitWithHistory?>
     suspend fun getHabitOnce(id: Int): Habit?
     suspend fun upsertHabit(habit: Habit): Long
     suspend fun updateHabit(habit: Habit)

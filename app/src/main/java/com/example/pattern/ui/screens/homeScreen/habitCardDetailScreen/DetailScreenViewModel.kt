@@ -1,6 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
-
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateStreak
@@ -19,10 +20,18 @@ import com.example.pattern.notifications.ReminderManager
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.core.graphics.toColorInt
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+@Immutable
+sealed interface HabitDetailsUiState {
+    data object Loading : HabitDetailsUiState
+    data class Success(val habit: HabitDetailsUi) : HabitDetailsUiState
+    data object Error : HabitDetailsUiState
+}
 
 @HiltViewModel
 class HabitDetailsViewModel @Inject constructor(
@@ -33,16 +42,20 @@ class HabitDetailsViewModel @Inject constructor(
 
     private val habitId: Int = checkNotNull(savedStateHandle["habitId"])
 
-    val habit: StateFlow<HabitDetailsUi?> =
-        combine(
-            repository.getHabitStream(habitId),
-            repository.getDailyStatesForHabit(habitId)
-        ) { habit, dailyStates ->
-            habit?.toUi(dailyStates)
-        }.stateIn(
+    val uiState: StateFlow<HabitDetailsUiState> = repository.getHabitWithHistoryStream(habitId)
+        .distinctUntilChanged()
+        .map { habitWithHistory ->
+            if (habitWithHistory == null) {
+                HabitDetailsUiState.Error
+            } else {
+                HabitDetailsUiState.Success(habitWithHistory.toUi())
+            }
+        }
+        .distinctUntilChanged()
+        .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            null
+            HabitDetailsUiState.Loading
         )
 
     fun deleteHabit(habitId: Int) {
@@ -55,25 +68,27 @@ class HabitDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun Habit.toUi(dailyStates: List<HabitDailyState>): HabitDetailsUi {
-        val streakInfo = calculateStreak(this, dailyStates)
-        val totalXP = dailyStates.sumOf { ExperienceUtils.calculateHabitXP(this, it) }
+    private fun HabitWithHistory.toUi(): HabitDetailsUi {
+        val habit = this.habit
+        val dailyStates = this.history
+        val streakInfo = calculateStreak(habit, dailyStates)
+        val totalXP = dailyStates.sumOf { ExperienceUtils.calculateHabitXP(habit, it) }
         
         return HabitDetailsUi(
-            id = id,
-            name = name,
-            icon = iconCode,
-            accentColor = Color(accentColorHex.toColorInt()),
+            id = habit.id,
+            name = habit.name,
+            icon = habit.iconCode,
+            accentColor = Color(habit.accentColorHex.toColorInt()),
             currentStreak = streakInfo.currentStreak,
             totalCompletions = streakInfo.totalCompletions,
-            goal = goalLabel(type, durationInMinutes),
-            frequency = frequencyLabel(selectedDays),
-            createdOn = createdAt.toUiDate(),
-            createdAtLocalDate = Instant.ofEpochMilli(createdAt).atZone(ZoneId.systemDefault()).toLocalDate(),
+            goal = goalLabel(habit.type, habit.durationInMinutes),
+            frequency = frequencyLabel(habit.selectedDays),
+            createdOn = habit.createdAt.toUiDate(),
+            createdAtLocalDate = Instant.ofEpochMilli(habit.createdAt).atZone(ZoneId.systemDefault()).toLocalDate(),
             totalXP = totalXP,
-            reminderTime = reminderTime,
-            motivation = motivation,
-            completedDates = dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toSet()
+            reminderTime = habit.reminderTime,
+            motivation = habit.motivation,
+            completedDates = CompletedDates(dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toSet())
         )
     }
 }

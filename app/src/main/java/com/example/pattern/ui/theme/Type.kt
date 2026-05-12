@@ -1,8 +1,9 @@
 package com.example.pattern.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.googlefonts.Font
 import com.example.pattern.R
@@ -30,21 +31,25 @@ val displayFontFamily = FontFamily(
 // Default Material 3 typography values
 val baseline = Typography()
 
-val AppTypography = Typography(
-    displayLarge = baseline.displayLarge.copy(fontFamily = displayFontFamily),
-    displayMedium = baseline.displayMedium.copy(fontFamily = displayFontFamily),
-    displaySmall = baseline.displaySmall.copy(fontFamily = displayFontFamily),
-    headlineLarge = baseline.headlineLarge.copy(fontFamily = displayFontFamily),
-    headlineMedium = baseline.headlineMedium.copy(fontFamily = displayFontFamily),
-    headlineSmall = baseline.headlineSmall.copy(fontFamily = displayFontFamily),
-    titleLarge = baseline.titleLarge.copy(fontFamily = displayFontFamily),
-    titleMedium = baseline.titleMedium.copy(fontFamily = displayFontFamily),
-    titleSmall = baseline.titleSmall.copy(fontFamily = displayFontFamily),
-    bodyLarge = baseline.bodyLarge.copy(fontFamily = bodyFontFamily),
-    bodyMedium = baseline.bodyMedium.copy(fontFamily = bodyFontFamily),
-    bodySmall = baseline.bodySmall.copy(fontFamily = bodyFontFamily),
-    labelLarge = baseline.labelLarge.copy(fontFamily = bodyFontFamily),
-    labelMedium = baseline.labelMedium.copy(fontFamily = bodyFontFamily),
-    labelSmall = baseline.labelSmall.copy(fontFamily = bodyFontFamily),
+// Optimized TextStyle with PlatformSettings to prevent layout shifts
+private val defaultPlatformStyle = PlatformTextStyle(
+    includeFontPadding = false
 )
 
+val AppTypography = Typography(
+    displayLarge = baseline.displayLarge.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    displayMedium = baseline.displayMedium.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    displaySmall = baseline.displaySmall.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    headlineLarge = baseline.headlineLarge.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    headlineMedium = baseline.headlineMedium.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    headlineSmall = baseline.headlineSmall.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    titleLarge = baseline.titleLarge.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    titleMedium = baseline.titleMedium.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    titleSmall = baseline.titleSmall.copy(fontFamily = displayFontFamily, platformStyle = defaultPlatformStyle),
+    bodyLarge = baseline.bodyLarge.copy(fontFamily = bodyFontFamily, platformStyle = defaultPlatformStyle),
+    bodyMedium = baseline.bodyMedium.copy(fontFamily = bodyFontFamily, platformStyle = defaultPlatformStyle),
+    bodySmall = baseline.bodySmall.copy(fontFamily = bodyFontFamily, platformStyle = defaultPlatformStyle),
+    labelLarge = baseline.labelLarge.copy(fontFamily = bodyFontFamily, platformStyle = defaultPlatformStyle),
+    labelMedium = baseline.labelMedium.copy(fontFamily = bodyFontFamily, platformStyle = defaultPlatformStyle),
+    labelSmall = baseline.labelSmall.copy(fontFamily = bodyFontFamily, platformStyle = defaultPlatformStyle),
+)

@@ -115,7 +115,7 @@ fun HabitCardDetailsScreen(
             Spacer(Modifier.height(24.dp))
             
             ActivityCard(
-                completedDates = habit.completedDates,
+                completedDates = habit.completedDates.dates,
                 accentColor = accentColor,
                 createdAt = habit.createdAtLocalDate
             )

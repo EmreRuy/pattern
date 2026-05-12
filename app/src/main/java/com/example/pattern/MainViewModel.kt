@@ -4,10 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.local.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,15 +20,16 @@ class MainViewModel @Inject constructor(
     val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            val isFirstRun = userPreferences.isFirstRun.first()
-            _startDestination.value = if (isFirstRun) {
-                com.example.pattern.ui.navigation.Screens.Onboarding.route
-            } else {
-                com.example.pattern.ui.navigation.Screens.Home.route
+        userPreferences.isFirstRun
+            .onEach { isFirstRun ->
+                _startDestination.value = if (isFirstRun) {
+                    com.example.pattern.ui.navigation.Screens.Onboarding.route
+                } else {
+                    com.example.pattern.ui.navigation.Screens.Home.route
+                }
+                _isLoading.value = false
             }
-            _isLoading.value = false
-        }
+            .launchIn(viewModelScope)
     }
 
     fun completeOnboarding() {

@@ -4,9 +4,11 @@ import com.example.pattern.data.local.entity.Habit as LocalHabit
 import com.example.pattern.data.local.entity.HabitDailyState as LocalDailyState
 import com.example.pattern.data.local.entity.SettingsEntity
 import com.example.pattern.data.local.entity.HabitType as LocalHabitType
+import com.example.pattern.data.local.entity.HabitWithHistory as LocalHabitWithHistory
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.model.Settings
 
 fun LocalHabitType.toDomain(): HabitType = when (this) {
@@ -69,6 +71,11 @@ fun HabitDailyState.toLocal(): LocalDailyState = LocalDailyState(
     timerPauseTime = timerPauseTime,
     isCompleted = isCompleted,
     isTaskCompleted = isTaskCompleted
+)
+
+fun LocalHabitWithHistory.toDomain(): HabitWithHistory = HabitWithHistory(
+    habit = habit.toDomain(),
+    history = history.map { it.toDomain() }
 )
 
 fun SettingsEntity.toDomain(): Settings = Settings(

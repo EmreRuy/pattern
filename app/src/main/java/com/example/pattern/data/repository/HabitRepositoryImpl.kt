@@ -35,6 +35,10 @@ class HabitRepositoryImpl @Inject constructor(
         return habitDao.getHabit(id).map { it?.toDomain() }
     }
 
+    override fun getHabitWithHistoryStream(id: Int): Flow<com.example.pattern.domain.model.HabitWithHistory?> {
+        return habitDao.getHabitWithHistory(id).map { it?.toDomain() }
+    }
+
     override suspend fun getHabitOnce(id: Int): Habit? {
         return habitDao.getHabitOnce(id)?.toDomain()
     }

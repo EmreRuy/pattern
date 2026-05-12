@@ -5,6 +5,9 @@ import androidx.compose.ui.graphics.Color
 import java.time.LocalDate
 
 @Immutable
+data class CompletedDates(val dates: Set<String>)
+
+@Immutable
 data class HabitDetailsUi(
     val id: Int,
     val name: String,
@@ -19,5 +22,5 @@ data class HabitDetailsUi(
     val totalXP: Int,
     val reminderTime: String? = null,
     val motivation: String? = null,
-    val completedDates: Set<String> = emptySet()
+    val completedDates: CompletedDates = CompletedDates(emptySet())
 )

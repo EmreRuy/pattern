@@ -7,6 +7,8 @@ import androidx.room.Update
 import androidx.room.Upsert
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitDailyState
+import com.example.pattern.data.local.entity.HabitWithHistory
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,6 +24,10 @@ interface HabitDao {
     suspend fun deleteHabit(habit: Habit)
     @Query("DELETE FROM habits WHERE id = :habitId")
     suspend fun deleteHabitById(habitId: Int)
+
+    @Transaction
+    @Query("SELECT * FROM habits WHERE id = :id")
+    fun getHabitWithHistory(id: Int): Flow<HabitWithHistory?>
 
     @Query("SELECT * FROM habits WHERE id = :id")
     fun getHabit(id: Int): Flow<Habit?>

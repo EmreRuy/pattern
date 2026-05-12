@@ -38,11 +38,11 @@ import com.example.pattern.domain.model.HabitDailyState
 
 @Composable
 fun HabitListBody(
-    habits: List<Habit>,
-    dailyStates: Map<Int, HabitDailyState>,
+    habits: HabitList,
+    dailyStates: DailyStateMap,
     onHabitClick: (Int) -> Unit
 ) {
-    if (habits.isEmpty()) {
+    if (habits.items.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             EmptyHabitMessage()
         }
@@ -53,10 +53,10 @@ fun HabitListBody(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(
-                items = habits,
+                items = habits.items,
                 key = { it.id }
             ) { habit ->
-                val dailyState = dailyStates[habit.id]
+                val dailyState = dailyStates.states[habit.id]
                 HabitListItem(
                     habit = habit,
                     dailyState = dailyState,

@@ -1,5 +1,8 @@
 package com.example.pattern.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class HabitDailyState(
     val habitId: Int,
     val date: String,

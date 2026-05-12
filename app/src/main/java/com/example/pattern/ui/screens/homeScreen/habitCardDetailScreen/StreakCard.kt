@@ -26,6 +26,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +45,7 @@ private object StreakTokens {
 
     @Composable
     fun inactiveColor() = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-    
+
     // Animation Specs
     val DefaultFade = tween<Float>(durationMillis = 400)
 }
@@ -103,11 +104,8 @@ private fun StreakIconCenterpiece(
     modifier: Modifier = Modifier
 ) {
     val isElite = streakCount >= 30
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (streakCount > 0) 1f else 0f,
-        animationSpec = StreakTokens.DefaultFade,
-        label = "GlowAlpha"
-    )
+    // Removed animation to prevent "blinking" on entry
+    val glowAlpha = if (streakCount > 0) 1f else 0f
 
     Box(
         contentAlignment = Alignment.Center,
@@ -140,27 +138,40 @@ private fun StreakIconCenterpiece(
 @Composable
 private fun StreakCounter(
     currentStreak: Int,
-    textColor: Color
+    textColor: Color,
+    modifier: Modifier = Modifier
 ) {
     val streakText = stringResource(R.string.detail_day_streak).lowercase()
-    
-    Text(
-        text = buildAnnotatedString {
+
+    // Staff-level fix: Using a single Text node with a unified font family (Poppins)
+    // to prevent the "jump" caused by metric mismatches between Lato and Poppins.
+    // LineHeight is locked to reserve vertical space before font swap.
+    val annotatedString = remember(currentStreak, streakText) {
+        buildAnnotatedString {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Black)) {
                 append(currentStreak.toString())
             }
             append(" ")
-            append(streakText)
-        },
+            withStyle(style = SpanStyle(fontWeight = FontWeight.ExtraBold)) {
+                append(streakText)
+            }
+        }
+    }
+
+    Text(
+        text = annotatedString,
         style = MaterialTheme.typography.headlineMedium.copy(
-            fontWeight = FontWeight.ExtraBold,
             color = textColor,
             letterSpacing = (-0.8).sp,
-            fontSize = 32.sp
+            fontSize = 32.sp,
+            lineHeight = 40.sp,
+            textAlign = TextAlign.Center
         ),
-        modifier = Modifier.semantics {
-            contentDescription = "$currentStreak $streakText"
-        },
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = "$currentStreak $streakText"
+            },
         maxLines = 1,
         softWrap = false
     )
@@ -170,26 +181,17 @@ private fun StreakCounter(
 private fun StreakMotivationBadge(
     currentStreak: Int
 ) {
-    val motivationResId = remember(currentStreak) { getStreakMotivationResId(currentStreak) }
+    val motivationResId = getStreakMotivationResId(currentStreak)
 
-    AnimatedContent(
-        targetState = motivationResId,
-        transitionSpec = {
-            fadeIn(animationSpec = StreakTokens.DefaultFade) togetherWith
-                    fadeOut(animationSpec = StreakTokens.DefaultFade)
-        },
-        label = "MotivationText"
-    ) { targetResId ->
-        Text(
-            text = stringResource(targetResId),
-            style = MaterialTheme.typography.labelMedium.copy(
-                color = StreakTokens.textSecondary(),
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 1.2.sp
-            ),
-            modifier = Modifier.padding(top = 4.dp)
-        )
-    }
+    Text(
+        text = stringResource(motivationResId),
+        style = MaterialTheme.typography.labelMedium.copy(
+            color = StreakTokens.textSecondary(),
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 1.2.sp
+        ),
+        modifier = Modifier.padding(top = 4.dp)
+    )
 }
 
 @Immutable
@@ -265,7 +267,7 @@ private fun TimelineNode(
 ) {
     val nodeColor = if (state.isAchieved) accentColor else StreakTokens.inactiveColor()
     val textColor = if (state.isAchieved) accentColor else StreakTokens.textSecondary().copy(alpha = 0.5f)
-    
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(48.dp)
@@ -287,9 +289,9 @@ private fun TimelineNode(
                 }
             }
         }
-        
+
         Spacer(Modifier.height(8.dp))
-        
+
         Text(
             text = "D${state.day}",
             style = MaterialTheme.typography.labelSmall.copy(
