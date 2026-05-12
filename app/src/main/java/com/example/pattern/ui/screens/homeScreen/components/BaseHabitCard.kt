@@ -64,13 +64,13 @@ fun BaseHabitCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 3.dp, horizontal = 12.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .padding(vertical = 4.dp, horizontal = 12.dp)
+            .clip(RoundedCornerShape(28.dp))
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) { onCardClick(habit.id) },
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isDark)
                 MaterialTheme.colorScheme.surfaceContainerLow
@@ -81,13 +81,13 @@ fun BaseHabitCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(start = 6.dp, end = 14.dp, top = 6.dp, bottom = 6.dp)
+                .padding(start = 8.dp, end = 14.dp, top = 10.dp, bottom = 10.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Icon Section
             Box(
-                modifier = Modifier.size(52.dp)
+                modifier = Modifier.size(56.dp)
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -100,7 +100,7 @@ fun BaseHabitCard(
                 ) {
                     Text(
                         text = habit.iconEmoji.orEmpty(),
-                        fontSize = 24.sp,
+                        fontSize = 26.sp,
                     )
                 }
 
@@ -125,14 +125,15 @@ fun BaseHabitCard(
                     .weight(1f)
             ) {
                 Text(
-                    text = habit.name.replaceFirstChar { it.uppercase() },
+                    text = habit.name.trim().replaceFirstChar { it.uppercase() },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = onSurface.copy(alpha = 0.9f),
-                        fontSize = 16.sp,
-                        letterSpacing = (-0.5).sp
+                        fontWeight = FontWeight.Black,
+                        color = onSurface.copy(alpha = 0.82f),
+                        fontSize = 17.5.sp,
+                        letterSpacing = (-0.6).sp,
+                        lineHeight = 22.sp
                     )
                 )
                 subtitle()

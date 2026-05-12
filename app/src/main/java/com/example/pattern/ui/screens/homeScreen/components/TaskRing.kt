@@ -27,9 +27,9 @@ fun TaskRing(
     checked: Boolean,
     onToggle: () -> Unit
 ) {
-    val ringSize = 32.dp
-    val iconSize = 20.dp
-    val strokeWidthDp = 3.5.dp
+    val ringSize = 36.dp
+    val iconSize = 22.dp
+    val strokeWidthDp = 4.dp
     val progress by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = tween(500, easing = FastOutSlowInEasing),

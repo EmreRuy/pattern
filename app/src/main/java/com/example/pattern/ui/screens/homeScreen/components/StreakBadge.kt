@@ -19,7 +19,7 @@ fun StreakBadge(
     Icon(
         imageVector = Icons.Rounded.Whatshot,
         contentDescription = null,
-        modifier = Modifier.size(18.dp),
+        modifier = Modifier.size(20.dp),
         tint = if (isStreakActive) Color(0xFFFF9800) else Color.Gray.copy(alpha = 0.5f)
     )
 }

@@ -39,9 +39,9 @@ fun TimerRing(
     showSuccess: Boolean,
     onClick: () -> Unit
 ) {
-    val ringSize = 32.dp
-    val iconSize = 20.dp
-    val strokeWidthDp = 3.5.dp
+    val ringSize = 36.dp
+    val iconSize = 22.dp
+    val strokeWidthDp = 4.dp
     // Theme color capture
     val backgroundRingColor = MaterialTheme.colorScheme.surfaceVariant
     val primaryColor = MaterialTheme.colorScheme.primary

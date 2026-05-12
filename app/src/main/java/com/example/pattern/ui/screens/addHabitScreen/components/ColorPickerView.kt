@@ -37,7 +37,7 @@ fun ColorPickerView(
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 42.dp),
+            columns = GridCells.Adaptive(minSize = 48.dp),
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
