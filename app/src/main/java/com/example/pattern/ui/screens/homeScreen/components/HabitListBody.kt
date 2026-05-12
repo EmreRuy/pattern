@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
@@ -54,7 +55,7 @@ fun HabitListBody(
             LazyColumn(
                 modifier = Modifier.weight(1f, fill = false),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(
                     items = habits,
@@ -89,7 +90,7 @@ fun HabitListItem(
             .clip(RoundedCornerShape(28.dp))
             .background(containerColor)
             .clickable { onHabitClick(habit.id) }
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+            .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Vertical Accent Indicator
@@ -108,12 +109,16 @@ fun HabitListItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = habit.name,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = (-0.2).sp
+                text = habit.name.trim().replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                    fontSize = 16.sp,
+                    letterSpacing = (-0.2).sp,
+                    lineHeight = 24.sp
                 ),
-                maxLines = 1
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(

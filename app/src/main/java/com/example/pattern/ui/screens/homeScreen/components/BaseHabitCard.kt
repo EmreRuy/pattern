@@ -64,7 +64,7 @@ fun BaseHabitCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 12.dp)
+            .padding(vertical = 3.dp, horizontal = 12.dp)
             .clip(RoundedCornerShape(28.dp))
             .clickable(
                 indication = null,
@@ -81,13 +81,13 @@ fun BaseHabitCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(start = 8.dp, end = 14.dp, top = 10.dp, bottom = 10.dp)
+                .padding(start = 8.dp, end = 14.dp, top = 8.dp, bottom = 8.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Icon Section
             Box(
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(52.dp)
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -100,7 +100,7 @@ fun BaseHabitCard(
                 ) {
                     Text(
                         text = habit.iconEmoji.orEmpty(),
-                        fontSize = 26.sp,
+                        fontSize = 24.sp,
                     )
                 }
 
@@ -128,12 +128,12 @@ fun BaseHabitCard(
                     text = habit.name.trim().replaceFirstChar { it.uppercase() },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        color = onSurface.copy(alpha = 0.82f),
-                        fontSize = 17.5.sp,
-                        letterSpacing = (-0.6).sp,
-                        lineHeight = 22.sp
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Medium,
+                        color = onSurface.copy(alpha = 0.85f),
+                        fontSize = 16.sp,
+                        letterSpacing = (-0.2).sp,
+                        lineHeight = 24.sp
                     )
                 )
                 subtitle()
