@@ -62,13 +62,12 @@ fun StreakCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        shadowElevation = 0.dp
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest
     ) {
         Column(
             modifier = Modifier
-                .padding(vertical = 48.dp, horizontal = 20.dp),
+                .padding(vertical = 56.dp, horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             StreakIconCenterpiece(
@@ -82,22 +81,18 @@ fun StreakCard(
                 currentStreak = currentStreak,
                 textColor = StreakTokens.textPrimary()
             )
+            StreakMotivationBadge(
+                currentStreak = currentStreak
+            )
 
-            Box(
-                modifier = Modifier.heightIn(min = 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                StreakMotivationBadge(
-                    currentStreak = currentStreak
-                )
-            }
 
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(56.dp))
 
             StreakTimeline(
                 currentStreak = currentStreak,
                 accentColor = accentColor
             )
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -134,7 +129,7 @@ private fun StreakIconCenterpiece(
             imageVector = if (isElite) Icons.Rounded.EmojiEvents else Icons.Rounded.LocalFireDepartment,
             contentDescription = null,
             modifier = Modifier
-                .size(100.dp),
+                .size(120.dp),
             tint = accentColor
         )
     }
@@ -157,7 +152,7 @@ private fun StreakCounter(
                 append(currentStreak.toString())
             }
             append(" ")
-            withStyle(style = SpanStyle(fontWeight = FontWeight.ExtraBold)) {
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                 append(streakText)
             }
         }
@@ -166,14 +161,14 @@ private fun StreakCounter(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp),
+            .height(48.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = annotatedString,
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = textColor,
-                letterSpacing = (-0.8).sp,
+                letterSpacing = (-0.2).sp,
                 fontSize = 32.sp,
                 lineHeight = 40.sp,
                 textAlign = TextAlign.Center
@@ -196,11 +191,11 @@ private fun StreakMotivationBadge(
     Text(
         text = stringResource(motivationResId),
         style = MaterialTheme.typography.labelMedium.copy(
-            color = StreakTokens.textSecondary(),
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 1.2.sp
+            color = StreakTokens.textSecondary().copy(alpha = 0.7f),
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp
         ),
-        modifier = Modifier.padding(top = 4.dp)
+        modifier = Modifier.padding(top = 2.dp)
     )
 }
 
@@ -276,7 +271,8 @@ private fun TimelineNode(
     accentColor: Color
 ) {
     val nodeColor = if (state.isAchieved) accentColor else StreakTokens.inactiveColor()
-    val textColor = if (state.isAchieved) accentColor else StreakTokens.textSecondary().copy(alpha = 0.5f)
+    val textColor =
+        if (state.isAchieved) accentColor else StreakTokens.textSecondary().copy(alpha = 0.5f)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
