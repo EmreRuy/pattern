@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.R
+import com.example.pattern.ui.components.DebouncedIconButton
 
 @Composable
 fun HomeTopBar(

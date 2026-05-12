@@ -23,6 +23,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.testTag
 import com.example.pattern.ui.screens.homeScreen.components.HabitListViewModel
+import com.example.pattern.ui.components.DebouncedIconButton
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import kotlinx.coroutines.delay
@@ -88,37 +89,11 @@ fun HabitListScreen(
                 else -> {
                     HabitListBody(
                         habits = uiState.habits,
-                        dailyStates = uiState.todayStates.values.toList(),
+                        dailyStates = uiState.todayStates,
                         onHabitClick = onHabitClick
                     )
                 }
             }
         }
-    }
-}
-@Composable
-fun DebouncedIconButton(
-    onClick: () -> Unit,
-    debounceTime: Long = 1000L,
-    content: @Composable () -> Unit
-) {
-    var enabled by remember { mutableStateOf(true) }
-    val scope = rememberCoroutineScope()
-
-    IconButton(
-        onClick = {
-            if (!enabled) return@IconButton
-
-            enabled = false
-            onClick()
-
-            scope.launch {
-                delay(debounceTime)
-                enabled = true
-            }
-        },
-        enabled = enabled
-    ) {
-        content()
     }
 }

@@ -1,4 +1,4 @@
-package com.example.pattern.ui.screens.addHabitScreen.components
+package com.example.pattern.ui.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme

@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -36,9 +36,14 @@ import com.example.pattern.R
  * These centralize the design language for the special Streak experience.
  */
 private object StreakTokens {
-    val InactiveGray = Color(0xFFDDE1E6)
-    val TextPrimary = Color(0xFF212121)
-    val TextSecondary = Color(0xFF9E9E9E)
+    @Composable
+    fun textPrimary() = MaterialTheme.colorScheme.onSurface
+
+    @Composable
+    fun textSecondary() = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+
+    @Composable
+    fun inactiveColor() = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
     
     // Animation Specs
     val DefaultFade = tween<Float>(durationMillis = 400)
@@ -56,13 +61,13 @@ fun StreakCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(32.dp),
+        shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier
-                .padding(top = 56.dp, bottom = 48.dp, start = 20.dp, end = 20.dp),
+                .padding(vertical = 48.dp, horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             StreakIconCenterpiece(
@@ -74,14 +79,14 @@ fun StreakCard(
 
             StreakCounter(
                 currentStreak = currentStreak,
-                textColor = StreakTokens.TextPrimary
+                textColor = StreakTokens.textPrimary()
             )
 
             StreakMotivationBadge(
                 currentStreak = currentStreak
             )
 
-            Spacer(Modifier.height(56.dp))
+            Spacer(Modifier.height(48.dp))
 
             StreakTimeline(
                 currentStreak = currentStreak,
@@ -107,17 +112,17 @@ private fun StreakIconCenterpiece(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(160.dp)
+            .size(140.dp)
             .drawWithCache {
                 val brush = Brush.radialGradient(
-                    0.0f to accentColor.copy(alpha = 0.15f * glowAlpha),
-                    0.6f to accentColor.copy(alpha = 0.04f * glowAlpha),
+                    0.0f to accentColor.copy(alpha = 0.2f * glowAlpha),
+                    0.5f to accentColor.copy(alpha = 0.05f * glowAlpha),
                     1.0f to Color.Transparent,
                 )
                 onDrawBehind {
                     drawCircle(
                         brush = brush,
-                        radius = size.maxDimension / 1.2f
+                        radius = size.maxDimension / 1.1f
                     )
                 }
             }
@@ -126,7 +131,7 @@ private fun StreakIconCenterpiece(
             imageVector = if (isElite) Icons.Rounded.EmojiEvents else Icons.Rounded.LocalFireDepartment,
             contentDescription = null,
             modifier = Modifier
-                .size(120.dp),
+                .size(100.dp),
             tint = accentColor
         )
     }
@@ -139,34 +144,26 @@ private fun StreakCounter(
 ) {
     val streakText = stringResource(R.string.detail_day_streak).lowercase()
     
-    AnimatedContent(
-        targetState = currentStreak,
-        transitionSpec = {
-            (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
-                    scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)))
-                .togetherWith(fadeOut(animationSpec = tween(90)))
+    Text(
+        text = buildAnnotatedString {
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Black)) {
+                append(currentStreak.toString())
+            }
+            append(" ")
+            append(streakText)
         },
-        label = "StreakCounter",
+        style = MaterialTheme.typography.headlineMedium.copy(
+            fontWeight = FontWeight.ExtraBold,
+            color = textColor,
+            letterSpacing = (-0.8).sp,
+            fontSize = 32.sp
+        ),
         modifier = Modifier.semantics {
             contentDescription = "$currentStreak $streakText"
-        }
-    ) { targetStreak ->
-        Text(
-            text = buildAnnotatedString {
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Black)) {
-                    append(targetStreak.toString())
-                }
-                append(" ")
-                append(streakText)
-            },
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
-                color = textColor,
-                letterSpacing = (-0.8).sp,
-                fontSize = 34.sp
-            )
-        )
-    }
+        },
+        maxLines = 1,
+        softWrap = false
+    )
 }
 
 @Composable
@@ -186,11 +183,11 @@ private fun StreakMotivationBadge(
         Text(
             text = stringResource(targetResId),
             style = MaterialTheme.typography.labelMedium.copy(
-                color = StreakTokens.TextSecondary.copy(alpha = 0.7f),
+                color = StreakTokens.textSecondary(),
                 fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 1.5.sp
+                letterSpacing = 1.2.sp
             ),
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }
@@ -224,8 +221,9 @@ private fun StreakTimeline(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        verticalAlignment = Alignment.Top
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         days.forEachIndexed { index, state ->
             TimelineNode(
@@ -252,12 +250,11 @@ private fun TimelineConnector(
     activeColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val color = if (isActive) activeColor else StreakTokens.inactiveColor()
     Box(
         modifier = modifier
-            .height(4.dp)
-            .background(
-                color = if (isActive) activeColor else StreakTokens.InactiveGray.copy(alpha = 0.4f)
-            )
+            .height(2.dp)
+            .background(color = color, shape = CircleShape)
     )
 }
 
@@ -266,26 +263,26 @@ private fun TimelineNode(
     state: TimelineDayState,
     accentColor: Color
 ) {
-    val nodeColor = if (state.isAchieved) accentColor else StreakTokens.InactiveGray.copy(alpha = 0.5f)
-    val textColor = if (state.isAchieved) accentColor else StreakTokens.TextSecondary.copy(alpha = 0.4f)
+    val nodeColor = if (state.isAchieved) accentColor else StreakTokens.inactiveColor()
+    val textColor = if (state.isAchieved) accentColor else StreakTokens.textSecondary().copy(alpha = 0.5f)
     
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(40.dp)
+        modifier = Modifier.width(48.dp)
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(36.dp)) {
             Surface(
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(if (state.isAchieved) 36.dp else 32.dp),
                 shape = CircleShape,
                 color = nodeColor,
-                shadowElevation = if (state.isAchieved) 6.dp else 0.dp
+                shadowElevation = if (state.isAchieved) 4.dp else 0.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = if (state.isMilestone) Icons.Rounded.EmojiEvents else Icons.Rounded.LocalFireDepartment,
+                        imageVector = getTimelineIcon(state),
                         contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                        tint = Color.White
+                        modifier = Modifier.size(if (state.isMilestone) 20.dp else 18.dp),
+                        tint = if (state.isAchieved) Color.White else Color.White.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -298,9 +295,16 @@ private fun TimelineNode(
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = textColor,
-                fontSize = 12.sp
+                fontSize = 11.sp
             )
         )
+    }
+}
+
+private fun getTimelineIcon(state: TimelineDayState): ImageVector {
+    return when {
+        state.isMilestone -> Icons.Rounded.EmojiEvents
+        else -> Icons.Rounded.LocalFireDepartment
     }
 }
 

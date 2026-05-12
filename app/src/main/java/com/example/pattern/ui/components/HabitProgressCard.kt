@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.pattern.R
-import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsUi
 import com.example.pattern.utils.ExperienceUtils
 

@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,39 +35,33 @@ import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.domain.model.HabitDailyState
-import com.example.pattern.ui.screens.settings.MossGreen
 
 @Composable
 fun HabitListBody(
     habits: List<Habit>,
-    dailyStates: List<HabitDailyState>,
+    dailyStates: Map<Int, HabitDailyState>,
     onHabitClick: (Int) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (habits.isEmpty()) {
+    if (habits.isEmpty()) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             EmptyHabitMessage()
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f, fill = false),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(
-                    items = habits,
-                    key = { it.id }
-                ) { habit ->
-                    val dailyState = dailyStates.find { it.habitId == habit.id }
-                    HabitListItem(
-                        habit = habit,
-                        dailyState = dailyState,
-                        onHabitClick = onHabitClick
-                    )
-                }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(
+                items = habits,
+                key = { it.id }
+            ) { habit ->
+                val dailyState = dailyStates[habit.id]
+                HabitListItem(
+                    habit = habit,
+                    dailyState = dailyState,
+                    onHabitClick = onHabitClick
+                )
             }
         }
     }
@@ -82,25 +76,30 @@ fun HabitListItem(
     val accentColor = remember(habit.accentColorHex) {
         Color(habit.accentColorHex.toColorInt())
     }
-    val isDark = isSystemInDarkTheme()
-    val containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerLowest
+    
+    val containerColor = if (isSystemInDarkTheme()) {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLowest
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(containerColor)
             .clickable { onHabitClick(habit.id) }
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Vertical Accent Indicator
         Box(
             modifier = Modifier
-                .size(width = 6.dp, height = 42.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .size(width = 4.dp, height = 36.dp)
+                .clip(CircleShape)
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(accentColor, accentColor.copy(alpha = 0.6f))
+                        colors = listOf(accentColor, accentColor.copy(alpha = 0.5f))
                     )
                 )
         )
@@ -109,35 +108,30 @@ fun HabitListItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = habit.name.trim().replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-                    fontSize = 16.sp,
-                    letterSpacing = (-0.2).sp,
-                    lineHeight = 24.sp
+                text = habit.name.trim(),
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    letterSpacing = (-0.2).sp
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = when (habit.type) {
                     HabitType.BUILD -> "${habit.durationInMinutes ?: 0} min session"
                     HabitType.TASK -> "Daily task"
                     HabitType.QUIT -> "Drop habit"
                 },
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
 
-        // Habit XP Score
         val xpScore = remember(habit, dailyState) {
             ExperienceUtils.calculateHabitXP(habit, dailyState ?: HabitDailyState(habitId = habit.id, date = ""))
         }
         
-        // Let's also show the max XP if it's 0, so they know what it's worth.
         val maxXP = remember(habit) {
              val dummyState = when (habit.type) {
                 HabitType.BUILD -> HabitDailyState(habitId = habit.id, date = "", isCompleted = true)
@@ -150,14 +144,14 @@ fun HabitListItem(
             Text(
                 text = if (xpScore > 0) "+$xpScore" else "$maxXP",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = if (xpScore > 0) MossGreen else Color.Gray.copy(alpha = 0.5f)
+                    fontWeight = FontWeight.Black,
+                    color = if (xpScore > 0) accentColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 )
             )
             Text(
                 text = "XP",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.outline
             )
         }
     }

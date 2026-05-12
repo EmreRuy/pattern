@@ -55,9 +55,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.R
+import com.example.pattern.ui.components.DebouncedIconButton
 import com.example.pattern.ui.screens.settings.SettingsViewModel
-import com.example.pattern.ui.screens.addHabitScreen.components.SectionHeader
-import com.example.pattern.ui.screens.homeScreen.components.DebouncedIconButton
+import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils

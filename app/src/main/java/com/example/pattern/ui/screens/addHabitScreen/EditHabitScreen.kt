@@ -28,6 +28,7 @@ import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
+import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import com.example.pattern.ui.screens.settings.PatternTimePickerDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
