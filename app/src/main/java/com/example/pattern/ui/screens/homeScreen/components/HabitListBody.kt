@@ -110,7 +110,7 @@ fun HabitListItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = habit.name.trim().replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.titleLarge.copy(
+                style = MaterialTheme.typography.bodySmall.copy(
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
                     fontSize = 16.sp,

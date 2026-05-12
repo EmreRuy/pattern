@@ -235,8 +235,8 @@ private fun DayNumberCircle(
         ) {
             Text(
                 text = dayNumber,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = if (isSelected || isToday) FontWeight.ExtraBold else FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = if (isSelected || isToday) FontWeight.Medium else FontWeight.Normal,
                     fontSize = 15.sp
                 ),
                 color = contentColor

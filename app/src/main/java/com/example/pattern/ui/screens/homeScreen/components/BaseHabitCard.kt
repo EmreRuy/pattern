@@ -128,7 +128,7 @@ fun BaseHabitCard(
                     text = habit.name.trim().replaceFirstChar { it.uppercase() },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleLarge.copy(
+                    style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium,
                         color = onSurface.copy(alpha = 0.85f),
                         fontSize = 16.sp,
