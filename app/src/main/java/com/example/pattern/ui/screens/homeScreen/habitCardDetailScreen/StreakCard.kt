@@ -83,9 +83,14 @@ fun StreakCard(
                 textColor = StreakTokens.textPrimary()
             )
 
-            StreakMotivationBadge(
-                currentStreak = currentStreak
-            )
+            Box(
+                modifier = Modifier.heightIn(min = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                StreakMotivationBadge(
+                    currentStreak = currentStreak
+                )
+            }
 
             Spacer(Modifier.height(48.dp))
 
@@ -158,23 +163,28 @@ private fun StreakCounter(
         }
     }
 
-    Text(
-        text = annotatedString,
-        style = MaterialTheme.typography.headlineMedium.copy(
-            color = textColor,
-            letterSpacing = (-0.8).sp,
-            fontSize = 32.sp,
-            lineHeight = 40.sp,
-            textAlign = TextAlign.Center
-        ),
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .semantics {
+            .height(44.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = annotatedString,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                color = textColor,
+                letterSpacing = (-0.8).sp,
+                fontSize = 32.sp,
+                lineHeight = 40.sp,
+                textAlign = TextAlign.Center
+            ),
+            modifier = Modifier.semantics {
                 contentDescription = "$currentStreak $streakText"
             },
-        maxLines = 1,
-        softWrap = false
-    )
+            maxLines = 1,
+            softWrap = false
+        )
+    }
 }
 
 @Composable

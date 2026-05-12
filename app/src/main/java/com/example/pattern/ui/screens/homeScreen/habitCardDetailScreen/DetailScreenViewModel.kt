@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.core.graphics.toColorInt
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 
 @Immutable
 sealed interface HabitDetailsUiState {
@@ -51,6 +53,7 @@ class HabitDetailsViewModel @Inject constructor(
                 HabitDetailsUiState.Success(habitWithHistory.toUi())
             }
         }
+        .flowOn(Dispatchers.Default)
         .distinctUntilChanged()
         .stateIn(
             viewModelScope,
