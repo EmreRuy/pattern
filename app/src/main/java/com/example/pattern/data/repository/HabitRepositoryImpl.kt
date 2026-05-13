@@ -14,8 +14,10 @@ import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.Settings
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -108,7 +110,7 @@ class HabitRepositoryImpl @Inject constructor(
                 ExperienceUtils.calculateHabitXP(habit.toDomain(), state.toDomain())
             } else 0
         }
-    }
+    }.flowOn(Dispatchers.Default)
 
     override fun getSettingsStream(): Flow<Settings?> = settingsDao.getSettingsFlow().map { it?.toDomain() }
 

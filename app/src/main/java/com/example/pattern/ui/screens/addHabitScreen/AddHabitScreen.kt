@@ -25,6 +25,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import com.example.pattern.ui.screens.settings.PatternTimePickerDialog
@@ -40,7 +41,7 @@ fun AddHabitScreen(
     onBack: () -> Unit,
     viewModel: AddHabitViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     AddHabitScreenContent(
         uiState = uiState,
@@ -82,12 +83,21 @@ fun AddHabitScreenContent(
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
+    // Optimization: Use derivedStateOf to stabilize state and prevent unnecessary TopAppBar recompositions
+    val currentUiState by rememberUpdatedState(uiState)
+    val screenTitle by remember { derivedStateOf { currentUiState.screenTitle } }
+    val isSaveEnabled by remember { derivedStateOf { currentUiState.isValid } }
+    val isNameValid by remember { derivedStateOf { currentUiState.isNameValid } }
+    val isColorValid by remember { derivedStateOf { currentUiState.isColorValid } }
+    val isDaysValid by remember { derivedStateOf { currentUiState.isDaysValid } }
+    val currentStep by remember { derivedStateOf { currentUiState.currentStep } }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        uiState.screenTitle,
+                        screenTitle,
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 2.sp
@@ -96,7 +106,7 @@ fun AddHabitScreenContent(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (uiState.currentStep == AddHabitStep.Main) onBack()
+                        if (currentStep == AddHabitStep.Main) onBack()
                         else onStepChange(AddHabitStep.Main)
                     }) {
                         Icon(
@@ -107,13 +117,13 @@ fun AddHabitScreenContent(
                     }
                 },
                 actions = {
-                    if (uiState.currentStep == AddHabitStep.Main) {
+                    if (currentStep == AddHabitStep.Main) {
                         IconButton(onClick = {
-                            if (!uiState.isNameValid) {
+                            if (!isNameValid) {
                                 scope.launch { snackbarHostState.showSnackbar("Please enter a name for your pattern") }
-                            } else if (!uiState.isColorValid) {
+                            } else if (!isColorValid) {
                                 scope.launch { snackbarHostState.showSnackbar("Please select a color") }
-                            } else if (!uiState.isDaysValid) {
+                            } else if (!isDaysValid) {
                                 scope.launch { snackbarHostState.showSnackbar("Please select at least one day") }
                             } else {
                                 onSave()
@@ -122,11 +132,11 @@ fun AddHabitScreenContent(
                             Icon(
                                 imageVector = Icons.Rounded.Check,
                                 contentDescription = "Save",
-                                tint = if (uiState.isValid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                tint = if (isSaveEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                    } else if (uiState.currentStep == AddHabitStep.Category || uiState.currentStep == AddHabitStep.Motivation) {
+                    } else if (currentStep == AddHabitStep.Category || currentStep == AddHabitStep.Motivation) {
                         IconButton(onClick = { onStepChange(AddHabitStep.Main) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Check,
@@ -146,7 +156,7 @@ fun AddHabitScreenContent(
         contentWindowInsets = WindowInsets.statusBars
     ) { padding ->
         AnimatedContent(
-            targetState = uiState.currentStep,
+            targetState = currentStep,
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)

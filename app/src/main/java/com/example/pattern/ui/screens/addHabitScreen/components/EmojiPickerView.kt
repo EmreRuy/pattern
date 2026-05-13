@@ -49,7 +49,7 @@ fun EmojiPickerView(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(filtered) { icon ->
+            items(filtered, key = { it }) { icon ->
                 val isSelected = icon == selectedEmoji
                 Box(
                     modifier = Modifier
