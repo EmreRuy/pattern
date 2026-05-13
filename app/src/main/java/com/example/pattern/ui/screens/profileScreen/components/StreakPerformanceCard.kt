@@ -65,9 +65,15 @@ fun StreakPerformanceCard(
             // Header consistent with XPDistributionCard
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = Icons.Rounded.LocalFireDepartment,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    modifier = Modifier.size(16.dp)
+                )
                 Text(
                     text = "STREAK PERFORMANCE",
                     style = MaterialTheme.typography.labelSmall.copy(
@@ -75,12 +81,6 @@ fun StreakPerformanceCard(
                         letterSpacing = 1.5.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-                Icon(
-                    imageVector = Icons.Rounded.LocalFireDepartment,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    modifier = Modifier.size(18.dp)
                 )
             }
             

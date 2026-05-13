@@ -255,7 +255,7 @@ fun AddHabitScreenContent(
                             decorationBox = { innerTextField ->
                                 if (uiState.motivation.isEmpty()) {
                                     Text(
-                                        text = "Add a reason or reminder...",
+                                        text = "Add a reason or quote...",
                                         style = MaterialTheme.typography.bodyLarge.copy(
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                         )

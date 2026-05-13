@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.pattern.R
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.profileScreen.components.*
+import com.example.pattern.ui.screens.profileScreen.components.dashboard.ProfileExtraCard
 
 @Composable
 fun ProfileScreen(
@@ -40,7 +40,7 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 2. Behavioral Analysis Group
+        // Behavioral Analysis Group
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             // Success Card - Premium Behavioral Insight
             ProfileExtraCard(uiState = uiState.successDashboard)
@@ -55,7 +55,7 @@ fun ProfileScreen(
             XPDistributionCard(distribution = uiState.xpDistribution)
         }
 
-        // 3. Historical Data Visualization
+        // Historical Data Visualization
         XPProgressChartCard(
             title = "TOTAL XP GAINED",
             weeklyDataPoints = uiState.weeklyXpHistory,

@@ -190,10 +190,9 @@ private fun StreakMotivationBadge(
 
     Text(
         text = stringResource(motivationResId),
-        style = MaterialTheme.typography.labelMedium.copy(
+        style = MaterialTheme.typography.labelSmall.copy(
             color = StreakTokens.textSecondary().copy(alpha = 0.7f),
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.5.sp
+            fontWeight = FontWeight.Bold
         ),
         modifier = Modifier.padding(top = 2.dp)
     )

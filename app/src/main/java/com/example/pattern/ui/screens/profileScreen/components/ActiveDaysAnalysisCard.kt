@@ -46,9 +46,15 @@ fun ActiveDaysAnalysisCard(
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = Icons.Rounded.BarChart,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    modifier = Modifier.size(16.dp)
+                )
                 Text(
                     text = "ACTIVE DAYS ANALYSIS",
                     style = MaterialTheme.typography.labelSmall.copy(
@@ -56,12 +62,6 @@ fun ActiveDaysAnalysisCard(
                         letterSpacing = 1.5.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-                Icon(
-                    imageVector = Icons.Rounded.BarChart,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    modifier = Modifier.size(18.dp)
                 )
             }
 
