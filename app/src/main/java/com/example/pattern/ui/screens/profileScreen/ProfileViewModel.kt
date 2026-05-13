@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.usecase.GetProfileStatsUseCase
 import com.example.pattern.ui.screens.profileScreen.mapper.ProfileStateMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -20,6 +21,7 @@ class ProfileViewModel @Inject constructor(
 
     val uiState: StateFlow<ProfileUiState> = getProfileStatsUseCase()
         .map { stats -> ProfileStateMapper.mapToUiState(stats) }
+        .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

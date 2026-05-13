@@ -149,19 +149,21 @@ private fun BarItem(
             else 
                 MaterialTheme.colorScheme.primary
 
+            val barBrush = remember(barColor) {
+                Brush.verticalGradient(
+                    colors = listOf(
+                        barColor.copy(alpha = 0.7f),
+                        barColor
+                    )
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .width(10.dp)
                     .fillMaxHeight(animatedProgress.coerceIn(0.05f, 1f))
                     .clip(CircleShape)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                barColor.copy(alpha = 0.7f),
-                                barColor
-                            )
-                        )
-                    )
+                    .background(barBrush)
             )
         }
         

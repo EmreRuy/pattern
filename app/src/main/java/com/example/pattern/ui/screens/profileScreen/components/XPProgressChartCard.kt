@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -301,22 +302,20 @@ private fun ChartDrawing(
 ) {
     var touchX by remember { mutableStateOf<Float?>(null) }
     val density = LocalDensity.current
-    val paddingPx = with(density) { 16.dp.toPx() } // Internal padding to prevent point clipping
+    val horizontalPaddingPx = with(density) { 16.dp.toPx() }
 
-    val fillPath = remember { Path() }
-    val strokePath = remember { Path() }
-
-    Canvas(
+    // Use drawWithCache to minimize allocations and path rebuilding
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(dataPoints) {
                 detectTapGestures(
                     onPress = { offset ->
                         val width = size.width
-                        val drawableWidth = width - (paddingPx * 2)
+                        val drawableWidth = width - (horizontalPaddingPx * 2)
                         
                         touchX = offset.x
-                        val index = (((offset.x - paddingPx) / drawableWidth) * (dataPoints.size - 1))
+                        val index = (((offset.x - horizontalPaddingPx) / drawableWidth) * (dataPoints.size - 1))
                             .roundToInt()
                             .coerceIn(0, dataPoints.size - 1)
                         onPointSelected(dataPoints[index])
@@ -334,80 +333,92 @@ private fun ChartDrawing(
                     onDragCancel = { touchX = null; onRelease() },
                     onDrag = { change, _ ->
                         val width = size.width
-                        val drawableWidth = width - (paddingPx * 2)
+                        val drawableWidth = width - (horizontalPaddingPx * 2)
                         
                         touchX = change.position.x
-                        val index = (((change.position.x - paddingPx) / drawableWidth) * (dataPoints.size - 1))
+                        val index = (((change.position.x - horizontalPaddingPx) / drawableWidth) * (dataPoints.size - 1))
                             .roundToInt()
                             .coerceIn(0, dataPoints.size - 1)
                         onPointSelected(dataPoints[index])
                     }
                 )
             }
-    ) {
-        val width = size.width
-        val height = size.height
-        val drawableWidth = width - (paddingPx * 2)
-        val drawableHeight = height - (paddingPx * 2)
-        val divisor = (dataPoints.size - 1).coerceAtLeast(1).toFloat()
+            .drawWithCache {
+                val fillPath = Path()
+                val strokePath = Path()
+                
+                onDrawBehind {
+                    val width = size.width
+                    val height = size.height
+                    val drawableWidth = width - (horizontalPaddingPx * 2)
+                    val drawableHeight = height - (horizontalPaddingPx * 2)
+                    val divisor = (dataPoints.size - 1).coerceAtLeast(1).toFloat()
 
-        // Grid lines
-        val gridColor = Color(0xFFF8F8F8)
-        drawLine(gridColor, Offset(0f, height * 0.5f), Offset(width, height * 0.5f), strokeWidth = 1.dp.toPx())
-        drawLine(gridColor, Offset(0f, paddingPx), Offset(width, paddingPx), strokeWidth = 1.dp.toPx())
-        drawLine(gridColor, Offset(0f, height - paddingPx), Offset(width, height - paddingPx), strokeWidth = 1.dp.toPx())
+                    // Grid lines
+                    val gridColor = Color(0xFFF8F8F8)
+                    drawLine(gridColor, Offset(0f, height * 0.5f), Offset(width, height * 0.5f), strokeWidth = 1.dp.toPx())
+                    drawLine(gridColor, Offset(0f, horizontalPaddingPx), Offset(width, horizontalPaddingPx), strokeWidth = 1.dp.toPx())
+                    drawLine(gridColor, Offset(0f, height - horizontalPaddingPx), Offset(width, height - horizontalPaddingPx), strokeWidth = 1.dp.toPx())
 
-        if (dataPoints.size < 2) return@Canvas
+                    if (dataPoints.size < 2) return@onDrawBehind
 
-        // Optimization: Avoid list allocation in draw loop
-        // We still need the points for interaction and pulse, but we can avoid mapping the whole list twice
-        val points = dataPoints.mapIndexed { index, point ->
-            Offset(
-                x = paddingPx + (index / divisor) * drawableWidth,
-                y = (height - paddingPx) - ((point.xpValue / maxYValue) * drawableHeight * animationProgress)
-            )
-        }
+                    // Avoid list allocation by using direct drawing loops
+                    // Area Fill Path construction
+                    fillPath.reset()
+                    val firstPointY = (height - horizontalPaddingPx) - ((dataPoints.first().xpValue / maxYValue) * drawableHeight * animationProgress)
+                    fillPath.moveTo(horizontalPaddingPx, height - horizontalPaddingPx)
+                    fillPath.lineTo(horizontalPaddingPx, firstPointY)
 
-        // Area Fill
-        fillPath.reset()
-        fillPath.moveTo(points.first().x, height - paddingPx)
-        for (i in 0 until points.size) {
-            val current = points[i]
-            if (i == 0) fillPath.lineTo(current.x, current.y)
-            else {
-                val prev = points[i - 1]
-                fillPath.cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
+                    // Main Line Path construction
+                    strokePath.reset()
+                    strokePath.moveTo(horizontalPaddingPx, firstPointY)
+
+                    for (i in 1 until dataPoints.size) {
+                        val prevPoint = dataPoints[i - 1]
+                        val currPoint = dataPoints[i]
+                        
+                        val prevX = horizontalPaddingPx + ((i - 1) / divisor) * drawableWidth
+                        val prevY = (height - horizontalPaddingPx) - ((prevPoint.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        val currX = horizontalPaddingPx + (i / divisor) * drawableWidth
+                        val currY = (height - horizontalPaddingPx) - ((currPoint.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        
+                        val controlX = prevX + (currX - prevX) / 2
+                        
+                        fillPath.cubicTo(controlX, prevY, controlX, currY, currX, currY)
+                        strokePath.cubicTo(controlX, prevY, controlX, currY, currX, currY)
+                    }
+
+                    fillPath.lineTo(horizontalPaddingPx + drawableWidth, height - horizontalPaddingPx)
+                    fillPath.close()
+
+                    drawPath(fillPath, Brush.verticalGradient(listOf(accentColor.copy(alpha = 0.2f), Color.Transparent)))
+                    drawPath(strokePath, accentColor, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+                    // Interaction indicators
+                    touchX?.let { x ->
+                        val index = (((x - horizontalPaddingPx) / drawableWidth) * divisor).roundToInt().coerceIn(0, dataPoints.size - 1)
+                        val point = dataPoints[index]
+                        val pX = horizontalPaddingPx + (index / divisor) * drawableWidth
+                        val pY = (height - horizontalPaddingPx) - ((point.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        val p = Offset(pX, pY)
+                        
+                        drawLine(accentColor.copy(alpha = 0.2f), Offset(p.x, horizontalPaddingPx), Offset(p.x, height - horizontalPaddingPx), strokeWidth = 2.dp.toPx())
+                        drawCircle(Color.White, 8.dp.toPx(), p)
+                        drawCircle(accentColor, 6.dp.toPx(), p)
+                    } ?: run {
+                        // Pulse on last point
+                        val lastPoint = dataPoints.last()
+                        val pX = horizontalPaddingPx + drawableWidth
+                        val pY = (height - horizontalPaddingPx) - ((lastPoint.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        val p = Offset(pX, pY)
+                        
+                        drawCircle(accentColor.copy(alpha = 0.1f * animationProgress), 12.dp.toPx(), p)
+                        drawCircle(accentColor, 5.dp.toPx(), p)
+                        drawCircle(Color.White, 2.dp.toPx(), p)
+                    }
+                }
             }
-        }
-        fillPath.lineTo(points.last().x, height - paddingPx)
-        fillPath.close()
-        drawPath(fillPath, Brush.verticalGradient(listOf(accentColor.copy(alpha = 0.2f), Color.Transparent)))
-
-        // Main Line
-        strokePath.reset()
-        strokePath.moveTo(points.first().x, points.first().y)
-        for (i in 1 until points.size) {
-            val prev = points[i - 1]
-            val current = points[i]
-            strokePath.cubicTo(prev.x + (current.x - prev.x) / 2, prev.y, prev.x + (current.x - prev.x) / 2, current.y, current.x, current.y)
-        }
-        drawPath(strokePath, accentColor, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-
-        // Interaction indicators
-        touchX?.let { x ->
-            val index = (((x - paddingPx) / drawableWidth) * divisor).roundToInt().coerceIn(0, dataPoints.size - 1)
-            val p = points[index]
-            
-            drawLine(accentColor.copy(alpha = 0.2f), Offset(p.x, paddingPx), Offset(p.x, height - paddingPx), strokeWidth = 2.dp.toPx())
-            drawCircle(Color.White, 8.dp.toPx(), p)
-            drawCircle(accentColor, 6.dp.toPx(), p)
-        } ?: run {
-            // Pulse on last point
-            drawCircle(accentColor.copy(alpha = 0.1f * animationProgress), 12.dp.toPx(), points.last())
-            drawCircle(accentColor, 5.dp.toPx(), points.last())
-            drawCircle(Color.White, 2.dp.toPx(), points.last())
-        }
-    }
+    ) {}
 }
 
 private fun formatXPLabel(value: Float): String {
