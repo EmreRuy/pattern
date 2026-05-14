@@ -28,18 +28,25 @@ sealed interface HabitListUiState {
     data class Error(val message: String) : HabitListUiState
 }
 
+/**
+ * Optimized ViewModel for the Home Screen.
+ * 
+ * Performance Fix:
+ * Instead of fetching ALL historical daily states and filtering in memory (O(History)),
+ * it now only observes today's states from the database (O(1)).
+ */
 @HiltViewModel
 class HabitListViewModel @Inject constructor(
     private val repository: HabitRepository
 ) : ViewModel() {
 
+    // Optimized stream using specific today's data
     val uiState: StateFlow<HabitListUiState> = combine(
         repository.getAllHabitsStream(),
-        repository.getAllDailyStatesStream() 
-    ) { habits, allStates ->
-        val today = LocalDate.now().toString()
-        val todayStatesMap = allStates.filter { it.date == today }
-            .associateBy { it.habitId }
+        // Only observe today's states - massive performance win for long-term users
+        repository.getDailyStatesForDate(LocalDate.now().toString())
+    ) { habits, todayStates ->
+        val todayStatesMap = todayStates.associateBy { it.habitId }
 
         HabitListUiState.Success(
             habits = HabitList(habits),

@@ -106,18 +106,8 @@ class HabitRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getTotalXPStream(): Flow<Int> = combine(
-        habitDao.getAllHabits(),
-        habitDao.getAllDailyStates()
-    ) { habits, allStates ->
-        val habitMap = habits.associateBy { it.id }
-        allStates.sumOf { state ->
-            val habit = habitMap[state.habitId]
-            if (habit != null) {
-                ExperienceUtils.calculateHabitXP(habit.toDomain(), state.toDomain())
-            } else 0
-        }
-    }.flowOn(Dispatchers.Default)
+    override fun getTotalXPStream(): Flow<Int> = 
+        habitDao.getTotalXP().map { it ?: 0 }.flowOn(Dispatchers.Default)
 
     override fun getSettingsStream(): Flow<Settings?> = settingsDao.getSettingsFlow().map { it?.toDomain() }
 

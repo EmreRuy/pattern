@@ -84,11 +84,23 @@ interface HabitDao {
     """)
     fun getAllCompletedDates(): Flow<List<HabitCompletionDate>>
 
-    @Query("""
-        SELECT * FROM habit_daily_state 
-        WHERE date >= :startDate
-    """)
+    @Query("SELECT * FROM habit_daily_state WHERE date >= :startDate")
     fun getDailyStatesFromDate(startDate: String): Flow<List<HabitDailyState>>
+
+    @Query("""
+        SELECT SUM(
+            CASE 
+                WHEN h.type = 'TASK' THEN 15
+                WHEN h.type = 'QUIT' THEN 20
+                WHEN h.type = 'BUILD' THEN 10 + (IFNULL(h.durationInMinutes, 0) / 15) * 5
+                ELSE 0
+            END
+        )
+        FROM habit_daily_state ds
+        JOIN habits h ON ds.habitId = h.id
+        WHERE ds.isCompleted = 1 OR ds.isTaskCompleted = 1
+    """)
+    fun getTotalXP(): Flow<Int?>
 
     @Query("""
         SELECT * FROM habit_daily_state

@@ -5,17 +5,27 @@ import com.example.pattern.data.local.entity.HabitType
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-//Provides methods to convert complex data types into formats Room can store (and back).
+/**
+ * Optimized TypeConverters for Room.
+ * Uses a single Gson instance to avoid redundant allocations.
+ */
 class Converters {
+    private val gson = Gson()
+    private val booleanListType = object : TypeToken<List<Boolean>>() {}.type
+
     @TypeConverter
-    fun fromBooleanList(list: List<Boolean>): String {
-        return Gson().toJson(list)
+    fun fromBooleanList(list: List<Boolean>?): String {
+        return gson.toJson(list ?: emptyList<Boolean>())
     }
 
     @TypeConverter
-    fun toBooleanList(json: String): List<Boolean> {
-        val type = object : TypeToken<List<Boolean>>() {}.type
-        return Gson().fromJson(json, type)
+    fun toBooleanList(json: String?): List<Boolean> {
+        if (json.isNullOrEmpty()) return emptyList()
+        return try {
+            gson.fromJson(json, booleanListType)
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     @TypeConverter
@@ -25,6 +35,10 @@ class Converters {
 
     @TypeConverter
     fun toHabitType(name: String): HabitType {
-        return HabitType.valueOf(name)
+        return try {
+            HabitType.valueOf(name)
+        } catch (_: Exception) {
+            HabitType.BUILD // Default fallback
+        }
     }
 }
