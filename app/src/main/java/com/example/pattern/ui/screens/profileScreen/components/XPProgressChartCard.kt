@@ -253,7 +253,7 @@ private fun ChartPage(
                     ChartDrawing(
                         dataPoints = dataPoints,
                         maxYValue = maxYValue,
-                        animationProgress = animationProgress.value,
+                        animationProgress = { animationProgress.value },
                         accentColor = accentColor,
                         onPointSelected = { point ->
                             if (selectedPoint != point) {
@@ -295,7 +295,7 @@ private fun ChartPage(
 private fun ChartDrawing(
     dataPoints: List<XPDataPoint>,
     maxYValue: Float,
-    animationProgress: Float,
+    animationProgress: () -> Float,
     accentColor: Color,
     onPointSelected: (XPDataPoint) -> Unit,
     onRelease: () -> Unit
@@ -365,7 +365,8 @@ private fun ChartDrawing(
                     // Avoid list allocation by using direct drawing loops
                     // Area Fill Path construction
                     fillPath.reset()
-                    val firstPointY = (height - horizontalPaddingPx) - ((dataPoints.first().xpValue / maxYValue) * drawableHeight * animationProgress)
+                    val progress = animationProgress()
+                    val firstPointY = (height - horizontalPaddingPx) - ((dataPoints.first().xpValue / maxYValue) * drawableHeight * progress)
                     fillPath.moveTo(horizontalPaddingPx, height - horizontalPaddingPx)
                     fillPath.lineTo(horizontalPaddingPx, firstPointY)
 
@@ -378,9 +379,9 @@ private fun ChartDrawing(
                         val currPoint = dataPoints[i]
                         
                         val prevX = horizontalPaddingPx + ((i - 1) / divisor) * drawableWidth
-                        val prevY = (height - horizontalPaddingPx) - ((prevPoint.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        val prevY = (height - horizontalPaddingPx) - ((prevPoint.xpValue / maxYValue) * drawableHeight * progress)
                         val currX = horizontalPaddingPx + (i / divisor) * drawableWidth
-                        val currY = (height - horizontalPaddingPx) - ((currPoint.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        val currY = (height - horizontalPaddingPx) - ((currPoint.xpValue / maxYValue) * drawableHeight * progress)
                         
                         val controlX = prevX + (currX - prevX) / 2
                         
@@ -399,7 +400,7 @@ private fun ChartDrawing(
                         val index = (((x - horizontalPaddingPx) / drawableWidth) * divisor).roundToInt().coerceIn(0, dataPoints.size - 1)
                         val point = dataPoints[index]
                         val pX = horizontalPaddingPx + (index / divisor) * drawableWidth
-                        val pY = (height - horizontalPaddingPx) - ((point.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        val pY = (height - horizontalPaddingPx) - ((point.xpValue / maxYValue) * drawableHeight * progress)
                         val p = Offset(pX, pY)
                         
                         drawLine(accentColor.copy(alpha = 0.2f), Offset(p.x, horizontalPaddingPx), Offset(p.x, height - horizontalPaddingPx), strokeWidth = 2.dp.toPx())
@@ -409,10 +410,10 @@ private fun ChartDrawing(
                         // Pulse on last point
                         val lastPoint = dataPoints.last()
                         val pX = horizontalPaddingPx + drawableWidth
-                        val pY = (height - horizontalPaddingPx) - ((lastPoint.xpValue / maxYValue) * drawableHeight * animationProgress)
+                        val pY = (height - horizontalPaddingPx) - ((lastPoint.xpValue / maxYValue) * drawableHeight * progress)
                         val p = Offset(pX, pY)
                         
-                        drawCircle(accentColor.copy(alpha = 0.1f * animationProgress), 12.dp.toPx(), p)
+                        drawCircle(accentColor.copy(alpha = 0.1f * progress), 12.dp.toPx(), p)
                         drawCircle(accentColor, 5.dp.toPx(), p)
                         drawCircle(Color.White, 2.dp.toPx(), p)
                     }

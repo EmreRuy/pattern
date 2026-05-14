@@ -11,6 +11,15 @@ import com.example.pattern.R
 import com.example.pattern.ui.model.HabitCardModel
 import kotlinx.coroutines.delay
 
+/**
+ * Optimized HabitBuildCard.
+ * 
+ * Performance Enhancements:
+ * 1. Uses State objects inside derivedStateOf without destructuring at the top level, 
+ *    preventing the entire card from recomposing every second.
+ * 2. Recomposition is isolated to the subtitle and action lambdas.
+ * 3. LaunchedEffect uses a specific derived finished state to avoid redundant executions.
+ */
 @Composable
 fun HabitBuildCard(
     habit: HabitCardModel,
@@ -22,33 +31,39 @@ fun HabitBuildCard(
     onUnfinishTimer: (Int) -> Unit,
     onCardClick: (Int) -> Unit,
 ) {
-    // Isolate the ticking state to this specific card instance, 
-    // but we will pass it down to narrow the recomposition scope.
     val totalMillis = remember(habit.durationInMinutes) {
         (habit.durationInMinutes ?: 0) * 60_000L
     }
 
-    // This state updates every second. 
-    // By using it ONLY inside the 'subtitle' and 'action' blocks of BaseHabitCard,
-    // we prevent the rest of the card (icon, name, background) from recomposing.
-    val currentTime by produceState(initialValue = System.currentTimeMillis()) {
+    // Isolate the ticking state to this specific card instance.
+    // We keep the State object reference stable.
+    val currentTimeState = produceState(initialValue = System.currentTimeMillis()) {
         while (true) {
             delay(1000)
             value = System.currentTimeMillis()
         }
     }
 
-    // The derivedStateOf remains, but we will NOT destructure it at the top level.
-    val timerData by remember(currentTime, habit.timerStartTime, habit.timerPauseTime, habit.isCompleted) {
+    // timerDataState handles the updates efficiently.
+    // It depends on currentTimeState.value but doesn't cause recomposition of the outer function
+    // as long as timerDataState.value is not read here.
+    val timerDataState = remember(habit.timerStartTime, habit.timerPauseTime, habit.isCompleted, totalMillis) {
         derivedStateOf {
-            calculateTimerData(habit, totalMillis, currentTime)
+            calculateTimerData(habit, totalMillis, currentTimeState.value)
         }
     }
 
     val showSuccess = remember { mutableStateOf(false) }
 
-    LaunchedEffect(timerData.first) { // remainingTime
-        if (!habit.isCompleted && timerData.first <= 0 && habit.timerStartTime != null) {
+    // Isolate the "is finished" check to avoid re-triggering LaunchedEffect every second.
+    val isTimerFinished = remember(habit.isCompleted, habit.timerStartTime) {
+        derivedStateOf {
+            !habit.isCompleted && timerDataState.value.first <= 0 && habit.timerStartTime != null
+        }
+    }
+
+    LaunchedEffect(isTimerFinished.value) {
+        if (isTimerFinished.value) {
             showSuccess.value = true
             onTimerFinished(habit)
             delay(1200)
@@ -61,9 +76,15 @@ fun HabitBuildCard(
         onCardClick = onCardClick,
         subtitle = {
             if (totalMillis > 0) {
-                // Read formattedTime INSIDE the lambda to isolate recomposition
+                // Reading timerDataState.value here isolates recomposition to this lambda.
+                val formattedTime = if (habit.isCompleted) {
+                    stringResource(R.string.habit_goal_reached)
+                } else {
+                    timerDataState.value.second
+                }
+                
                 Text(
-                    text = if (habit.isCompleted) stringResource(R.string.habit_goal_reached) else timerData.second,
+                    text = formattedTime,
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontFeatureSettings = "tnum",
                         fontWeight = FontWeight.SemiBold
@@ -75,10 +96,10 @@ fun HabitBuildCard(
             }
         },
         action = {
+            // Reading progress here isolates recomposition to this lambda.
+            val progress = timerDataState.value.third
             TimerRing(
-                // Use a lambda if TimerRing is updated to support it, 
-                // or just read it here to keep recomposition inside this lambda block.
-                progress = timerData.third,
+                progress = progress,
                 isCompleted = habit.isCompleted,
                 isRunning = habit.timerStartTime != null && habit.timerPauseTime == null,
                 isPaused = habit.timerStartTime != null && habit.timerPauseTime != null,

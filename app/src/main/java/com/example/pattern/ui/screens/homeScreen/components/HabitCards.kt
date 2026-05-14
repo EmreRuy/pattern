@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -18,6 +19,9 @@ import androidx.compose.ui.unit.dp
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.ui.model.HabitCardModel
 import java.time.LocalDate
+
+@Immutable
+data class HabitCardList(val items: List<HabitCardModel>)
 
 /**
  * A pager that displays habit cards for different days.
@@ -63,8 +67,8 @@ fun HabitCardsPager(
         val habits = habitsByDate[date] ?: emptyList()
         val isToday = date == today
 
-        HabitList(
-            habits = habits,
+        HabitListContent(
+            habits = HabitCardList(habits),
             hasAnyHabits = hasAnyHabits,
             date = date,
             paddingValues = paddingValues,
@@ -81,8 +85,8 @@ fun HabitCardsPager(
 }
 
 @Composable
-private fun HabitList(
-    habits: List<HabitCardModel>,
+private fun HabitListContent(
+    habits: HabitCardList,
     hasAnyHabits: Boolean,
     date: LocalDate,
     paddingValues: PaddingValues,
@@ -95,7 +99,7 @@ private fun HabitList(
     onPauseTimer: (HabitCardModel, LocalDate) -> Unit,
     onResumeTimer: (HabitCardModel, LocalDate) -> Unit,
 ) {
-    if (habits.isEmpty()) {
+    if (habits.items.isEmpty()) {
         val message = remember(hasAnyHabits) {
             if (hasAnyHabits) "No habits scheduled for this day!"
             else "Start by adding your first habit!"
@@ -108,7 +112,7 @@ private fun HabitList(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             items(
-                items = habits,
+                items = habits.items,
                 key = { it.id },
                 contentType = { it.type }
             ) { habit ->

@@ -55,7 +55,7 @@ fun HomeCalendarSelector(
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        CalendarHeader(title = currentMonthTitle)
+        CalendarHeader(title = { currentMonthTitle })
         
         HorizontalPager(
             state = pagerState,
@@ -93,9 +93,9 @@ fun HomeCalendarSelector(
 }
 
 @Composable
-private fun CalendarHeader(title: String) {
+private fun CalendarHeader(title: () -> String) {
     AnimatedContent(
-        targetState = title,
+        targetState = title(),
         transitionSpec = {
             (fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) + 
              slideInVertically { it / 2 })
