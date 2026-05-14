@@ -8,6 +8,7 @@ import androidx.room.Upsert
 import com.example.pattern.data.local.entity.Habit
 import com.example.pattern.data.local.entity.HabitDailyState
 import com.example.pattern.data.local.entity.HabitWithHistory
+import com.example.pattern.data.local.entity.HabitCompletionDate
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
@@ -70,6 +71,18 @@ interface HabitDao {
 
     @Query("SELECT * FROM habit_daily_state")
     fun getAllDailyStates(): Flow<List<HabitDailyState>>
+
+    @Query("""
+        SELECT date FROM habit_daily_state
+        WHERE habitId = :habitId AND (isCompleted = 1 OR isTaskCompleted = 1)
+    """)
+    fun getCompletedDatesForHabit(habitId: Int): Flow<List<String>>
+
+    @Query("""
+        SELECT habitId, date FROM habit_daily_state
+        WHERE isCompleted = 1 OR isTaskCompleted = 1
+    """)
+    fun getAllCompletedDates(): Flow<List<HabitCompletionDate>>
 
     @Query("""
         SELECT * FROM habit_daily_state 

@@ -19,6 +19,7 @@ interface HabitRepository {
     fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>>
     fun getAllDailyStatesStream(): Flow<List<HabitDailyState>>
     fun getDailyStatesFromDateStream(startDate: String): Flow<List<HabitDailyState>>
+    fun getCompletedDatesStream(): Flow<Map<Int, Set<String>>>
     suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState>
     suspend fun upsertDailyState(state: HabitDailyState)
     suspend fun getDailyStateOnce(habitId: Int, date: String): HabitDailyState?

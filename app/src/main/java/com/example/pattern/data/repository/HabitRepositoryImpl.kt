@@ -69,6 +69,13 @@ class HabitRepositoryImpl @Inject constructor(
     override fun getDailyStatesFromDateStream(startDate: String): Flow<List<HabitDailyState>> =
         habitDao.getDailyStatesFromDate(startDate).map { list -> list.map { it.toDomain() } }
 
+    override fun getCompletedDatesStream(): Flow<Map<Int, Set<String>>> {
+        return habitDao.getAllCompletedDates().map { list ->
+            list.groupBy({ it.habitId }, { it.date })
+                .mapValues { it.value.toSet() }
+        }
+    }
+
     override suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState> =
         habitDao.getDailyStatesForHabitOnce(habitId).map { it.toDomain() }
 

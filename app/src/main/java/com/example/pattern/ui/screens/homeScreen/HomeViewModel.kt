@@ -2,24 +2,26 @@ package com.example.pattern.ui.screens.homeScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.domain.repository.HabitRepository
-import com.example.pattern.domain.usecase.GetHomeHabitsUseCase
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.ui.mapper.toCardModel
 import com.example.pattern.utils.ExperienceUtils
+import com.example.pattern.utils.calculateCurrentStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val habitRepository: HabitRepository,
-    private val getHomeHabitsUseCase: GetHomeHabitsUseCase,
     private val updateHabitProgressUseCase: UpdateHabitProgressUseCase
 ) : ViewModel() {
 
@@ -28,13 +30,41 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
         habitRepository.getSettingsStream().distinctUntilChanged(),
-        habitRepository.getAllHabitsStream().map { it.isNotEmpty() }.distinctUntilChanged()
-    ) { date, settings, hasAnyHabits ->
+        habitRepository.getAllHabitsStream().distinctUntilChanged(),
+        habitRepository.getCompletedDatesStream().distinctUntilChanged()
+    ) { date, settings, habits, completedDatesByHabit ->
         val dateWindow = listOf(date.minusDays(1), date, date.plusDays(1))
         
+        // High-Performance Optimization: 
+        // We only fetch full DailyState objects for the 3-day visible window.
+        // We use a lightweight ID->Dates map for streak calculations.
         combine(
             dateWindow.map { d ->
-                getHomeHabitsUseCase(d).map { habits -> d to habits.map { it.toCardModel() } }
+                habitRepository.getDailyStatesForDate(d.toString()).map { dailyStates ->
+                    val dayOfWeekIndex = d.dayOfWeek.value - 1
+                    val dateStatesMap = dailyStates.associateBy { it.habitId }
+                    
+                    val processedHabits = habits.mapNotNull { habit ->
+                        val creationDate = Instant.ofEpochMilli(habit.createdAt)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        
+                        val wasCreated = !d.isBefore(creationDate)
+                        val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+                        
+                        if (wasCreated && isScheduled) {
+                            val completedDates = completedDatesByHabit[habit.id] ?: emptySet()
+                            val currentStreak = calculateCurrentStreak(habit, completedDates, LocalDate.now())
+                            
+                            HabitWithStatus(
+                                habit = habit,
+                                dailyState = dateStatesMap[habit.id],
+                                currentStreak = currentStreak
+                            ).toCardModel()
+                        } else null
+                    }
+                    d to processedHabits
+                }
             }
         ) { results ->
             val habitsMap = results.toMap()
@@ -43,7 +73,7 @@ class HomeViewModel @Inject constructor(
                 isSelectedDateToday = date == LocalDate.now(),
                 habits = habitsMap[date] ?: emptyList(),
                 habitsByDate = habitsMap,
-                hasAnyHabits = hasAnyHabits,
+                hasAnyHabits = habits.isNotEmpty(),
                 levelInfo = ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0)
             ) as HomeUiState
         }

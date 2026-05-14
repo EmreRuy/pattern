@@ -27,6 +27,56 @@ fun calculateStreak(
 }
 
 /**
+ * Optimized version that only calculates the current streak.
+ * Stops scanning as soon as the streak is broken, making it much faster for Home Screen.
+ */
+fun calculateCurrentStreak(
+    habit: Habit,
+    completedDateStrings: Set<String>,
+    today: LocalDate = LocalDate.now()
+): Int {
+    val creationDate = Instant.ofEpochMilli(habit.createdAt)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    if (completedDateStrings.isEmpty()) return 0
+
+    var currentStreak = 0
+    var checkDate = today
+    val todayStr = today.toString()
+
+    // If not completed today, the streak might still be alive if it was completed yesterday
+    // or if it's not scheduled for today.
+    if (!completedDateStrings.contains(todayStr)) {
+        val dayOfWeekIndex = today.dayOfWeek.value - 1
+        val isScheduledToday = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+        if (isScheduledToday) {
+            // Streak broken today if it was scheduled and not done
+            checkDate = today.minusDays(1)
+        } else {
+            // Not scheduled today, streak continues from yesterday
+            checkDate = today.minusDays(1)
+        }
+    }
+
+    while (!checkDate.isBefore(creationDate)) {
+        val checkDateStr = checkDate.toString()
+        val isCompleted = completedDateStrings.contains(checkDateStr)
+        
+        if (isCompleted) {
+            currentStreak++
+        } else {
+            val dayOfWeekIndex = checkDate.dayOfWeek.value - 1
+            val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+            if (isScheduled) break // Streak broken
+        }
+        checkDate = checkDate.minusDays(1)
+    }
+
+    return currentStreak
+}
+
+/**
  * Optimized version that accepts pre-calculated completed date strings.
  */
 fun calculateStreakFromDates(

@@ -14,34 +14,26 @@ import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 
+import com.example.pattern.utils.calculateCurrentStreak
+
 /**
  * Use Case to retrieve and process habits for the Home Screen.
- * Optimized for single-pass processing and off-main-thread execution.
+ * Optimized for high-performance single-pass processing.
  */
 class GetHomeHabitsUseCase @Inject constructor(
     private val repository: HabitRepository
 ) {
     operator fun invoke(date: LocalDate): Flow<List<HabitWithStatus>> {
+        val dateKey = date.toString()
         return combine(
             repository.getAllHabitsStream(),
-            repository.getAllDailyStatesStream()
-        ) { habits, allStates ->
-            val dateKey = date.toString()
+            repository.getCompletedDatesStream(),
+            repository.getDailyStatesForDate(dateKey)
+        ) { habits, completedDatesByHabit, dailyStatesForDate ->
             val today = LocalDate.now()
             val dayOfWeekIndex = date.dayOfWeek.value - 1
             
-            // Single-pass: Group states by habitId and filter for current date
-            val statesMap = mutableMapOf<Int, MutableSet<String>>()
-            val dateStatesMap = mutableMapOf<Int, HabitDailyState>()
-            
-            for (state in allStates) {
-                if (state.isCompleted || state.isTaskCompleted) {
-                    statesMap.getOrPut(state.habitId) { mutableSetOf() }.add(state.date)
-                }
-                if (state.date == dateKey) {
-                    dateStatesMap[state.habitId] = state
-                }
-            }
+            val dateStatesMap = dailyStatesForDate.associateBy { it.habitId }
 
             habits.mapNotNull { habit ->
                 val creationDate = Instant.ofEpochMilli(habit.createdAt)
@@ -52,13 +44,15 @@ class GetHomeHabitsUseCase @Inject constructor(
                 val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
                 
                 if (wasCreated && isScheduled) {
-                    val completedDates = statesMap[habit.id] ?: emptySet()
+                    val completedDates = completedDatesByHabit[habit.id] ?: emptySet()
                     
-                    val streakInfo = calculateStreakFromDates(habit, completedDates, today)
+                    // Staff Optimization: Use calculateCurrentStreak which stops early
+                    val currentStreak = calculateCurrentStreak(habit, completedDates, today)
+                    
                     HabitWithStatus(
                         habit = habit,
                         dailyState = dateStatesMap[habit.id],
-                        currentStreak = streakInfo.currentStreak
+                        currentStreak = currentStreak
                     )
                 } else {
                     null
