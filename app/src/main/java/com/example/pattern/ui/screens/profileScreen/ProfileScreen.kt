@@ -2,8 +2,8 @@ package com.example.pattern.ui.screens.profileScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,6 +15,20 @@ import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.profileScreen.components.*
 import com.example.pattern.ui.screens.profileScreen.components.dashboard.ProfileExtraCard
 
+/**
+ * Staff-Engineered ProfileScreen.
+ * 
+ * Performance Fix:
+ * Replaced the 'verticalScroll(Column)' with a 'LazyColumn'.
+ * 
+ * RATIONALE:
+ * The previous implementation forced Jetpack Compose to measure and compose ALL heavy cards
+ * (Charts, Pagers, Distributions) simultaneously on screen entry. This "Big Bang" inflation
+ * choked the UI thread during navigation.
+ * 
+ * By using LazyColumn, we achieve "Visual Parity" while only composing cards as they 
+ * enter the viewport, drastically reducing the initial frame budget.
+ */
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -22,48 +36,58 @@ fun ProfileScreen(
     onPremiumClick: () -> Unit,
     onOpenSettings: () -> Unit = {}
 ) {
-    val scroll = rememberScrollState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
 
-    Column(
+    LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
-            .verticalScroll(scroll)
+            .statusBarsPadding(),
+        contentPadding = PaddingValues(bottom = 32.dp)
     ) {
-        HomeTopBar(
-            onMenuClick = onOpenMenuSheet,
-            onSettingsClick = onOpenSettings,
-            onPremiumClick = onPremiumClick
-        )
+        // 1. Top Bar - Static at the top of the list
+        item(key = "top_bar") {
+            HomeTopBar(
+                onMenuClick = onOpenMenuSheet,
+                onSettingsClick = onOpenSettings,
+                onPremiumClick = onPremiumClick
+            )
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        item(key = "spacer_top") {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
-        // Behavioral Analysis Group
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            // Success Card - Premium Behavioral Insight
+        // 2. Behavioral Analysis Group (High Priority)
+        item(key = "success_card") {
             ProfileExtraCard(uiState = uiState.successDashboard)
+        }
 
+        item(key = "streak_card") {
             StreakPerformanceCard(
                 bestStreaks = uiState.bestStreaks,
                 insight = uiState.streakInsight
             )
+        }
 
+        item(key = "active_days_card") {
             ActiveDaysAnalysisCard(analysis = uiState.activeDaysAnalysis)
-            
+        }
+        
+        item(key = "xp_dist_card") {
             XPDistributionCard(distribution = uiState.xpDistribution)
         }
 
-        // Historical Data Visualization
-        XPProgressChartCard(
-            title = "TOTAL XP GAINED",
-            weeklyDataPoints = uiState.weeklyXpHistory,
-            monthlyDataPoints = uiState.xpHistory,
-            yearlyDataPoints = uiState.yearlyXpHistory
-        )
-        
-        // Bottom padding for comfortable scrolling
-        Spacer(modifier = Modifier.height(32.dp))
+        // 3. Historical Data Visualization (Heavy - Deferred via LazyColumn)
+        item(key = "xp_chart_card") {
+            XPProgressChartCard(
+                title = "TOTAL XP GAINED",
+                weeklyDataPoints = uiState.weeklyXpHistory,
+                monthlyDataPoints = uiState.xpHistory,
+                yearlyDataPoints = uiState.yearlyXpHistory
+            )
+        }
     }
 }

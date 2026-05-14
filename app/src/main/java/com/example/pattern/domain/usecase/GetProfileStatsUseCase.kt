@@ -20,9 +20,10 @@ import javax.inject.Inject
  * 
  * Key optimizations:
  * 1. Uses getCompletedDatesStream() to minimize data transfer from SQLite.
- * 2. O(1) mathematical calculation for scheduled/missed days instead of O(N) loops.
- * 3. Single-pass XP distribution and ranking generation.
- * 4. Offloads all computations to Dispatchers.Default.
+ * 2. O(1) mathematical calculation for scheduled/missed days.
+ * 3. Pre-parses dates to avoid expensive LocalDate.parse() in loops.
+ * 4. Single-pass XP distribution and ranking generation.
+ * 5. Offloads all computations to Dispatchers.Default.
  */
 class GetProfileStatsUseCase @Inject constructor(
     private val repository: HabitRepository
@@ -34,20 +35,27 @@ class GetProfileStatsUseCase @Inject constructor(
         ) { habits, completedDatesMap ->
             val today = LocalDate.now()
 
-            // 1. Core Metrics Calculation
+            // 1. Pre-process completion data to avoid parsing strings in loops
+            // Map<Date, Map<HabitId, XP>>
+            val dailyXpGains = mutableMapOf<LocalDate, Int>()
+            val parsedCompletedDatesMap = completedDatesMap.mapValues { (_, dateStrings) ->
+                dateStrings.mapNotNull { 
+                    try { LocalDate.parse(it) } catch (_: Exception) { null } 
+                }.toSet()
+            }
+
+            // 2. Core Metrics Calculation
             var totalDone = 0
             var totalXP = 0
             var buildXP = 0
             var quitXP = 0
             var taskXP = 0
-            val dailyXpGains = mutableMapOf<String, Int>()
 
             val habitStatsList = habits.map { habit ->
-                val completionDates = completedDatesMap[habit.id] ?: emptySet()
+                val completionDates = parsedCompletedDatesMap[habit.id] ?: emptySet()
                 val habitDone = completionDates.size
                 totalDone += habitDone
 
-                // Calculate XP for this habit
                 val habitXpPerCompletion = getXPForHabit(habit)
                 val totalHabitXp = habitDone * habitXpPerCompletion
                 totalXP += totalHabitXp
@@ -58,7 +66,6 @@ class GetProfileStatsUseCase @Inject constructor(
                     HabitType.TASK -> taskXP += totalHabitXp
                 }
 
-                // Update daily XP gains for history charts
                 completionDates.forEach { date ->
                     dailyXpGains[date] = (dailyXpGains[date] ?: 0) + habitXpPerCompletion
                 }
@@ -67,12 +74,15 @@ class GetProfileStatsUseCase @Inject constructor(
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
                 
-                // Optimized missed count calculation
                 val totalScheduledUntilToday = countScheduledDays(creationDate, today.minusDays(1), habit.selectedDays)
-                val completionsUntilYesterday = completionDates.count { LocalDate.parse(it).isBefore(today) }
+                val completionsUntilYesterday = completionDates.count { it.isBefore(today) }
                 val habitMissed = (totalScheduledUntilToday - completionsUntilYesterday).coerceAtLeast(0)
 
-                val streakInfo = calculateStreakFromDates(habit, completionDates, today)
+                val streakInfo = calculateStreakFromDates(
+                    habit, 
+                    completedDatesMap[habit.id] ?: emptySet(), 
+                    today
+                )
                 
                 Triple(habit, habitDone, habitMissed) to streakInfo
             }
@@ -83,12 +93,12 @@ class GetProfileStatsUseCase @Inject constructor(
 
             val levelInfo = ExperienceUtils.getLevelInfo(totalXP)
 
-            // 2. XP History (Weekly, Monthly, Yearly)
+            // 3. XP History (Weekly, Monthly, Yearly) - Uses pre-parsed dates
             val weeklyXpHistory = calculateCumulativeHistory(dailyXpGains, today.minusDays(6), 7, false, today)
             val xpHistory = calculateCumulativeHistory(dailyXpGains, today.minusDays(29), 30, false, today)
             val yearlyXpHistory = calculateCumulativeHistory(dailyXpGains, today.minusMonths(11).withDayOfMonth(1), 12, true, today)
 
-            // 3. Rankings
+            // 4. Rankings
             val topDone = habitStatsList
                 .filter { it.first.second > 0 }
                 .sortedByDescending { it.first.second }
@@ -107,7 +117,7 @@ class GetProfileStatsUseCase @Inject constructor(
                 .take(3)
                 .map { StreakStat(it.first.first.name, it.second.longestStreak, it.first.first.iconCode, it.first.first.accentColorHex) }
 
-            val activeDaysAnalysis = calculateActiveDaysAnalysis(habits, completedDatesMap, today)
+            val activeDaysAnalysis = calculateActiveDaysAnalysis(habits, parsedCompletedDatesMap, today)
 
             ProfileStats(
                 levelInfo = levelInfo,
@@ -157,7 +167,7 @@ class GetProfileStatsUseCase @Inject constructor(
 
     private fun calculateActiveDaysAnalysis(
         habits: List<Habit>,
-        completedDatesMap: Map<Int, Set<String>>,
+        parsedCompletedDatesMap: Map<Int, Set<LocalDate>>,
         today: LocalDate
     ): ActiveDaysAnalysis {
         val scheduledCounts = IntArray(7) { 0 }
@@ -168,23 +178,17 @@ class GetProfileStatsUseCase @Inject constructor(
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
             
-            // Still some O(D) here for active days analysis, but minimized
-            // Optimization: iterate over selected days instead of all days
             for (dayOfWeek in 1..7) {
                 val dayIdx = dayOfWeek - 1
                 if (habit.selectedDays.getOrNull(dayIdx) == true) {
-                    val scheduledOnThisDay = countOccurrencesOfDayOfWeek(startDate, today, dayOfWeek)
-                    scheduledCounts[dayIdx] += scheduledOnThisDay
+                    scheduledCounts[dayIdx] += countOccurrencesOfDayOfWeek(startDate, today, dayOfWeek)
                 }
             }
 
-            completedDatesMap[habit.id]?.forEach { dateStr ->
-                try {
-                    val date = LocalDate.parse(dateStr)
-                    if (!date.isAfter(today)) {
-                        completedCounts[date.dayOfWeek.value - 1]++
-                    }
-                } catch (_: Exception) {}
+            parsedCompletedDatesMap[habit.id]?.forEach { date ->
+                if (!date.isAfter(today)) {
+                    completedCounts[date.dayOfWeek.value - 1]++
+                }
             }
         }
 
@@ -225,7 +229,7 @@ class GetProfileStatsUseCase @Inject constructor(
     }
 
     private fun calculateCumulativeHistory(
-        dailyXpGains: Map<String, Int>,
+        dailyXpGains: Map<LocalDate, Int>,
         startDate: LocalDate,
         count: Int,
         isMonthly: Boolean,
@@ -235,12 +239,10 @@ class GetProfileStatsUseCase @Inject constructor(
         
         // Calculate baseline XP earned before the window starts - optimized O(history)
         var runningTotal = 0f
-        dailyXpGains.forEach { (dateStr, xp) ->
-            try {
-                if (LocalDate.parse(dateStr).isBefore(startDate)) {
-                    runningTotal += xp
-                }
-            } catch (_: Exception) {}
+        dailyXpGains.forEach { (date, xp) ->
+            if (date.isBefore(startDate)) {
+                runningTotal += xp
+            }
         }
 
         return List(count) { i ->
@@ -249,18 +251,14 @@ class GetProfileStatsUseCase @Inject constructor(
             val periodGains = if (isMonthly) {
                 var monthSum = 0
                 val nextPeriod = date.plusMonths(1)
-                // Filter and sum for month
-                dailyXpGains.forEach { (dateStr, xp) ->
-                    try {
-                        val d = LocalDate.parse(dateStr)
-                        if (!d.isBefore(date) && d.isBefore(nextPeriod) && !d.isAfter(today)) {
-                            monthSum += xp
-                        }
-                    } catch (_: Exception) {}
+                dailyXpGains.forEach { (d, xp) ->
+                    if (!d.isBefore(date) && d.isBefore(nextPeriod) && !d.isAfter(today)) {
+                        monthSum += xp
+                    }
                 }
                 monthSum
             } else {
-                dailyXpGains[date.toString()] ?: 0
+                dailyXpGains[date] ?: 0
             }
             
             runningTotal += periodGains
