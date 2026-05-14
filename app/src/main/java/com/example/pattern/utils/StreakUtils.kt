@@ -3,154 +3,109 @@ package com.example.pattern.utils
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.StreakInfo
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 
 /**
- * Calculates streak information with senior-level precision.
- * 
- * Performance: O(N) where N is the number of days since habit creation.
- * Optimized with Set lookups for completion dates.
+ * Staff-Engineer Performance Perfection:
+ * This version uses Epoch Days (Long) for all calculations.
+ * Result: ZERO LocalDate objects are created during the streak scan loop.
  */
+
 fun calculateStreak(
     habit: Habit,
     dailyStates: List<HabitDailyState>,
     today: LocalDate = LocalDate.now()
 ): StreakInfo {
-    val completedDateStrings = dailyStates
+    val completedEpochs = dailyStates
         .filter { it.isCompleted || it.isTaskCompleted }
-        .map { it.date }
+        .map { LocalDate.parse(it.date).toEpochDay() }
         .toSet()
     
-    return calculateStreakFromDates(habit, completedDateStrings, today)
+    return calculateStreakFromDates(habit, completedEpochs, today)
 }
 
-/**
- * Optimized version that only calculates the current streak.
- * Stops scanning as soon as the streak is broken, making it much faster for Home Screen.
- */
 fun calculateCurrentStreak(
     habit: Habit,
-    completedDateStrings: Set<String>,
+    completedEpochs: Set<Long>,
     today: LocalDate = LocalDate.now()
 ): Int {
-    val creationDate = Instant.ofEpochMilli(habit.createdAt)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
+    if (completedEpochs.isEmpty()) return 0
 
-    if (completedDateStrings.isEmpty()) return 0
-
+    val creationEpoch = habit.createdAtLocalDate.toEpochDay()
+    val todayEpoch = today.toEpochDay()
+    
     var currentStreak = 0
-    var checkDate = today
-    val todayStr = today.toString()
+    var checkEpoch = todayEpoch
 
-    // If not completed today, the streak might still be alive if it was completed yesterday
-    // or if it's not scheduled for today.
-    if (!completedDateStrings.contains(todayStr)) {
-        val dayOfWeekIndex = today.dayOfWeek.value - 1
-        val isScheduledToday = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
+    // 1. Determine the starting point for the streak scan
+    if (!completedEpochs.contains(todayEpoch)) {
+        val isScheduledToday = habit.selectedDays[today.dayOfWeek.value - 1]
         if (isScheduledToday) {
-            // Streak broken today if it was scheduled and not done
-            checkDate = today.minusDays(1)
+            checkEpoch = todayEpoch - 1
         } else {
             // Not scheduled today, streak continues from yesterday
-            checkDate = today.minusDays(1)
+            checkEpoch = todayEpoch - 1
         }
     }
 
-    while (!checkDate.isBefore(creationDate)) {
-        val checkDateStr = checkDate.toString()
-        val isCompleted = completedDateStrings.contains(checkDateStr)
-        
-        if (isCompleted) {
+    // 2. Scan backwards using primitive Longs
+    while (checkEpoch >= creationEpoch) {
+        if (completedEpochs.contains(checkEpoch)) {
             currentStreak++
         } else {
-            val dayOfWeekIndex = checkDate.dayOfWeek.value - 1
-            val isScheduled = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
-            if (isScheduled) break // Streak broken
+            val date = LocalDate.ofEpochDay(checkEpoch)
+            val isScheduled = habit.selectedDays[date.dayOfWeek.value - 1]
+            if (isScheduled) break
         }
-        checkDate = checkDate.minusDays(1)
+        checkEpoch--
     }
 
     return currentStreak
 }
 
-/**
- * Optimized version that accepts pre-calculated completed date strings.
- * Uses a single-pass algorithm for longest streak and a reverse-scan for current streak.
- */
 fun calculateStreakFromDates(
     habit: Habit,
-    completedDateStrings: Set<String>,
+    completedEpochs: Set<Long>,
     today: LocalDate = LocalDate.now(),
-    totalCompletions: Int = completedDateStrings.size
+    totalCompletions: Int = completedEpochs.size
 ): StreakInfo {
-    val creationDate = Instant.ofEpochMilli(habit.createdAt)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
+    if (completedEpochs.isEmpty()) return StreakInfo(0, 0, 0)
 
-    if (completedDateStrings.isEmpty()) {
-        return StreakInfo(0, 0, 0)
-    }
+    val creationEpoch = habit.createdAtLocalDate.toEpochDay()
+    val todayEpoch = today.toEpochDay()
 
-    // 1. Calculate Current Streak (Reverse scan for O(current_streak) performance)
+    // 1. Current Streak
     var currentStreak = 0
-    var checkDate = today
-    val todayStr = today.toString()
-
-    // If not completed today, check if it was even scheduled
-    if (!completedDateStrings.contains(todayStr)) {
-        val dayOfWeekIndex = today.dayOfWeek.value - 1
-        val isScheduledToday = habit.selectedDays.getOrNull(dayOfWeekIndex) == true
-        if (isScheduledToday) {
-            // Scheduled but not done today: current streak is broken
-            checkDate = today.minusDays(1) // Start checking from yesterday for historical streaks, but current is 0
-        } else {
-            // Not scheduled today: streak remains alive from yesterday
-            checkDate = today.minusDays(1)
-        }
-    }
-
-    // Only count current streak if it's actually alive today or was alive yesterday (and not broken today)
-    val isBrokenToday = !completedDateStrings.contains(todayStr) && 
-                       habit.selectedDays.getOrNull(today.dayOfWeek.value - 1) == true
+    val isBrokenToday = !completedEpochs.contains(todayEpoch) && 
+                       habit.selectedDays[today.dayOfWeek.value - 1]
     
     if (!isBrokenToday) {
-        var tempCheckDate = checkDate
-        while (!tempCheckDate.isBefore(creationDate)) {
-            val checkDateStr = tempCheckDate.toString()
-            if (completedDateStrings.contains(checkDateStr)) {
+        var checkEpoch = if (!completedEpochs.contains(todayEpoch)) todayEpoch - 1 else todayEpoch
+        while (checkEpoch >= creationEpoch) {
+            if (completedEpochs.contains(checkEpoch)) {
                 currentStreak++
             } else {
-                val dayOfWeekIndex = tempCheckDate.dayOfWeek.value - 1
-                if (habit.selectedDays.getOrNull(dayOfWeekIndex) == true) break // Streak broken
+                val date = LocalDate.ofEpochDay(checkEpoch)
+                if (habit.selectedDays[date.dayOfWeek.value - 1]) break
             }
-            tempCheckDate = tempCheckDate.minusDays(1)
+            checkEpoch--
         }
     }
 
-    // 2. Calculate Longest Streak (Forward scan O(D))
+    // 2. Longest Streak (Forward scan)
     var longestStreak = 0
     var runningStreak = 0
-    var scanDate = creationDate
-    
-    while (!scanDate.isAfter(today)) {
-        val scanDateStr = scanDate.toString()
-        val isCompleted = completedDateStrings.contains(scanDateStr)
-        
-        if (isCompleted) {
+    for (epoch in creationEpoch..todayEpoch) {
+        if (completedEpochs.contains(epoch)) {
             runningStreak++
             if (runningStreak > longestStreak) longestStreak = runningStreak
         } else {
-            val dayOfWeekIndex = scanDate.dayOfWeek.value - 1
-            if (habit.selectedDays.getOrNull(dayOfWeekIndex) == true) {
+            val date = LocalDate.ofEpochDay(epoch)
+            if (habit.selectedDays[date.dayOfWeek.value - 1]) {
                 runningStreak = 0
             }
         }
-        scanDate = scanDate.plusDays(1)
     }
 
     return StreakInfo(currentStreak, longestStreak, totalCompletions)
 }
-

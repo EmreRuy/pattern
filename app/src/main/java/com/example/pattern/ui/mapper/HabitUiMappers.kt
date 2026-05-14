@@ -8,6 +8,10 @@ import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.ui.model.HabitCardModel
 
+/**
+ * Staff Engineer Refactoring:
+ * Updated mapper to correctly propagate the new timer state machine properties.
+ */
 fun HabitWithStatus.toCardModel(): HabitCardModel {
     val icon = when (habit.type) {
         HabitType.BUILD -> Icons.Default.Build
@@ -24,8 +28,8 @@ fun HabitWithStatus.toCardModel(): HabitCardModel {
         isTaskChecked = dailyState?.isTaskCompleted ?: false,
         accentColorHex = habit.accentColorHex,
         durationInMinutes = habit.durationInMinutes,
-        timerStartTime = dailyState?.timerStartTime,
-        timerPauseTime = dailyState?.timerPauseTime,
+        accumulatedTimeMs = dailyState?.accumulatedTimeMs ?: 0L,
+        activeSessionStartMs = dailyState?.activeSessionStartMs,
         isCompleted = dailyState?.isCompleted ?: false,
         currentStreak = currentStreak
     )

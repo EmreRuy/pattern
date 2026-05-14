@@ -47,7 +47,11 @@ class GetHomeHabitsUseCase @Inject constructor(
                     val completedDates = completedDatesByHabit[habit.id] ?: emptySet()
                     
                     // Staff Optimization: Use calculateCurrentStreak which stops early
-                    val currentStreak = calculateCurrentStreak(habit, completedDates, today)
+                    val currentStreak = calculateCurrentStreak(
+                        habit = habit,
+                        completedEpochs = completedDates.map { it.toEpochDay() }.toSet(),
+                        today = today
+                    )
                     
                     HabitWithStatus(
                         habit = habit,

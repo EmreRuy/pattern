@@ -8,9 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -19,11 +17,10 @@ import javax.inject.Inject
  * Staff-engineered UseCase optimized for performance and scalability.
  * 
  * Key optimizations:
- * 1. Uses getCompletedDatesStream() to minimize data transfer from SQLite.
- * 2. O(1) mathematical calculation for scheduled/missed days.
- * 3. Pre-parses dates to avoid expensive LocalDate.parse() in loops.
- * 4. Single-pass XP distribution and ranking generation.
- * 5. Offloads all computations to Dispatchers.Default.
+ * 1. Zero-Allocation Dates: Uses Set<LocalDate> directly from the repository.
+ * 2. Reference Performance: Uses pre-calculated habit.createdAtLocalDate.
+ * 3. Single-pass XP distribution and ranking generation.
+ * 4. Offloads all computations to Dispatchers.Default.
  */
 class GetProfileStatsUseCase @Inject constructor(
     private val repository: HabitRepository
@@ -35,14 +32,8 @@ class GetProfileStatsUseCase @Inject constructor(
         ) { habits, completedDatesMap ->
             val today = LocalDate.now()
 
-            // 1. Pre-process completion data to avoid parsing strings in loops
-            // Map<Date, Map<HabitId, XP>>
+            // 1. XP Gains tracking - Map<LocalDate, Int>
             val dailyXpGains = mutableMapOf<LocalDate, Int>()
-            val parsedCompletedDatesMap = completedDatesMap.mapValues { (_, dateStrings) ->
-                dateStrings.mapNotNull { 
-                    try { LocalDate.parse(it) } catch (_: Exception) { null } 
-                }.toSet()
-            }
 
             // 2. Core Metrics Calculation
             var totalDone = 0
@@ -52,7 +43,7 @@ class GetProfileStatsUseCase @Inject constructor(
             var taskXP = 0
 
             val habitStatsList = habits.map { habit ->
-                val completionDates = parsedCompletedDatesMap[habit.id] ?: emptySet()
+                val completionDates = completedDatesMap[habit.id] ?: emptySet()
                 val habitDone = completionDates.size
                 totalDone += habitDone
 
@@ -70,18 +61,16 @@ class GetProfileStatsUseCase @Inject constructor(
                     dailyXpGains[date] = (dailyXpGains[date] ?: 0) + habitXpPerCompletion
                 }
 
-                val creationDate = Instant.ofEpochMilli(habit.createdAt)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
+                val creationDate = habit.createdAtLocalDate
                 
                 val totalScheduledUntilToday = countScheduledDays(creationDate, today.minusDays(1), habit.selectedDays)
                 val completionsUntilYesterday = completionDates.count { it.isBefore(today) }
                 val habitMissed = (totalScheduledUntilToday - completionsUntilYesterday).coerceAtLeast(0)
 
                 val streakInfo = calculateStreakFromDates(
-                    habit, 
-                    completedDatesMap[habit.id] ?: emptySet(), 
-                    today
+                    habit = habit,
+                    completedEpochs = completionDates.map { it.toEpochDay() }.toSet(),
+                    today = today
                 )
                 
                 Triple(habit, habitDone, habitMissed) to streakInfo
@@ -117,7 +106,7 @@ class GetProfileStatsUseCase @Inject constructor(
                 .take(3)
                 .map { StreakStat(it.first.first.name, it.second.longestStreak, it.first.first.iconCode, it.first.first.accentColorHex) }
 
-            val activeDaysAnalysis = calculateActiveDaysAnalysis(habits, parsedCompletedDatesMap, today)
+            val activeDaysAnalysis = calculateActiveDaysAnalysis(habits, completedDatesMap, today)
 
             ProfileStats(
                 levelInfo = levelInfo,
@@ -167,16 +156,14 @@ class GetProfileStatsUseCase @Inject constructor(
 
     private fun calculateActiveDaysAnalysis(
         habits: List<Habit>,
-        parsedCompletedDatesMap: Map<Int, Set<LocalDate>>,
+        completedDatesMap: Map<Int, Set<LocalDate>>,
         today: LocalDate
     ): ActiveDaysAnalysis {
-        val scheduledCounts = IntArray(7) { 0 }
-        val completedCounts = IntArray(7) { 0 }
+        val scheduledCounts = IntArray(7)
+        val completedCounts = IntArray(7)
         
         habits.forEach { habit ->
-            val startDate = Instant.ofEpochMilli(habit.createdAt)
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
+            val startDate = habit.createdAtLocalDate
             
             for (dayOfWeek in 1..7) {
                 val dayIdx = dayOfWeek - 1
@@ -185,7 +172,7 @@ class GetProfileStatsUseCase @Inject constructor(
                 }
             }
 
-            parsedCompletedDatesMap[habit.id]?.forEach { date ->
+            completedDatesMap[habit.id]?.forEach { date ->
                 if (!date.isAfter(today)) {
                     completedCounts[date.dayOfWeek.value - 1]++
                 }

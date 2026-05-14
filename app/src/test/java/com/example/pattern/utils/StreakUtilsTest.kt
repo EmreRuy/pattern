@@ -23,8 +23,8 @@ class StreakUtilsTest {
             isCompleted = false,
             createdAt = 1704067200000L, // Jan 1st 2024
             accentColorHex = "#77DD77",
-            timerStartTime = null,
-            timerPauseTime = null,
+            accumulatedTimeMs = 0L,
+            activeSessionStartMs = null,
             reminderTime = null,
             motivation = null
         )

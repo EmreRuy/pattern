@@ -41,8 +41,8 @@ class ReminderManager @Inject constructor(
             isCompleted = false,
             createdAt = 0,
             accentColorHex = "",
-            timerStartTime = null,
-            timerPauseTime = null,
+            accumulatedTimeMs = 0L,
+            activeSessionStartMs = null,
             reminderTime = null,
             motivation = null
         )

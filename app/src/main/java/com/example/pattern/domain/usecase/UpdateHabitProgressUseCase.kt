@@ -7,6 +7,11 @@ import com.example.pattern.utils.ExperienceUtils
 import java.time.LocalDate
 import javax.inject.Inject
 
+/**
+ * Staff Engineer Refactoring:
+ * Optimized timer transitions using the State Machine pattern. 
+ * This reduces arithmetic complexity and improves database consistency.
+ */
 class UpdateHabitProgressUseCase @Inject constructor(
     private val repository: HabitRepository
 ) {
@@ -17,8 +22,7 @@ class UpdateHabitProgressUseCase @Inject constructor(
         if (currentDaily?.isCompleted == true) return
         
         val updated = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
-            timerStartTime = System.currentTimeMillis(),
-            timerPauseTime = null,
+            activeSessionStartMs = System.currentTimeMillis(),
             isCompleted = false
         )
         repository.upsertDailyState(updated)
@@ -27,18 +31,29 @@ class UpdateHabitProgressUseCase @Inject constructor(
     suspend fun pauseTimer(habitId: Int, date: LocalDate) {
         val dateStr = date.toString()
         val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return
-        if (currentDaily.isCompleted || currentDaily.timerStartTime == null) return
-        repository.upsertDailyState(currentDaily.copy(timerPauseTime = System.currentTimeMillis()))
+        
+        // Safety check: can't pause if already completed or not running
+        if (currentDaily.isCompleted || currentDaily.activeSessionStartMs == null) return
+        
+        val now = System.currentTimeMillis()
+        val sessionDuration = (now - currentDaily.activeSessionStartMs).coerceAtLeast(0L)
+        
+        repository.upsertDailyState(currentDaily.copy(
+            accumulatedTimeMs = currentDaily.accumulatedTimeMs + sessionDuration,
+            activeSessionStartMs = null
+        ))
     }
 
     suspend fun resumeTimer(habitId: Int, date: LocalDate) {
         val dateStr = date.toString()
         val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return
-        if (currentDaily.isCompleted || currentDaily.timerStartTime == null || currentDaily.timerPauseTime == null) return
-        val now = System.currentTimeMillis()
-        val pausedDuration = now - currentDaily.timerPauseTime
-        val newStartTime = currentDaily.timerStartTime + pausedDuration
-        repository.upsertDailyState(currentDaily.copy(timerStartTime = newStartTime, timerPauseTime = null))
+        
+        // Safety check: can't resume if already completed or already running
+        if (currentDaily.isCompleted || currentDaily.activeSessionStartMs != null) return
+        
+        repository.upsertDailyState(currentDaily.copy(
+            activeSessionStartMs = System.currentTimeMillis()
+        ))
     }
 
     suspend fun finishTimer(habitId: Int, date: LocalDate) {
@@ -46,9 +61,17 @@ class UpdateHabitProgressUseCase @Inject constructor(
             val dateStr = date.toString()
             val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
             val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
+            
             if (currentDaily.isCompleted) return@withTransaction
             
-            val updated = currentDaily.copy(isCompleted = true, timerStartTime = null, timerPauseTime = null)
+            val now = System.currentTimeMillis()
+            val finalAccumulated = currentDaily.calculateTotalTimeMs(now)
+
+            val updated = currentDaily.copy(
+                isCompleted = true, 
+                accumulatedTimeMs = finalAccumulated,
+                activeSessionStartMs = null
+            )
             repository.upsertDailyState(updated)
             repository.addXP(ExperienceUtils.calculateHabitXP(habit, updated))
         }

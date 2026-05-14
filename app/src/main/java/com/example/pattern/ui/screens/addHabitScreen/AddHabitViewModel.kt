@@ -94,8 +94,8 @@ class AddHabitViewModel @Inject constructor(
             motivation = if (state.motivation.isBlank()) null else state.motivation.trim(),
             isCompleted = false,
             createdAt = System.currentTimeMillis(),
-            timerStartTime = null,
-            timerPauseTime = null
+            accumulatedTimeMs = 0L,
+            activeSessionStartMs = null
         )
         viewModelScope.launch {
             try {

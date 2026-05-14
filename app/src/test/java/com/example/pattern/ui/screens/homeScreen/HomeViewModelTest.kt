@@ -69,8 +69,8 @@ class HomeViewModelTest {
                 isCompleted = false,
                 createdAt = System.currentTimeMillis(),
                 accentColorHex = "#77DD77",
-                timerStartTime = null,
-                timerPauseTime = null,
+                accumulatedTimeMs = 0L,
+                activeSessionStartMs = null,
                 reminderTime = null,
                 motivation = null
             )

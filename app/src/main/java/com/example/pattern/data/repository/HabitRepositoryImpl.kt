@@ -13,12 +13,9 @@ import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.Settings
 import com.example.pattern.domain.repository.HabitRepository
-import com.example.pattern.utils.ExperienceUtils
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
+import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +27,22 @@ class HabitRepositoryImpl @Inject constructor(
 ) : HabitRepository {
 
     override fun getAllHabitsStream(): Flow<List<Habit>> {
-        return habitDao.getAllHabits().map { list -> list.map { it.toDomain() } }
+        return habitDao.getAllHabits()
+            .distinctUntilChanged { old, new ->
+                if (old.size != new.size) return@distinctUntilChanged false
+                old.zip(new).all { (o, n) ->
+                    // Structural Equality on Local Entity: Ignore timer ticking fields
+                    o.id == n.id &&
+                    o.name == n.name &&
+                    o.type == n.type &&
+                    o.isCompleted == n.isCompleted &&
+                    o.selectedDays == n.selectedDays &&
+                    o.iconCode == n.iconCode &&
+                    o.accentColorHex == n.accentColorHex &&
+                    o.reminderTime == n.reminderTime
+                }
+            }
+            .map { list -> list.map { it.toDomain() } }
     }
 
     override fun getHabitStream(id: Int): Flow<Habit?> {
@@ -64,15 +76,27 @@ class HabitRepositoryImpl @Inject constructor(
         habitDao.getDailyStatesForHabit(habitId).map { list -> list.map { it.toDomain() } }
 
     override fun getAllDailyStatesStream(): Flow<List<HabitDailyState>> =
-        habitDao.getAllDailyStates().map { list -> list.map { it.toDomain() } }
+        habitDao.getAllDailyStates()
+            .distinctUntilChanged { old, new ->
+                if (old.size != new.size) return@distinctUntilChanged false
+                old.zip(new).all { (o, n) ->
+                    o.habitId == n.habitId && 
+                    o.date == n.date && 
+                    o.isCompleted == n.isCompleted && 
+                    o.isTaskCompleted == n.isTaskCompleted &&
+                    o.activeSessionStartMs == n.activeSessionStartMs
+                }
+            }
+            .map { list -> list.map { it.toDomain() } }
 
     override fun getDailyStatesFromDateStream(startDate: String): Flow<List<HabitDailyState>> =
         habitDao.getDailyStatesFromDate(startDate).map { list -> list.map { it.toDomain() } }
 
-    override fun getCompletedDatesStream(): Flow<Map<Int, Set<String>>> {
+    override fun getCompletedDatesStream(): Flow<Map<Int, Set<LocalDate>>> {
         return habitDao.getAllCompletedDates()
+            .distinctUntilChanged()
             .map { list ->
-                list.groupBy({ it.habitId }, { it.date })
+                list.groupBy({ it.habitId }, { LocalDate.parse(it.date) })
                     .mapValues { it.value.toSet() }
             }
             .flowOn(Dispatchers.Default)

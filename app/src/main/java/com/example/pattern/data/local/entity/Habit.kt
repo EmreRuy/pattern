@@ -1,23 +1,49 @@
 package com.example.pattern.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/**
+ * Staff Engineer Refactoring:
+ * Refactored 'Habit' to use consistent timer state management.
+ */
 @Entity(tableName = "habits")
 data class Habit(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    
     val name: String,
+    
     val type: HabitType,
+    
+    @ColumnInfo(name = "duration_in_minutes")
     val durationInMinutes: Int?,
+    
+    @ColumnInfo(name = "selected_days")
     val selectedDays: List<Boolean>,
+    
+    @ColumnInfo(name = "icon_code")
     val iconCode: String,
+    
+    @ColumnInfo(name = "is_completed")
     val isCompleted: Boolean = false,
+    
+    @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
+    
+    @ColumnInfo(name = "accent_color_hex")
     val accentColorHex: String = "#77DD77",
-    val timerStartTime: Long? = null,
-    val timerPauseTime: Long? = null,
+
+    @ColumnInfo(name = "accumulated_time_ms")
+    val accumulatedTimeMs: Long = 0L,
+
+    @ColumnInfo(name = "active_session_start_ms")
+    val activeSessionStartMs: Long? = null,
+
+    @ColumnInfo(name = "reminder_time")
     val reminderTime: String? = null, // Stores in "HH:mm" format
+    
     val motivation: String? = null
 )
 

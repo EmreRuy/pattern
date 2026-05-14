@@ -12,6 +12,11 @@ import com.example.pattern.data.local.entity.HabitCompletionDate
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Staff Engineer Refactoring:
+ * Updated DAO queries to align with the snake_case schema naming conventions
+ * and the new timer state machine fields.
+ */
 @Dao
 interface HabitDao {
 
@@ -23,6 +28,7 @@ interface HabitDao {
 
     @Delete
     suspend fun deleteHabit(habit: Habit)
+
     @Query("DELETE FROM habits WHERE id = :habitId")
     suspend fun deleteHabitById(habitId: Int)
 
@@ -36,7 +42,7 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :id")
     suspend fun getHabitOnce(id: Int): Habit?
 
-    @Query("SELECT * FROM habits ORDER BY createdAt DESC")
+    @Query("SELECT * FROM habits ORDER BY created_at DESC")
     fun getAllHabits(): Flow<List<Habit>>
 
     // Daily State
@@ -46,7 +52,7 @@ interface HabitDao {
 
     @Query("""
         SELECT * FROM habit_daily_state
-        WHERE habitId = :habitId AND date = :date
+        WHERE habit_id = :habitId AND date = :date
         LIMIT 1
     """)
     suspend fun getDailyStateOnce(
@@ -64,7 +70,7 @@ interface HabitDao {
 
     @Query("""
         SELECT * FROM habit_daily_state
-        WHERE habitId = :habitId
+        WHERE habit_id = :habitId
         ORDER BY date DESC
     """)
     fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>>
@@ -74,13 +80,13 @@ interface HabitDao {
 
     @Query("""
         SELECT date FROM habit_daily_state
-        WHERE habitId = :habitId AND (isCompleted = 1 OR isTaskCompleted = 1)
+        WHERE habit_id = :habitId AND (is_completed = 1 OR is_task_completed = 1)
     """)
     fun getCompletedDatesForHabit(habitId: Int): Flow<List<String>>
 
     @Query("""
-        SELECT habitId, date FROM habit_daily_state
-        WHERE isCompleted = 1 OR isTaskCompleted = 1
+        SELECT habit_id AS habitId, date FROM habit_daily_state
+        WHERE is_completed = 1 OR is_task_completed = 1
     """)
     fun getAllCompletedDates(): Flow<List<HabitCompletionDate>>
 
@@ -92,19 +98,19 @@ interface HabitDao {
             CASE 
                 WHEN h.type = 'TASK' THEN 15
                 WHEN h.type = 'QUIT' THEN 20
-                WHEN h.type = 'BUILD' THEN 10 + (IFNULL(h.durationInMinutes, 0) / 15) * 5
+                WHEN h.type = 'BUILD' THEN 10 + (IFNULL(h.duration_in_minutes, 0) / 15) * 5
                 ELSE 0
             END
         )
         FROM habit_daily_state ds
-        JOIN habits h ON ds.habitId = h.id
-        WHERE ds.isCompleted = 1 OR ds.isTaskCompleted = 1
+        JOIN habits h ON ds.habit_id = h.id
+        WHERE ds.is_completed = 1 OR ds.is_task_completed = 1
     """)
     fun getTotalXP(): Flow<Int?>
 
     @Query("""
         SELECT * FROM habit_daily_state
-        WHERE habitId = :habitId
+        WHERE habit_id = :habitId
         ORDER BY date DESC
     """)
     suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState>
@@ -112,8 +118,8 @@ interface HabitDao {
     // Task Completion
     @Query("""
         UPDATE habit_daily_state
-        SET isTaskCompleted = :completed
-        WHERE habitId = :habitId AND date = :date
+        SET is_task_completed = :completed
+        WHERE habit_id = :habitId AND date = :date
     """)
     suspend fun setTaskCompleted(
         habitId: Int,

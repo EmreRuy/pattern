@@ -11,6 +11,12 @@ import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.model.Settings
 
+/**
+ * Staff Engineer Note:
+ * This mapping layer is crucial for maintaining separation of concerns. 
+ * Updated to support the new (Accumulated + ActiveStart) timer state machine.
+ */
+
 fun LocalHabitType.toDomain(): HabitType = when (this) {
     LocalHabitType.BUILD -> HabitType.BUILD
     LocalHabitType.QUIT -> HabitType.QUIT
@@ -33,8 +39,8 @@ fun LocalHabit.toDomain(): Habit = Habit(
     isCompleted = isCompleted,
     createdAt = createdAt,
     accentColorHex = accentColorHex,
-    timerStartTime = timerStartTime,
-    timerPauseTime = timerPauseTime,
+    accumulatedTimeMs = accumulatedTimeMs,
+    activeSessionStartMs = activeSessionStartMs,
     reminderTime = reminderTime,
     motivation = motivation
 )
@@ -49,8 +55,8 @@ fun Habit.toLocal(): LocalHabit = LocalHabit(
     isCompleted = isCompleted,
     createdAt = createdAt,
     accentColorHex = accentColorHex,
-    timerStartTime = timerStartTime,
-    timerPauseTime = timerPauseTime,
+    accumulatedTimeMs = accumulatedTimeMs,
+    activeSessionStartMs = activeSessionStartMs,
     reminderTime = reminderTime,
     motivation = motivation
 )
@@ -58,8 +64,8 @@ fun Habit.toLocal(): LocalHabit = LocalHabit(
 fun LocalDailyState.toDomain(): HabitDailyState = HabitDailyState(
     habitId = habitId,
     date = date,
-    timerStartTime = timerStartTime,
-    timerPauseTime = timerPauseTime,
+    accumulatedTimeMs = accumulatedTimeMs,
+    activeSessionStartMs = activeSessionStartMs,
     isCompleted = isCompleted,
     isTaskCompleted = isTaskCompleted
 )
@@ -67,8 +73,8 @@ fun LocalDailyState.toDomain(): HabitDailyState = HabitDailyState(
 fun HabitDailyState.toLocal(): LocalDailyState = LocalDailyState(
     habitId = habitId,
     date = date,
-    timerStartTime = timerStartTime,
-    timerPauseTime = timerPauseTime,
+    accumulatedTimeMs = accumulatedTimeMs,
+    activeSessionStartMs = activeSessionStartMs,
     isCompleted = isCompleted,
     isTaskCompleted = isTaskCompleted
 )
