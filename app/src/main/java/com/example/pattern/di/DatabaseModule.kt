@@ -24,12 +24,12 @@ object DatabaseModule {
         @ApplicationContext context: Context
     ): HabitDatabase {
         return Room.databaseBuilder(
-            context.applicationContext,
-            HabitDatabase::class.java,
-            "habit_database"
-        )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-            // .fallbackToDestructiveMigration() // Staff Note: Destructive migrations are prohibited in Tier-1 production environments to prevent data loss.
+                context.applicationContext,
+                HabitDatabase::class.java,
+                "habit_database"
+            )
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .fallbackToDestructiveMigration(false) // Staff Note: Destructive migrations are prohibited in Tier-1 production environments to prevent data loss.
             .build()
     }
 
