@@ -57,6 +57,8 @@ android {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    // Suppress ByteBuddy dynamic agent loading warning for JDK 21+
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
 }
 
 dependencies {

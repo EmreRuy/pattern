@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
+import com.example.pattern.di.DefaultDispatcher
 import com.example.pattern.ui.mapper.toCardModel
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateCurrentStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -29,7 +31,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val habitRepository: HabitRepository,
-    private val updateHabitProgressUseCase: UpdateHabitProgressUseCase
+    private val updateHabitProgressUseCase: UpdateHabitProgressUseCase,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -98,7 +101,7 @@ class HomeViewModel @Inject constructor(
     }.combine(levelInfoFlow) { success, level ->
         success.copy(levelInfo = level)
     }
-    .flowOn(Dispatchers.Default)
+    .flowOn(defaultDispatcher)
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
