@@ -117,6 +117,8 @@ dependencies {
     implementation(libs.google.play.review)
 
     // WorkManager & Hilt Integration (Notifications)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.datastore.preferences)
 
     ksp(libs.androidx.hilt.compiler)

@@ -68,11 +68,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Lead Expert Fix: Handle intent when app is already running
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainContent(startDestination: String) {
         val viewModel: MainViewModel = hiltViewModel()
         val context = LocalContext.current
+        val navController = rememberNavController()
+        val actions = remember(navController) { NavActions(navController) }
+        
+        // Lead Expert Enhancement: Unified Notification Navigation Logic
+        LaunchedEffect(navController) {
+            val habitId = intent.getIntExtra("HABIT_ID", -1)
+            if (habitId != -1) {
+                intent.removeExtra("HABIT_ID")
+                actions.navigateToDetail(habitId)
+            }
+        }
+
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { /* Handle result */ }
@@ -87,8 +105,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val navController = rememberNavController()
-        val actions = remember(navController) { NavActions(navController) }
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
 

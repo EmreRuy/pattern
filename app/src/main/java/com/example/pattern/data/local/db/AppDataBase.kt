@@ -28,7 +28,6 @@ abstract class AppDataBase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
 
     /**
-     * Staff Engineer Note: 
      * We use RenameColumn to safely migrate the camelCase columns to snake_case 
      * without losing any user settings or XP data.
      */

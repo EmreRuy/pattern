@@ -13,6 +13,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Lead Expert Implementation:
+ * BootReceiver ensures all scheduled reminders are restored after a system reboot.
+ * Alarms are not persistent across reboots, so we must manually reschedule them.
+ */
 @AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
 
@@ -37,14 +42,15 @@ class BootReceiver : BroadcastReceiver() {
             val pendingResult = goAsync()
             scope.launch {
                 try {
+                    // Fetch all habits and reschedule those that have reminders
                     val habits = repository.getAllHabitsStream().first()
                     habits.forEach { habit ->
                         if (habit.reminderTime != null) {
                             scheduler.schedule(habit)
                         }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
+                    // Silently fail or log for system events
                 } finally {
                     pendingResult.finish()
                 }

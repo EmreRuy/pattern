@@ -4,31 +4,45 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.example.pattern.data.receiver.AlarmReceiver
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.scheduler.ReminderScheduler
+import com.example.pattern.utils.ReminderUtils
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 class AndroidReminderScheduler(
     private val context: Context
 ) : ReminderScheduler {
 
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
+    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     override fun schedule(habit: Habit) {
-        val reminderTime = habit.reminderTime ?: return
-        val localTime = try {
-            LocalTime.parse(reminderTime)
+        val reminderTimeStr = habit.reminderTime ?: return
+        
+        // 1. Parse Time
+        val reminderTime = try {
+            LocalTime.parse(reminderTimeStr, timeFormatter)
         } catch (e: Exception) {
             return
         }
 
-        val nextTrigger = calculateNextTrigger(localTime, habit.selectedDays) ?: return
+        // 2. Calculate Next Trigger
+        val nextTrigger = ReminderUtils.calculateNextTrigger(
+            reminderTime, 
+            habit.selectedDays,
+            ZonedDateTime.now(ZoneId.systemDefault())
+        ) ?: return
+        val triggerAtMillis = nextTrigger.toInstant().toEpochMilli()
 
+        // 3. Create Intent
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("HABIT_ID", habit.id)
+            action = "com.example.pattern.ACTION_REMINDER"
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -38,28 +52,33 @@ class AndroidReminderScheduler(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // setExactAndAllowWhileIdle ensures the alarm fires even in Doze mode.
-        // Battery trade-off: Frequent exact alarms can drain battery, but for a habit tracker,
-        // precision (reminding at the exact time) is often preferred by users.
-        try {
+        // 4. Check Permission for Exact Alarm (Android 12+)
+        val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
+        // 5. Schedule
+        if (canScheduleExact) {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                nextTrigger.toInstant().toEpochMilli(),
+                triggerAtMillis,
                 pendingIntent
             )
-        } catch (e: SecurityException) {
-            // On Android 12+, we might need SCHEDULE_EXACT_ALARM permission.
-            // For simplicity in this implementation, we fallback to setAndAllowWhileIdle if it fails.
+        } else {
             alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                nextTrigger.toInstant().toEpochMilli(),
+                triggerAtMillis,
                 pendingIntent
             )
         }
     }
 
     override fun cancel(habit: Habit) {
-        val intent = Intent(context, AlarmReceiver::class.java)
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = "com.example.pattern.ACTION_REMINDER"
+        }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             habit.id,
@@ -67,29 +86,5 @@ class AndroidReminderScheduler(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         alarmManager.cancel(pendingIntent)
-    }
-
-    private fun calculateNextTrigger(time: LocalTime, selectedDays: List<Boolean>): ZonedDateTime? {
-        if (selectedDays.isEmpty() || !selectedDays.contains(true)) return null
-
-        val now = ZonedDateTime.now(ZoneId.systemDefault())
-        var triggerDateTime = now.with(time)
-
-        val todayIndex = now.dayOfWeek.value - 1 // 1 (Mon) -> 0, ..., 7 (Sun) -> 6
-
-        // Check if today is a selected day and the time hasn't passed yet
-        if (selectedDays[todayIndex] && triggerDateTime.isAfter(now)) {
-            return triggerDateTime
-        }
-
-        // Search for the next selected day in the coming week
-        for (i in 1..7) {
-            val nextDayIndex = (todayIndex + i) % 7
-            if (selectedDays[nextDayIndex]) {
-                return triggerDateTime.plusDays(i.toLong())
-            }
-        }
-
-        return null
     }
 }
