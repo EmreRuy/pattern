@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.dao.SettingsDao
-import com.example.pattern.data.local.db.HabitDatabase
+import com.example.pattern.data.local.db.AppDataBase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,26 +20,25 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context
-    ): HabitDatabase {
+    ): AppDataBase {
         return Room.databaseBuilder(
             context.applicationContext,
-            HabitDatabase::class.java,
+            AppDataBase::class.java,
             "habit_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-            .fallbackToDestructiveMigration(false)
+            .fallbackToDestructiveMigration(false) // Safety: Never lose user data in prod
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideHabitDao(database: HabitDatabase): HabitDao {
+    fun provideHabitDao(database: AppDataBase): HabitDao {
         return database.habitDao()
     }
 
     @Provides
     @Singleton
-    fun provideSettingsDao(db: HabitDatabase): SettingsDao {
+    fun provideSettingsDao(db: AppDataBase): SettingsDao {
         return db.settingsDao()
     }
 }

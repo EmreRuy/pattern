@@ -21,6 +21,11 @@ android {
         testInstrumentationRunner = "com.example.pattern.runner.HiltTestRunner"
     }
 
+    // Configure Room schema location
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

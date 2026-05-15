@@ -11,10 +11,13 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "habits")
 data class Habit(
     @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
     val id: Int = 0,
     
+    @ColumnInfo(name = "name")
     val name: String,
     
+    @ColumnInfo(name = "type")
     val type: HabitType,
     
     @ColumnInfo(name = "duration_in_minutes")
@@ -44,6 +47,7 @@ data class Habit(
     @ColumnInfo(name = "reminder_time")
     val reminderTime: String? = null, // Stores in "HH:mm" format
     
+    @ColumnInfo(name = "motivation")
     val motivation: String? = null
 )
 

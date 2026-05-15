@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.dao.SettingsDao
-import com.example.pattern.data.local.db.HabitDatabase
+import com.example.pattern.data.local.db.AppDataBase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
@@ -21,20 +21,20 @@ object TestDatabaseModule {
 
     @Provides
     @Singleton
-    fun provideInMemoryDatabase(@ApplicationContext context: Context): HabitDatabase {
+    fun provideInMemoryDatabase(@ApplicationContext context: Context): AppDataBase {
         return Room.inMemoryDatabaseBuilder(
             context,
-            HabitDatabase::class.java
+            AppDataBase::class.java
         ).allowMainThreadQueries().build()
     }
 
     @Provides
-    fun provideHabitDao(database: HabitDatabase): HabitDao {
+    fun provideHabitDao(database: AppDataBase): HabitDao {
         return database.habitDao()
     }
 
     @Provides
-    fun provideSettingsDao(database: HabitDatabase): SettingsDao {
+    fun provideSettingsDao(database: AppDataBase): SettingsDao {
         return database.settingsDao()
     }
 }

@@ -12,13 +12,12 @@ import com.example.pattern.data.local.entity.SettingsEntity
 
 @Database(
     entities = [Habit::class, HabitDailyState::class, SettingsEntity::class],
-    version = 15,
-    exportSchema = false
+    version = 1,
+    exportSchema = true,
 )
-@TypeConverters(Converters::class) // Tell Room to use my custom Type Converters
-abstract class HabitDatabase : RoomDatabase() {
+@TypeConverters(Converters::class)
+abstract class AppDataBase : RoomDatabase() {
 
-    // Define the DAOs that belong to this database
     abstract fun habitDao(): HabitDao
     abstract fun settingsDao(): SettingsDao
 }

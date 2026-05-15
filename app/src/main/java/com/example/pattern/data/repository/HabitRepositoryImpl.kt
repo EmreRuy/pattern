@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.room.withTransaction
 import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.dao.SettingsDao
-import com.example.pattern.data.local.db.HabitDatabase
+import com.example.pattern.data.local.db.AppDataBase
 import com.example.pattern.data.local.entity.SettingsEntity
 import com.example.pattern.data.mapper.toDomain
 import com.example.pattern.data.mapper.toLocal
@@ -21,7 +21,7 @@ import javax.inject.Singleton
 
 @Singleton
 class HabitRepositoryImpl @Inject constructor(
-    private val database: HabitDatabase,
+    private val database: AppDataBase,
     private val habitDao: HabitDao,
     private val settingsDao: SettingsDao
 ) : HabitRepository {
