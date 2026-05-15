@@ -32,6 +32,7 @@ data class HabitDailyState(
     val habitId: Int,
 
     /** ISO-8601 date string (e.g., "2025-11-19") */
+    @ColumnInfo(name = "date")
     val date: String,
 
     /** The sum of all completed timer sessions for this day in milliseconds. */
