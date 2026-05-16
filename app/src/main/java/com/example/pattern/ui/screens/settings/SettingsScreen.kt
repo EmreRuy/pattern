@@ -272,9 +272,14 @@ fun PatternTimePickerDialog(
                     colors = TimePickerDefaults.colors(
                         clockDialColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         selectorColor = MossGreen,
-                        periodSelectorSelectedContainerColor = MossGreen.copy(alpha = 0.2f),
-                        timeSelectorSelectedContainerColor = MossGreen.copy(alpha = 0.15f),
-                        timeSelectorSelectedContentColor = MossGreen
+                        timeSelectorSelectedContainerColor = Color.Transparent,
+                        timeSelectorUnselectedContainerColor = Color.Transparent,
+                        timeSelectorSelectedContentColor = MossGreen,
+                        timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                        periodSelectorSelectedContainerColor = Color.Transparent,
+                        periodSelectorUnselectedContainerColor = Color.Transparent,
+                        periodSelectorSelectedContentColor = MossGreen,
+                        periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
 
@@ -283,7 +288,8 @@ fun PatternTimePickerDialog(
                 // Action Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
                         Text(
@@ -291,8 +297,6 @@ fun PatternTimePickerDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
 
                     Button(
                         onClick = {

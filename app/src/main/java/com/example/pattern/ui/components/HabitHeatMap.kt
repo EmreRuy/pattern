@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -92,7 +91,7 @@ fun HabitHeatMap(
         ) {
             // Container for month labels with internal padding to match grid scroll
             Box(
-                modifier = Modifier.padding(end = 24.dp) 
+                modifier = Modifier.padding(end = 24.dp)
             ) {
                 val monthLabels = remember(startDate) {
                     (0 until weeksToShow).mapNotNull { w ->
@@ -120,7 +119,7 @@ fun HabitHeatMap(
             Spacer(Modifier.height(12.dp))
 
             Row(
-                modifier = Modifier.padding(end = 24.dp), // Extra trailing space for "Today"
+                modifier = Modifier.padding(end = 12.dp), // Extra trailing space for "Today"
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 gridData.forEach { weekColors ->
