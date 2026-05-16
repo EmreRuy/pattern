@@ -63,12 +63,12 @@ fun HabitHeatMap(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(14.dp)
+            .padding(horizontal = 24.dp) // Symmetric padding ensures space on both sides of the card
     ) {
         Column(
             modifier = Modifier
-                .padding(top = 24.dp)
-                .height(110.dp),
+                .padding(top = 26.dp)
+                .height(108.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             listOf("M", "W", "F", "S").forEach { day ->
@@ -76,21 +76,24 @@ fun HabitHeatMap(
                     text = day,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Black
                     ),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                 )
             }
         }
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(16.dp))
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .horizontalScroll(scrollState)
         ) {
-            Box(modifier = Modifier.fillMaxWidth()) {
+            // Container for month labels with internal padding to match grid scroll
+            Box(
+                modifier = Modifier.padding(end = 24.dp) 
+            ) {
                 val monthLabels = remember(startDate) {
                     (0 until weeksToShow).mapNotNull { w ->
                         val weekStartDate = startDate.plusWeeks(w.toLong())
@@ -104,7 +107,7 @@ fun HabitHeatMap(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
                             fontSize = 10.sp,
                             letterSpacing = 0.5.sp
                         ),
@@ -114,9 +117,12 @@ fun HabitHeatMap(
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                modifier = Modifier.padding(end = 24.dp), // Extra trailing space for "Today"
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 gridData.forEach { weekColors ->
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
