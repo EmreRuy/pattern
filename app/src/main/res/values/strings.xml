@@ -108,4 +108,10 @@
     <string name="onboarding_btn_next">Level Up</string>
     <string name="onboarding_btn_start">Begin Transformation</string>
     <string name="onboarding_btn_skip">Skip</string>
+
+    <!-- Permissions -->
+    <string name="permission_notification_title">Enable Reminders</string>
+    <string name="permission_notification_description">To help you stay consistent, please enable notification access in system settings.</string>
+    <string name="permission_notification_allow">Allow Reminders</string>
+    <string name="permission_notification_later">Maybe Later</string>
 </resources>

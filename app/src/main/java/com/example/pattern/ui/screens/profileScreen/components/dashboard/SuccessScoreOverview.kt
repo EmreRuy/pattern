@@ -59,7 +59,7 @@ fun SuccessScoreOverview(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp),
+                .height(150.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             SuccessInstrumentGauge(
@@ -69,7 +69,7 @@ fun SuccessScoreOverview(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             ) {
                 Text(
                     text = "${(percentage * 100).toInt()}%",

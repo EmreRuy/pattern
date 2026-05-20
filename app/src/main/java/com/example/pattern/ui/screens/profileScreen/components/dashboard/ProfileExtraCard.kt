@@ -44,7 +44,7 @@ fun ProfileExtraCard(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp),
+                    .height(280.dp),
                 verticalAlignment = Alignment.Top
             ) { page ->
                 when (page) {

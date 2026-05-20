@@ -30,7 +30,7 @@ fun TopHabitsList(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(260.dp)
+            .fillMaxHeight()
             .padding(horizontal = 24.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.Start
     ) {

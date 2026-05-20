@@ -17,7 +17,8 @@ data class AddHabitUiState(
     val selectedColor: String = "",
     val reminderEnabled: Boolean = false,
     val reminderTime: String = "09:00",
-    val showTimePicker: Boolean = false
+    val showTimePicker: Boolean = false,
+    val showPermissionDialog: Boolean = false
 ) {
     val isNameValid: Boolean get() = habitName.isNotBlank()
     val isColorValid: Boolean get() = selectedColor.isNotBlank()
@@ -28,7 +29,7 @@ data class AddHabitUiState(
     
     val screenTitle: String
         get() = when (currentStep) {
-            AddHabitStep.Main -> "NEW PATTERN"
+            AddHabitStep.Main -> "NEW HABIT"
             AddHabitStep.Category -> "CATEGORY"
             AddHabitStep.Color -> "SELECT COLOR"
             AddHabitStep.Emoji -> "CHOOSE ICON"

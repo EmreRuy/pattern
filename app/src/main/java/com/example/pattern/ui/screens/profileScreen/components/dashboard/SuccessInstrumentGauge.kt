@@ -24,7 +24,7 @@ fun SuccessInstrumentGauge(
     percentage: Float,
     modifier: Modifier = Modifier,
     primaryColor: Color = Color(0xFF588157),
-    animDuration: Int = 1800,
+    animDuration: Int = 2000,
 ) {
     var animationTarget by remember { mutableFloatStateOf(0f) }
     val curPercentage = animateFloatAsState(
@@ -39,11 +39,11 @@ fun SuccessInstrumentGauge(
     val tickCount = 20
     Canvas(
         modifier = modifier
-            .fillMaxWidth(0.85f)
-            .height(120.dp)
+            .fillMaxWidth()
+            .height(140.dp)
     ) {
-        val strokeWidthPx = 10.dp.toPx()
-        val tickPaddingPx = 10.dp.toPx()
+        val strokeWidthPx = 11.dp.toPx()
+        val tickPaddingPx = 11.dp.toPx()
         
         val radius = min(size.width / 2f, size.height) - (strokeWidthPx / 2f)
         val center = Offset(size.width / 2f, size.height - (strokeWidthPx / 2f))
@@ -68,7 +68,7 @@ fun SuccessInstrumentGauge(
         for (i in 0..tickCount) {
             val angleDeg = 180f + (i * (180f / tickCount))
             val isMainTick = i % 5 == 0
-            val currentTickHeight = if (isMainTick) 8.dp.toPx() else 4.dp.toPx()
+            val currentTickHeight = if (isMainTick) 10.dp.toPx() else 6.dp.toPx()
             
             val tickColor = if (angleDeg - 180f <= curPercentage.value * 180f + 0.1f)
                 primaryColor.copy(alpha = 0.5f)
@@ -122,7 +122,7 @@ fun SuccessInstrumentGauge(
             
             drawCircle(
                 color = Color.White,
-                radius = 2.5.dp.toPx(),
+                radius = 3.dp.toPx(),
                 center = Offset(tipX, tipY)
             )
         }

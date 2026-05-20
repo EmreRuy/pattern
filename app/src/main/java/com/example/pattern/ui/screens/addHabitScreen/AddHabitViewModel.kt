@@ -68,6 +68,10 @@ class AddHabitViewModel @Inject constructor(
         _uiState.update { it.copy(showTimePicker = show) }
     }
 
+    fun onShowPermissionDialogChange(show: Boolean) {
+        _uiState.update { it.copy(showPermissionDialog = show) }
+    }
+
     fun saveNewHabit(onSuccess: () -> Unit) {
         val state = _uiState.value
         if (!state.isValid) return
