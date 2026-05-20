@@ -10,12 +10,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +29,6 @@ import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,21 +40,18 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.R
 import com.example.pattern.ui.components.DebouncedIconButton
-import com.example.pattern.ui.screens.settings.SettingsViewModel
+import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
+import com.example.pattern.ui.theme.MossGreen
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils
@@ -227,99 +221,6 @@ fun SettingsContent(
         )
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PatternTimePickerDialog(
-    initialTime: String,
-    onTimeSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val parts = initialTime.split(":")
-    val timePickerState = rememberTimePickerState(
-        initialHour = parts.getOrNull(0)?.toInt() ?: 22,
-        initialMinute = parts.getOrNull(1)?.toInt() ?: 0,
-        is24Hour = true
-    )
-
-    val haptic = LocalHapticFeedback.current
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            modifier = Modifier
-                .padding(24.dp)
-                .wrapContentSize()
-                .clip(RoundedCornerShape(32.dp)),
-            color = MaterialTheme.colorScheme.surfaceContainerLowest,
-            tonalElevation = 6.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Header
-                Text(
-                    text = stringResource(R.string.settings_select_time),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 20.dp)
-                )
-                // The Picker
-                TimePicker(
-                    state = timePickerState,
-                    colors = TimePickerDefaults.colors(
-                        clockDialColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        selectorColor = MossGreen,
-                        timeSelectorSelectedContainerColor = Color.Transparent,
-                        timeSelectorUnselectedContainerColor = Color.Transparent,
-                        timeSelectorSelectedContentColor = MossGreen,
-                        timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                        periodSelectorSelectedContainerColor = Color.Transparent,
-                        periodSelectorUnselectedContainerColor = Color.Transparent,
-                        periodSelectorSelectedContentColor = MossGreen,
-                        periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Action Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            stringResource(R.string.cancel),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            // Import java.util.Locale
-                            val formatted = String.format(
-                                java.util.Locale.ROOT,
-                                "%02d:%02d",
-                                timePickerState.hour,
-                                timePickerState.minute
-                            )
-                            onTimeSelected(formatted)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MossGreen),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text(stringResource(R.string.confirm), color = Color.White)
-                    }
-                }
-            }
-        }
-    }
-}
 @Composable
 fun SettingsSection(
     title: String,
@@ -337,7 +238,6 @@ fun SettingsSection(
         }
     }
 }
-val MossGreen = Color(0xFF3E5C47)
 @Composable
 fun SettingsNavigationItem(
     icon: ImageVector,
