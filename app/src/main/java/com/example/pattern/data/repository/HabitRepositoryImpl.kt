@@ -125,12 +125,14 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
         try {
-            // Ensure daily state exists before updating
-            val existing = habitDao.getDailyStateOnce(habitId, date)
-            if (existing == null) {
-                habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
+            database.withTransaction {
+                // Ensure daily state exists before updating
+                val existing = habitDao.getDailyStateOnce(habitId, date)
+                if (existing == null) {
+                    habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
+                }
+                habitDao.setTaskCompleted(habitId, date, completed)
             }
-            habitDao.setTaskCompleted(habitId, date, completed)
         } catch (e: Exception) {
             if (e is SQLiteConstraintException || e.message?.contains("FOREIGN KEY") == true) {
                 Log.w("HabitRepository", "Foreign key violation in setTaskCompleted for habit $habitId: likely deleted.")
@@ -142,11 +144,13 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun incrementTaskCount(habitId: Int, date: String) {
         try {
-            val existing = habitDao.getDailyStateOnce(habitId, date)
-            if (existing == null) {
-                habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
+            database.withTransaction {
+                val existing = habitDao.getDailyStateOnce(habitId, date)
+                if (existing == null) {
+                    habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
+                }
+                habitDao.incrementTaskCount(habitId, date)
             }
-            habitDao.incrementTaskCount(habitId, date)
         } catch (e: Exception) {
             Log.e("HabitRepository", "Error in incrementTaskCount for habit $habitId", e)
         }
@@ -160,21 +164,25 @@ class HabitRepositoryImpl @Inject constructor(
     override suspend fun getSettingsOnce(): Settings? = settingsDao.getSettingsOnce()?.toDomain()
 
     override suspend fun updateQuietHours(enabled: Boolean, start: String, end: String) {
-        val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
-        settingsDao.upsertSettings(
-            current.copy(
-                quietHoursEnabled = enabled,
-                startTime = start,
-                endTime = end
+        database.withTransaction {
+            val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
+            settingsDao.upsertSettings(
+                current.copy(
+                    quietHoursEnabled = enabled,
+                    startTime = start,
+                    endTime = end
+                )
             )
-        )
+        }
     }
 
     override suspend fun addXP(xpToAdd: Int) {
-        val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
-        settingsDao.upsertSettings(
-            current.copy(totalXP = current.totalXP + xpToAdd)
-        )
+        database.withTransaction {
+            val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
+            settingsDao.upsertSettings(
+                current.copy(totalXP = current.totalXP + xpToAdd)
+            )
+        }
     }
 
     override suspend fun <R> withTransaction(block: suspend () -> R): R {

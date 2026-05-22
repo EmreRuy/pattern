@@ -2,10 +2,7 @@ package com.example.pattern.ui.screens.addHabitScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.domain.model.Habit
-import com.example.pattern.domain.model.HabitType
-import com.example.pattern.domain.repository.HabitRepository
-import com.example.pattern.notifications.ReminderManager
+import com.example.pattern.domain.usecase.CreateHabitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddHabitViewModel @Inject constructor(
-    private val repository: HabitRepository,
-    private val reminderManager: ReminderManager
+    private val createHabitUseCase: CreateHabitUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddHabitUiState())
@@ -81,40 +77,21 @@ class AddHabitViewModel @Inject constructor(
         val state = _uiState.value
         if (!state.isValid) return
 
-        val totalDurationInMinutes = if (state.habitType == "Grow") {
-            (state.durationHours * 60) + state.durationMinutes
-        } else {
-            null
-        }
-
-        val taskCount = if (state.habitType == "Task") {
-            state.taskCount
-        } else {
-            null
-        }
-
-        val newHabit = Habit(
-            id = 0,
-            name = state.habitName.trim(),
-            type = when (state.habitType) {
-                "Grow" -> HabitType.BUILD
-                "Drop" -> HabitType.QUIT
-                else -> HabitType.TASK
-            },
-            iconCode = state.emoji,
-            durationInMinutes = totalDurationInMinutes,
-            taskCount = taskCount,
-            selectedDays = DayOfWeek.entries.map { state.buildHabitDays.contains(it) }.toImmutableList(),
-            accentColorHex = state.selectedColor,
-            reminderTime = if (state.reminderEnabled) state.reminderTime else null,
-            motivation = if (state.motivation.isBlank()) null else state.motivation.trim(),
-            isCompleted = false,
-            createdAt = System.currentTimeMillis()
-        )
         viewModelScope.launch {
             try {
-                val id = repository.upsertHabit(newHabit)
-                reminderManager.scheduleReminder(newHabit.copy(id = id.toInt()))
+                createHabitUseCase.execute(
+                    name = state.habitName,
+                    type = state.habitType,
+                    emoji = state.emoji,
+                    motivation = state.motivation,
+                    selectedDays = state.buildHabitDays,
+                    durationHours = state.durationHours,
+                    durationMinutes = state.durationMinutes,
+                    taskCount = state.taskCount,
+                    color = state.selectedColor,
+                    reminderEnabled = state.reminderEnabled,
+                    reminderTime = state.reminderTime
+                )
                 onSuccess()
             } catch (e: Exception) {
                 // Handle error
