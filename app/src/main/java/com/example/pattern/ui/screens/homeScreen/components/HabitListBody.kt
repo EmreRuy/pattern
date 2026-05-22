@@ -74,7 +74,15 @@ fun HabitListItem(
     onHabitClick: (Int) -> Unit
 ) {
     val accentColor = remember(habit.accentColorHex) {
-        Color(habit.accentColorHex.toColorInt())
+        if (habit.accentColorHex.isBlank()) {
+            Color(0xFF6366F1)
+        } else {
+            try {
+                Color(habit.accentColorHex.toColorInt())
+            } catch (_: Exception) {
+                Color(0xFF6366F1)
+            }
+        }
     }
     
     val containerColor = if (isSystemInDarkTheme()) {
@@ -93,15 +101,16 @@ fun HabitListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Vertical Accent Indicator
+        val gradientBrush = remember(accentColor) {
+            Brush.verticalGradient(
+                colors = listOf(accentColor, accentColor.copy(alpha = 0.5f))
+            )
+        }
         Box(
             modifier = Modifier
                 .size(width = 4.dp, height = 36.dp)
                 .clip(CircleShape)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(accentColor, accentColor.copy(alpha = 0.5f))
-                    )
-                )
+                .background(brush = gradientBrush)
         )
 
         Spacer(modifier = Modifier.width(16.dp))

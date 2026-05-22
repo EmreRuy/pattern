@@ -12,6 +12,22 @@ object ExperienceUtils {
     private const val XP_BUILD_BASE = 10
     private const val XP_BUILD_PER_15_MINS = 5
 
+    private val THRESHOLDS = listOf(0, 100, 300, 700, 1500, 3100, 6300, 12700, 25500, 51100, 102300, 204700)
+    private val TITLES = listOf(
+        "Novice",        // Level 1
+        "Beginner",      // Level 2
+        "Apprentice",    // Level 3
+        "Learner",       // Level 4
+        "Practitioner",  // Level 5
+        "Consistent",    // Level 6
+        "Skilled",       // Level 7
+        "Advanced",      // Level 8
+        "Expert",        // Level 9
+        "Elite",         // Level 10
+        "Master",        // Level 11
+        "Grandmaster"    // Level 12+
+    )
+
     /**
      * Calculates XP for a single habit completion.
      */
@@ -37,40 +53,24 @@ object ExperienceUtils {
      * Determines Level and Title based on total accumulated XP.
      */
     fun getLevelInfo(totalXP: Int): LevelInfo {
-        val thresholds = listOf(0, 100, 300, 700, 1500, 3100, 6300, 12700, 25500, 51100, 102300, 204700)
-        val titles = listOf(
-            "Novice",        // Level 1
-            "Beginner",      // Level 2
-            "Apprentice",    // Level 3
-            "Learner",       // Level 4
-            "Practitioner",  // Level 5
-            "Consistent",    // Level 6
-            "Skilled",       // Level 7
-            "Advanced",      // Level 8
-            "Expert",        // Level 9
-            "Elite",         // Level 10
-            "Master",        // Level 11
-            "Grandmaster"    // Level 12+
-        )
-
         var level = 1
-        for (i in 1 until thresholds.size) {
-            if (totalXP >= thresholds[i]) {
+        for (i in 1 until THRESHOLDS.size) {
+            if (totalXP >= THRESHOLDS[i]) {
                 level = i + 1
             } else {
                 break
             }
         }
 
-        val currentLevelIdx = (level - 1).coerceAtMost(thresholds.size - 1)
-        val nextLevelIdx = level.coerceAtMost(thresholds.size - 1)
+        val currentLevelIdx = (level - 1).coerceAtMost(THRESHOLDS.size - 1)
+        val nextLevelIdx = level.coerceAtMost(THRESHOLDS.size - 1)
         
-        val currentThreshold = thresholds[currentLevelIdx]
-        val nextThreshold = if (nextLevelIdx < thresholds.size) thresholds[nextLevelIdx] else thresholds.last() * 2
+        val currentThreshold = THRESHOLDS[currentLevelIdx]
+        val nextThreshold = if (nextLevelIdx < THRESHOLDS.size) THRESHOLDS[nextLevelIdx] else THRESHOLDS.last() * 2
         
-        val title = titles[currentLevelIdx]
+        val title = TITLES[currentLevelIdx]
         
-        val progress = if (level >= thresholds.size) {
+        val progress = if (level >= THRESHOLDS.size) {
             1.0f 
         } else {
             (totalXP - currentThreshold).toFloat() / (nextThreshold - currentThreshold).toFloat()

@@ -82,7 +82,14 @@ fun ColorSelector(
     onOpen: () -> Unit
 ) {
     val color = remember(selectedColor) {
-        try { Color(selectedColor.toColorInt()) } catch (_: Exception) { Color(0xFF6366F1)
+        if (selectedColor.isBlank()) {
+            Color(0xFF6366F1)
+        } else {
+            try {
+                Color(selectedColor.toColorInt())
+            } catch (_: Exception) {
+                Color(0xFF6366F1)
+            }
         }
     }
     HabitSelectionCard(

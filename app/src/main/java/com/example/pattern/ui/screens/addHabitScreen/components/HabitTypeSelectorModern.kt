@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.ImmutableList
 import java.time.DayOfWeek
 
 
@@ -50,7 +52,7 @@ data class HabitTypeData(
 fun HabitTypeSelectorModern(
     selectedType: String,
     onTypeChange: (String) -> Unit,
-    selectedDays: List<DayOfWeek>,
+    selectedDays: ImmutableList<DayOfWeek>,
     onDaysChange: (List<DayOfWeek>) -> Unit,
     durationHours: Int,
     durationMinutes: Int,
@@ -58,11 +60,13 @@ fun HabitTypeSelectorModern(
     taskCount: Int,
     onTaskCountChange: (Int) -> Unit
 ) {
-    val habitTypes = listOf(
-        HabitTypeData("Grow", Icons.Default.AutoGraph, Color(0xFF22C55E)),
-        HabitTypeData("Drop", Icons.Default.RemoveCircleOutline, Color(0xFFFB7185)),
-        HabitTypeData("Task", Icons.Default.ChangeCircle, Color(0xFF6366F1))
-    )
+    val habitTypes = remember {
+        listOf(
+            HabitTypeData("Grow", Icons.Default.AutoGraph, Color(0xFF22C55E)),
+            HabitTypeData("Drop", Icons.Default.RemoveCircleOutline, Color(0xFFFB7185)),
+            HabitTypeData("Task", Icons.Default.ChangeCircle, Color(0xFF6366F1))
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()

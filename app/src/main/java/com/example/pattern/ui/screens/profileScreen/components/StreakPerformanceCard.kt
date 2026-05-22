@@ -109,7 +109,15 @@ fun StreakPerformanceCard(
 @Composable
 private fun StreakItem(streak: StreakStat) {
     val color = remember(streak.colorHex) {
-        try { Color(streak.colorHex.toColorInt()) } catch (_: Exception) { Color(0xFF588157) }
+        if (streak.colorHex.isBlank()) {
+            Color(0xFF588157)
+        } else {
+            try {
+                Color(streak.colorHex.toColorInt())
+            } catch (_: Exception) {
+                Color(0xFF588157)
+            }
+        }
     }
 
     Row(

@@ -39,18 +39,19 @@ fun HomeCalendarSelector(
 ) {
     // The central pivot is "This Week" (the week containing today).
     // pageIndex 25,000 corresponds to the week of LocalDate.now().
-    val pivotDate = remember { 
-        LocalDate.now().minusDays((LocalDate.now().dayOfWeek.value - 1).toLong()) 
+    val today = remember { LocalDate.now() }
+    val pivotDate = remember(today) { 
+        today.minusDays((today.dayOfWeek.value - 1).toLong()) 
     }
+
+    val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
 
     // Derived state for the month title to avoid unnecessary recompositions of the header
     val currentMonthTitle by remember {
         derivedStateOf {
             val weekOffset = pagerState.currentPage - 25000
             val dateInWeek = pivotDate.plusWeeks(weekOffset.toLong())
-            dateInWeek.format(
-                DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-            )
+            dateInWeek.format(monthFormatter)
         }
     }
 
@@ -79,7 +80,7 @@ fun HomeCalendarSelector(
                     val date = remember(weekStartDate) { weekStartDate.plusDays(i.toLong()) }
                     val dayModel = remember(date) { date.toCalendarDayModel() }
                     val isSelected = selectedDate == date
-                    val isToday = remember(date) { date == LocalDate.now() }
+                    val isToday = remember(date, today) { date == today }
                     
                     CalendarItem(
                         isSelected = isSelected,

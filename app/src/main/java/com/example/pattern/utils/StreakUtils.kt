@@ -11,11 +11,20 @@ import java.time.LocalDate
  * Result: ZERO LocalDate objects are created during the streak scan loop.
  */
 
+private fun getDayOfWeekValue(epochDay: Long): Int {
+    // Epoch Day 0 is 1970-01-01 (Thursday). 
+    // Thursday is 4 in java.time.DayOfWeek.
+    // (0 + 3) % 7 + 1 = 4
+    return (((epochDay + 3) % 7 + 7) % 7).toInt() + 1
+}
+
 fun calculateStreak(
     habit: Habit,
     dailyStates: List<HabitDailyState>,
     today: LocalDate = LocalDate.now()
 ): StreakInfo {
+    if (dailyStates.isEmpty()) return StreakInfo(0, 0, 0)
+
     val completedEpochs = dailyStates
         .filter { it.isCompleted || it.isTaskCompleted }
         .map { LocalDate.parse(it.date).toEpochDay() }
@@ -53,8 +62,8 @@ fun calculateCurrentStreak(
         if (completedEpochs.contains(checkEpoch)) {
             currentStreak++
         } else {
-            val date = LocalDate.ofEpochDay(checkEpoch)
-            val isScheduled = habit.selectedDays[date.dayOfWeek.value - 1]
+            val dayOfWeekValue = getDayOfWeekValue(checkEpoch)
+            val isScheduled = habit.selectedDays[dayOfWeekValue - 1]
             if (isScheduled) break
         }
         checkEpoch--
@@ -85,8 +94,8 @@ fun calculateStreakFromDates(
             if (completedEpochs.contains(checkEpoch)) {
                 currentStreak++
             } else {
-                val date = LocalDate.ofEpochDay(checkEpoch)
-                if (habit.selectedDays[date.dayOfWeek.value - 1]) break
+                val dayOfWeekValue = getDayOfWeekValue(checkEpoch)
+                if (habit.selectedDays[dayOfWeekValue - 1]) break
             }
             checkEpoch--
         }
@@ -100,8 +109,8 @@ fun calculateStreakFromDates(
             runningStreak++
             if (runningStreak > longestStreak) longestStreak = runningStreak
         } else {
-            val date = LocalDate.ofEpochDay(epoch)
-            if (habit.selectedDays[date.dayOfWeek.value - 1]) {
+            val dayOfWeekValue = getDayOfWeekValue(epoch)
+            if (habit.selectedDays[dayOfWeekValue - 1]) {
                 runningStreak = 0
             }
         }

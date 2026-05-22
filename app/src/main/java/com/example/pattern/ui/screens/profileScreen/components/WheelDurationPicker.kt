@@ -15,6 +15,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -74,11 +75,14 @@ fun WheelDurationPicker(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val hourItems = remember { (0..23).map { it.toString().padStart(2, '0') } }
+            val minuteItems = remember { (0..59).map { it.toString().padStart(2, '0') } }
+            
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 WheelPicker(
-                    items = (0..23).map { it.toString().padStart(2, '0') },
+                    items = hourItems,
                     selectedIndex = durationHours,
                     onSelectedIndexChange = { onDurationChange(it, durationMinutes) }
                 )
@@ -95,7 +99,7 @@ fun WheelDurationPicker(
             // Minutes Picker
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 WheelPicker(
-                    items = (0..59).map { it.toString().padStart(2, '0') },
+                    items = minuteItems,
                     selectedIndex = durationMinutes,
                     onSelectedIndexChange = { onDurationChange(durationHours, it) }
                 )

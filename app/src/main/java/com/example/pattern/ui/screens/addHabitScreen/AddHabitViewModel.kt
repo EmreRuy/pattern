@@ -22,55 +22,84 @@ class AddHabitViewModel @Inject constructor(
     val uiState: StateFlow<AddHabitUiState> = _uiState.asStateFlow()
 
     fun onNameChange(name: String) {
-        _uiState.update { it.copy(habitName = name.take(20)) }
+        val truncatedName = name.take(20)
+        _uiState.update { 
+            if (it.habitName == truncatedName) it else it.copy(habitName = truncatedName)
+        }
     }
 
     fun onTypeChange(type: String) {
-        _uiState.update { it.copy(habitType = type) }
+        _uiState.update { 
+            if (it.habitType == type) it else it.copy(habitType = type)
+        }
     }
 
     fun onEmojiChange(emoji: String) {
-        _uiState.update { it.copy(emoji = emoji) }
+        _uiState.update { 
+            if (it.emoji == emoji) it else it.copy(emoji = emoji)
+        }
     }
 
     fun onMotivationChange(motivation: String) {
-        _uiState.update { it.copy(motivation = motivation) }
+        _uiState.update { 
+            if (it.motivation == motivation) it else it.copy(motivation = motivation)
+        }
     }
 
     fun onDaysChange(days: List<DayOfWeek>) {
-        _uiState.update { it.copy(buildHabitDays = days.toImmutableList()) }
+        val immutableDays = days.toImmutableList()
+        _uiState.update { 
+            if (it.buildHabitDays == immutableDays) it else it.copy(buildHabitDays = immutableDays)
+        }
     }
 
     fun onDurationChange(hours: Int, minutes: Int) {
-        _uiState.update { it.copy(durationHours = hours, durationMinutes = minutes) }
+        _uiState.update { 
+            if (it.durationHours == hours && it.durationMinutes == minutes) it 
+            else it.copy(durationHours = hours, durationMinutes = minutes)
+        }
     }
 
     fun onTaskCountChange(count: Int) {
-        _uiState.update { it.copy(taskCount = count) }
+        _uiState.update { 
+            if (it.taskCount == count) it else it.copy(taskCount = count)
+        }
     }
 
     fun onColorChange(color: String) {
-        _uiState.update { it.copy(selectedColor = color) }
+        _uiState.update { 
+            if (it.selectedColor == color) it else it.copy(selectedColor = color)
+        }
     }
 
     fun onReminderEnabledChange(enabled: Boolean) {
-        _uiState.update { it.copy(reminderEnabled = enabled) }
+        _uiState.update { 
+            if (it.reminderEnabled == enabled) it else it.copy(reminderEnabled = enabled)
+        }
     }
 
     fun onReminderTimeChange(time: String) {
-        _uiState.update { it.copy(reminderTime = time) }
+        _uiState.update { 
+            if (it.reminderTime == time) it else it.copy(reminderTime = time)
+        }
     }
 
     fun onStepChange(step: AddHabitStep) {
-        _uiState.update { it.copy(currentStep = step) }
+        _uiState.update { 
+            if (it.currentStep == step) it else it.copy(currentStep = step)
+        }
     }
 
     fun onShowTimePickerChange(show: Boolean) {
-        _uiState.update { it.copy(showTimePicker = show) }
+        _uiState.update { 
+            if (it.showTimePicker == show) it else it.copy(showTimePicker = show)
+        }
     }
 
     fun onShowPermissionDialogChange(show: Boolean) {
-        _uiState.update { it.copy(showPermissionDialog = show) }
+        _uiState.update { 
+            if (it.showPermissionDialog == show) it else it.copy(showPermissionDialog = show)
+        }
     }
 
     fun saveNewHabit(onSuccess: () -> Unit) {
@@ -93,8 +122,8 @@ class AddHabitViewModel @Inject constructor(
                     reminderTime = state.reminderTime
                 )
                 onSuccess()
-            } catch (e: Exception) {
-                // Handle error
+            } catch (_: Exception) {
+
             }
         }
     }

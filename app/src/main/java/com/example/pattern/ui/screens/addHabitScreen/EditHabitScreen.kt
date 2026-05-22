@@ -32,6 +32,7 @@ import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -134,7 +135,7 @@ fun EditHabitScreen(
     var motivation by remember { mutableStateOf(initialHabit.motivation ?: "") }
     var buildHabitDays by remember { 
         mutableStateOf(
-            DayOfWeek.entries.filterIndexed { index, _ -> initialHabit.selectedDays.getOrElse(index) { false } }
+            DayOfWeek.entries.filterIndexed { index, _ -> initialHabit.selectedDays.getOrElse(index) { false } }.toImmutableList()
         ) 
     }
 
@@ -150,12 +151,14 @@ fun EditHabitScreen(
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
-    val screenTitle = when (currentStep) {
-        AddHabitStep.Main -> "EDIT PATTERN"
-        AddHabitStep.Category -> "CATEGORY"
-        AddHabitStep.Color -> "SELECT COLOR"
-        AddHabitStep.Emoji -> "CHOOSE ICON"
-        AddHabitStep.Motivation -> "MOTIVATION"
+    val screenTitle = remember(currentStep) {
+        when (currentStep) {
+            AddHabitStep.Main -> "EDIT PATTERN"
+            AddHabitStep.Category -> "CATEGORY"
+            AddHabitStep.Color -> "SELECT COLOR"
+            AddHabitStep.Emoji -> "CHOOSE ICON"
+            AddHabitStep.Motivation -> "MOTIVATION"
+        }
     }
 
     Scaffold(
@@ -187,6 +190,8 @@ fun EditHabitScreen(
                         IconButton(onClick = {
                             if (habitName.isBlank()) {
                                 scope.launch { snackbarHostState.showSnackbar("Please enter a habit name") }
+                            } else if (buildHabitDays.isEmpty()) {
+                                scope.launch { snackbarHostState.showSnackbar("Please select at least one day") }
                             } else {
                                 viewModel.updateHabit(
                                     name = habitName,
@@ -308,7 +313,7 @@ fun EditHabitScreen(
                             selectedType = habitType,
                             onTypeChange = { habitType = it },
                             selectedDays = buildHabitDays,
-                            onDaysChange = { buildHabitDays = it },
+                            onDaysChange = { buildHabitDays = it.toImmutableList() },
                             durationHours = durationHours,
                             durationMinutes = durationMinutes,
                             onDurationChange = { h, m ->

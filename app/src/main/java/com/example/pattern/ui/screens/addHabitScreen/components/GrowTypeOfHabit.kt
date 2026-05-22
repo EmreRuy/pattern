@@ -39,13 +39,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.ui.screens.profileScreen.components.WheelDurationPicker
+import kotlinx.collections.immutable.ImmutableList
 import java.time.DayOfWeek
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GrowTypeOfHabit(
-    selectedDays: List<DayOfWeek>,
+    selectedDays: ImmutableList<DayOfWeek>,
     onDaysChange: (List<DayOfWeek>) -> Unit,
     durationHours: Int,
     durationMinutes: Int,

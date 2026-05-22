@@ -104,8 +104,18 @@ fun TopHabitsList(
                                 .size(36.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    try { Color(habit.colorHex.toColorInt()).copy(alpha = 0.12f) }
-                                    catch (_: Exception) { MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) }
+                                    remember(habit.colorHex) {
+                                        val color = if (habit.colorHex.isBlank()) {
+                                            Color(0xFF6366F1) // Default
+                                        } else {
+                                            try {
+                                                Color(habit.colorHex.toColorInt())
+                                            } catch (_: Exception) {
+                                                Color(0xFF6366F1)
+                                            }
+                                        }
+                                        color.copy(alpha = 0.12f)
+                                    }
                                 ),
                             contentAlignment = Alignment.Center
                         ) {

@@ -13,20 +13,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import java.time.DayOfWeek
 
 @Composable
 fun DaySelector(
-    selectedDays: List<DayOfWeek>,
+    selectedDays: ImmutableList<DayOfWeek>,
     onDaysChange: (List<DayOfWeek>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val days = DayOfWeek.entries
+    val days = remember { DayOfWeek.entries }
+    val selectedDaysSet = remember(selectedDays) { selectedDays.toSet() }
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -34,7 +37,7 @@ fun DaySelector(
         verticalAlignment = Alignment.CenterVertically
     ) {
         days.forEach { day ->
-            val isSelected = day in selectedDays
+            val isSelected = day in selectedDaysSet
             Box(
                 modifier = Modifier
                     .weight(1f)
