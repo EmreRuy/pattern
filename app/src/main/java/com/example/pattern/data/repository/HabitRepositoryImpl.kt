@@ -84,6 +84,7 @@ class HabitRepositoryImpl @Inject constructor(
                     o.date == n.date && 
                     o.isCompleted == n.isCompleted && 
                     o.isTaskCompleted == n.isTaskCompleted &&
+                    o.completedCount == n.completedCount &&
                     o.activeSessionStartMs == n.activeSessionStartMs
                 }
             }
