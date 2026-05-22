@@ -35,6 +35,8 @@ class HabitRepositoryImpl @Inject constructor(
                     o.id == n.id &&
                     o.name == n.name &&
                     o.type == n.type &&
+                    o.taskCount == n.taskCount &&
+                    o.durationInMinutes == n.durationInMinutes &&
                     o.isCompleted == n.isCompleted &&
                     o.selectedDays == n.selectedDays &&
                     o.iconCode == n.iconCode &&

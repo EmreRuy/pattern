@@ -79,8 +79,9 @@ class HomeViewModel @Inject constructor(
                         today
                     )
                     
+                    val habitHash = habit.hashCode()
                     val stateHash = dailyState?.hashCode() ?: 0
-                    val cacheKey = "${habit.id}_${dateStr}_${stateHash}_$streak"
+                    val cacheKey = "${habit.id}_${dateStr}_${habitHash}_${stateHash}_$streak"
                     currentWindowKeys.add(cacheKey)
                     
                     modelCache.getOrPut(cacheKey) {
