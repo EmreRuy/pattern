@@ -41,7 +41,6 @@ fun HabitTaskCard(
                 checked = habit.isTaskChecked,
                 taskCount = taskCount,
                 completedCount = habit.completedCount,
-                accentColor = Color(habit.accentColorHex.toColorInt()),
                 onToggle = {
                     if (isToday) {
                         if (isMultiStep && !habit.isTaskChecked) {

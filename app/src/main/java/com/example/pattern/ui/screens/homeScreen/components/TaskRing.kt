@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -28,8 +27,7 @@ fun TaskRing(
     checked: Boolean,
     onToggle: () -> Unit,
     taskCount: Int = 1,
-    completedCount: Int = 0,
-    accentColor: Color? = null
+    completedCount: Int = 0
 ) {
     val ringSize = 34.dp
     val iconSize = 18.dp
@@ -61,10 +59,8 @@ fun TaskRing(
         ),
         label = "taskScale"
     )
-
-    val primaryColor = accentColor ?: MaterialTheme.colorScheme.primary
+    val standardColor = MaterialTheme.colorScheme.onSurface
     val trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-
     Box(
         modifier = Modifier
             .size(ringSize)
@@ -99,7 +95,7 @@ fun TaskRing(
                         )
                         // Draw Active Progress
                         drawArc(
-                            color = primaryColor,
+                            color = standardColor,
                             startAngle = 270f,
                             sweepAngle = progress * 360f,
                             useCenter = false,
@@ -126,7 +122,7 @@ fun TaskRing(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = primaryColor,
+                    tint = standardColor,
                     modifier = Modifier.size(iconSize)
                 )
             } else if (taskCount > 1) {
@@ -136,7 +132,7 @@ fun TaskRing(
                         fontWeight = FontWeight.Black,
                         fontSize = 11.sp
                     ),
-                    color = if (completedCount > 0) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             }
         }
