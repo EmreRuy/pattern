@@ -20,18 +20,26 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 
 @Composable
 fun TaskRing(
     checked: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    taskCount: Int = 1,
+    completedCount: Int = 0
 ) {
     val ringSize = 34.dp
     val iconSize = 20.dp
     val strokeWidthDp = 3.5.dp
     val progress by animateFloatAsState(
-        targetValue = if (checked) 1f else 0f,
+        targetValue = if (taskCount > 1) {
+            (completedCount.toFloat() / taskCount.toFloat()).coerceIn(0f, 1f)
+        } else {
+            if (checked) 1f else 0f
+        },
         animationSpec = tween(500, easing = FastOutSlowInEasing),
         label = "taskProgress"
     )
@@ -87,12 +95,23 @@ fun TaskRing(
                 }
         )
 
-        Icon(
-            imageVector = Icons.Default.Check,
-            contentDescription = null,
-            tint = primaryColor.copy(alpha = iconAlpha),
-            modifier = Modifier.size(iconSize)
-        )
+        if (taskCount > 1 && !checked) {
+            Text(
+                text = completedCount.toString(),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                ),
+                color = if (completedCount > 0) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = primaryColor.copy(alpha = iconAlpha),
+                modifier = Modifier.size(iconSize)
+            )
+        }
     }
 }
 

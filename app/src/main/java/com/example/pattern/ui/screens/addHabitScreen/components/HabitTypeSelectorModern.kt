@@ -54,7 +54,9 @@ fun HabitTypeSelectorModern(
     onDaysChange: (List<DayOfWeek>) -> Unit,
     durationHours: Int,
     durationMinutes: Int,
-    onDurationChange: (Int, Int) -> Unit
+    onDurationChange: (Int, Int) -> Unit,
+    taskCount: Int,
+    onTaskCountChange: (Int) -> Unit
 ) {
     val habitTypes = listOf(
         HabitTypeData("Grow", Icons.Default.AutoGraph, Color(0xFF22C55E)),
@@ -67,15 +69,6 @@ fun HabitTypeSelectorModern(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Text(
-            text = "Focus".uppercase(),
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 1.5.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            ),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -154,7 +147,9 @@ fun HabitTypeSelectorModern(
                 "Task" -> {
                     TaskTypeOfHabits(
                         selectedDays = selectedDays,
-                        onDaysChange = onDaysChange
+                        onDaysChange = onDaysChange,
+                        taskCount = taskCount,
+                        onTaskCountChange = onTaskCountChange
                     )
                 }
             }

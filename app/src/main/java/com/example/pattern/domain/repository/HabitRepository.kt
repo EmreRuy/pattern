@@ -25,6 +25,7 @@ interface HabitRepository {
     suspend fun upsertDailyState(state: HabitDailyState)
     suspend fun getDailyStateOnce(habitId: Int, date: String): HabitDailyState?
     suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean)
+    suspend fun incrementTaskCount(habitId: Int, date: String)
     
     fun getTotalXPStream(): Flow<Int>
     fun getSettingsStream(): Flow<Settings?>

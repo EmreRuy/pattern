@@ -1,31 +1,34 @@
 package com.example.pattern.domain.model
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class ProfileStats(
     val levelInfo: LevelInfo,
-    val weeklyXpHistory: List<XPDataPoint>,
-    val xpHistory: List<XPDataPoint>,
-    val yearlyXpHistory: List<XPDataPoint>,
+    val weeklyXpHistory: ImmutableList<XPDataPoint>,
+    val xpHistory: ImmutableList<XPDataPoint>,
+    val yearlyXpHistory: ImmutableList<XPDataPoint>,
     val doneCount: Int,
     val missedCount: Int,
     val successRate: Float,
     val totalXp: Int,
     val totalHabits: Int,
-    val topDoneHabits: List<HabitStat>,
-    val topMissedHabits: List<HabitStat>,
-    val bestStreaks: List<StreakStat> = emptyList(),
+    val topDoneHabits: ImmutableList<HabitStat>,
+    val topMissedHabits: ImmutableList<HabitStat>,
+    val bestStreaks: ImmutableList<StreakStat> = persistentListOf(),
     val xpDistribution: XPDistribution = XPDistribution(),
-    val activeDaysAnalysis: ActiveDaysAnalysis = ActiveDaysAnalysis(emptyList())
+    val activeDaysAnalysis: ActiveDaysAnalysis = ActiveDaysAnalysis(persistentListOf())
 )
 
 @Immutable
 data class ActiveDaysAnalysis(
-    val dailyRates: List<DayCompletionRate>,
+    val dailyRates: ImmutableList<DayCompletionRate>,
     val insightMessage: String? = null,
     val worstDay: Int? = null // 1..7
 )
+
 
 @Immutable
 data class DayCompletionRate(

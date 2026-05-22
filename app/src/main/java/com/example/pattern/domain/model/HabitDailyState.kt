@@ -16,7 +16,8 @@ data class HabitDailyState(
     val accumulatedTimeMs: Long = 0L,
     val activeSessionStartMs: Long? = null,
     val isCompleted: Boolean = false,
-    val isTaskCompleted: Boolean = false
+    val isTaskCompleted: Boolean = false,
+    val completedCount: Int = 0
 ) {
     /** 
      * Derived property to check if a timer is currently active.

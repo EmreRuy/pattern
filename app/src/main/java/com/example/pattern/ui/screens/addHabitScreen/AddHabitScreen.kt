@@ -72,6 +72,7 @@ fun AddHabitScreen(
         onMotivationChange = viewModel::onMotivationChange,
         onDaysChange = viewModel::onDaysChange,
         onDurationChange = viewModel::onDurationChange,
+        onTaskCountChange = viewModel::onTaskCountChange,
         onColorChange = viewModel::onColorChange,
         onReminderEnabledChange = { enabled ->
             if (enabled) {
@@ -116,6 +117,7 @@ fun AddHabitScreenContent(
     onMotivationChange: (String) -> Unit,
     onDaysChange: (List<java.time.DayOfWeek>) -> Unit,
     onDurationChange: (Int, Int) -> Unit,
+    onTaskCountChange: (Int) -> Unit,
     onColorChange: (String) -> Unit,
     onReminderEnabledChange: (Boolean) -> Unit,
     onReminderTimeChange: (String) -> Unit,
@@ -282,7 +284,9 @@ fun AddHabitScreenContent(
                                 onDaysChange = onDaysChange,
                                 durationHours = uiState.durationHours,
                                 durationMinutes = uiState.durationMinutes,
-                                onDurationChange = onDurationChange
+                                onDurationChange = onDurationChange,
+                                taskCount = uiState.taskCount,
+                                onTaskCountChange = onTaskCountChange
                             )
                         }
                     }

@@ -10,6 +10,7 @@ import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.model.Settings
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Staff Engineer Note:
@@ -34,15 +35,14 @@ fun LocalHabit.toDomain(): Habit = Habit(
     name = name,
     type = type.toDomain(),
     durationInMinutes = durationInMinutes,
-    selectedDays = selectedDays,
+    selectedDays = selectedDays.toImmutableList(),
     iconCode = iconCode,
     isCompleted = isCompleted,
     createdAt = createdAt,
     accentColorHex = accentColorHex,
-    accumulatedTimeMs = accumulatedTimeMs,
-    activeSessionStartMs = activeSessionStartMs,
     reminderTime = reminderTime,
-    motivation = motivation
+    motivation = motivation,
+    taskCount = taskCount
 )
 
 fun Habit.toLocal(): LocalHabit = LocalHabit(
@@ -55,10 +55,9 @@ fun Habit.toLocal(): LocalHabit = LocalHabit(
     isCompleted = isCompleted,
     createdAt = createdAt,
     accentColorHex = accentColorHex,
-    accumulatedTimeMs = accumulatedTimeMs,
-    activeSessionStartMs = activeSessionStartMs,
     reminderTime = reminderTime,
-    motivation = motivation
+    motivation = motivation,
+    taskCount = taskCount
 )
 
 fun LocalDailyState.toDomain(): HabitDailyState = HabitDailyState(
@@ -67,7 +66,8 @@ fun LocalDailyState.toDomain(): HabitDailyState = HabitDailyState(
     accumulatedTimeMs = accumulatedTimeMs,
     activeSessionStartMs = activeSessionStartMs,
     isCompleted = isCompleted,
-    isTaskCompleted = isTaskCompleted
+    isTaskCompleted = isTaskCompleted,
+    completedCount = completedCount
 )
 
 fun HabitDailyState.toLocal(): LocalDailyState = LocalDailyState(
@@ -76,7 +76,8 @@ fun HabitDailyState.toLocal(): LocalDailyState = LocalDailyState(
     accumulatedTimeMs = accumulatedTimeMs,
     activeSessionStartMs = activeSessionStartMs,
     isCompleted = isCompleted,
-    isTaskCompleted = isTaskCompleted
+    isTaskCompleted = isTaskCompleted,
+    completedCount = completedCount
 )
 
 fun LocalHabitWithHistory.toDomain(): HabitWithHistory = HabitWithHistory(

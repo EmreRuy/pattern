@@ -84,7 +84,7 @@ class HabitDetailsViewModel @Inject constructor(
             accentColor = Color(habit.accentColorHex.toColorInt()),
             currentStreak = streakInfo.currentStreak,
             totalCompletions = streakInfo.totalCompletions,
-            goal = goalLabel(habit.type, habit.durationInMinutes),
+            goal = goalLabel(habit.type, habit.durationInMinutes, habit.taskCount),
             frequency = frequencyLabel(habit.selectedDays),
             createdOn = habit.createdAt.toUiDate(),
             createdAtLocalDate = Instant.ofEpochMilli(habit.createdAt).atZone(ZoneId.systemDefault()).toLocalDate(),
@@ -96,7 +96,7 @@ class HabitDetailsViewModel @Inject constructor(
     }
 }
 
-fun goalLabel(type: HabitType, minutes: Int?): String {
+fun goalLabel(type: HabitType, minutes: Int?, taskCount: Int?): String {
     return when (type) {
         HabitType.BUILD -> {
             if (minutes == null) return "0 m"
@@ -109,7 +109,10 @@ fun goalLabel(type: HabitType, minutes: Int?): String {
                 else -> "0 m"
             }
         }
-        HabitType.TASK -> "Complete task"
+        HabitType.TASK -> {
+            val count = taskCount ?: 1
+            if (count > 1) "$count times a day" else "Complete task"
+        }
         HabitType.QUIT -> "Drop habit"
     }
 }

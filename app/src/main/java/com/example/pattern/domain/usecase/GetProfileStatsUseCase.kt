@@ -4,6 +4,7 @@ import com.example.pattern.domain.model.*
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateStreakFromDates
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -110,17 +111,17 @@ class GetProfileStatsUseCase @Inject constructor(
 
             ProfileStats(
                 levelInfo = levelInfo,
-                weeklyXpHistory = weeklyXpHistory,
-                xpHistory = xpHistory,
-                yearlyXpHistory = yearlyXpHistory,
+                weeklyXpHistory = weeklyXpHistory.toImmutableList(),
+                xpHistory = xpHistory.toImmutableList(),
+                yearlyXpHistory = yearlyXpHistory.toImmutableList(),
                 doneCount = totalDone,
                 missedCount = totalMissed,
                 successRate = successRate,
                 totalXp = totalXP,
                 totalHabits = habits.size,
-                topDoneHabits = topDone,
-                topMissedHabits = topMissed,
-                bestStreaks = bestStreaks,
+                topDoneHabits = topDone.toImmutableList(),
+                topMissedHabits = topMissed.toImmutableList(),
+                bestStreaks = bestStreaks.toImmutableList(),
                 xpDistribution = XPDistribution(
                     buildXP = buildXP,
                     quitXP = quitXP,
@@ -200,7 +201,7 @@ class GetProfileStatsUseCase @Inject constructor(
             } else null
         }
 
-        return ActiveDaysAnalysis(dailyRates, insight, worstDayIndex?.plus(1))
+        return ActiveDaysAnalysis(dailyRates.toImmutableList(), insight, worstDayIndex?.plus(1))
     }
 
     private fun countOccurrencesOfDayOfWeek(start: LocalDate, end: LocalDate, dayOfWeek: Int): Int {

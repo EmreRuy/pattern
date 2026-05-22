@@ -50,7 +50,10 @@ data class HabitDailyState(
     val isCompleted: Boolean = false,
 
     @ColumnInfo(name = "is_task_completed")
-    val isTaskCompleted: Boolean = false
+    val isTaskCompleted: Boolean = false,
+
+    @ColumnInfo(name = "completed_count", defaultValue = "0")
+    val completedCount: Int = 0
 ) {
     /** 
      * Reactive state flag for the UI layer. 

@@ -11,6 +11,8 @@ import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateCurrentStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -93,8 +95,8 @@ class HomeViewModel @Inject constructor(
         HomeUiState.Success(
             selectedDate = date,
             isSelectedDateToday = date == today,
-            habits = habitsByDate[date] ?: emptyList(),
-            habitsByDate = habitsByDate,
+            habits = (habitsByDate[date] ?: emptyList()).toImmutableList(),
+            habitsByDate = habitsByDate.mapValues { it.value.toImmutableList() }.toImmutableMap(),
             hasAnyHabits = allHabits.isNotEmpty(),
             levelInfo = ExperienceUtils.getLevelInfo(0)
         )
@@ -117,6 +119,7 @@ class HomeViewModel @Inject constructor(
             is HomeUiEvent.OnTimerFinish -> viewModelScope.launch { updateHabitProgressUseCase.finishTimer(event.habitId, event.date) }
             is HomeUiEvent.OnTimerUnfinish -> viewModelScope.launch { updateHabitProgressUseCase.unfinishTimer(event.habitId, event.date) }
             is HomeUiEvent.OnTaskToggle -> viewModelScope.launch { updateHabitProgressUseCase.toggleTask(event.habitId, event.date, event.completed) }
+            is HomeUiEvent.OnTaskIncrement -> viewModelScope.launch { updateHabitProgressUseCase.incrementTask(event.habitId, event.date) }
         }
     }
 }

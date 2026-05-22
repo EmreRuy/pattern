@@ -3,6 +3,7 @@ package com.example.pattern.ui.screens.profileScreen.mapper
 import com.example.pattern.domain.model.*
 import com.example.pattern.ui.screens.profileScreen.ProfileUiState
 import com.example.pattern.ui.screens.profileScreen.components.dashboard.SuccessDashboardUiState
+import kotlinx.collections.immutable.toImmutableList
 
 object ProfileStateMapper {
 

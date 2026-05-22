@@ -2,6 +2,7 @@ package com.example.pattern.notifications
 
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.scheduler.ReminderScheduler
+import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,13 +37,11 @@ class ReminderManager @Inject constructor(
             name = "",
             type = com.example.pattern.domain.model.HabitType.BUILD,
             durationInMinutes = null,
-            selectedDays = emptyList(),
+            selectedDays = persistentListOf<Boolean>(),
             iconCode = "",
             isCompleted = false,
             createdAt = 0,
             accentColorHex = "",
-            accumulatedTimeMs = 0L,
-            activeSessionStartMs = null,
             reminderTime = null,
             motivation = null
         )

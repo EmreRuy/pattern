@@ -122,6 +122,11 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
         try {
+            // Ensure daily state exists before updating
+            val existing = habitDao.getDailyStateOnce(habitId, date)
+            if (existing == null) {
+                habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
+            }
             habitDao.setTaskCompleted(habitId, date, completed)
         } catch (e: Exception) {
             if (e is SQLiteConstraintException || e.message?.contains("FOREIGN KEY") == true) {
@@ -129,6 +134,18 @@ class HabitRepositoryImpl @Inject constructor(
             } else {
                 Log.e("HabitRepository", "Error in setTaskCompleted for habit $habitId", e)
             }
+        }
+    }
+
+    override suspend fun incrementTaskCount(habitId: Int, date: String) {
+        try {
+            val existing = habitDao.getDailyStateOnce(habitId, date)
+            if (existing == null) {
+                habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
+            }
+            habitDao.incrementTaskCount(habitId, date)
+        } catch (e: Exception) {
+            Log.e("HabitRepository", "Error in incrementTaskCount for habit $habitId", e)
         }
     }
 

@@ -32,6 +32,7 @@ import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,7 +67,8 @@ class EditHabitViewModel @Inject constructor(
         colorHex: String,
         reminderEnabled: Boolean,
         reminderTime: String?,
-        motivation: String?
+        motivation: String?,
+        taskCount: Int?
     ) {
         val currentHabit = _habit.value ?: return
         
@@ -80,7 +82,8 @@ class EditHabitViewModel @Inject constructor(
                 else -> HabitType.TASK
             },
             durationInMinutes = if (type == "Grow") (durationHours * 60) + durationMinutes else null,
-            selectedDays = daysList,
+            taskCount = if (type == "Task") taskCount else null,
+            selectedDays = daysList.toImmutableList(),
             iconCode = emoji,
             accentColorHex = colorHex,
             reminderTime = if (reminderEnabled) reminderTime else null,
@@ -137,6 +140,7 @@ fun EditHabitScreen(
 
     var durationHours by remember { mutableIntStateOf((initialHabit.durationInMinutes ?: 0) / 60) }
     var durationMinutes by remember { mutableIntStateOf((initialHabit.durationInMinutes ?: 0) % 60) }
+    var taskCount by remember { mutableIntStateOf(initialHabit.taskCount ?: 1) }
     var selectedColor by remember { mutableStateOf(initialHabit.accentColorHex) }
     var reminderEnabled by remember { mutableStateOf(initialHabit.reminderTime != null) }
     var reminderTime by remember { mutableStateOf(initialHabit.reminderTime ?: "09:00") }
@@ -194,7 +198,8 @@ fun EditHabitScreen(
                                     colorHex = selectedColor,
                                     reminderEnabled = reminderEnabled,
                                     reminderTime = reminderTime,
-                                    motivation = motivation
+                                    motivation = motivation,
+                                    taskCount = taskCount
                                 )
                                 onSaveSuccess()
                             }
@@ -309,7 +314,9 @@ fun EditHabitScreen(
                             onDurationChange = { h, m ->
                                 durationHours = h
                                 durationMinutes = m
-                            }
+                            },
+                            taskCount = taskCount,
+                            onTaskCountChange = { taskCount = it }
                         )
                     }
                 }

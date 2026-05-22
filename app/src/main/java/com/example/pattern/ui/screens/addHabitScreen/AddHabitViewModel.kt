@@ -7,6 +7,7 @@ import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,11 +42,15 @@ class AddHabitViewModel @Inject constructor(
     }
 
     fun onDaysChange(days: List<DayOfWeek>) {
-        _uiState.update { it.copy(buildHabitDays = days) }
+        _uiState.update { it.copy(buildHabitDays = days.toImmutableList()) }
     }
 
     fun onDurationChange(hours: Int, minutes: Int) {
         _uiState.update { it.copy(durationHours = hours, durationMinutes = minutes) }
+    }
+
+    fun onTaskCountChange(count: Int) {
+        _uiState.update { it.copy(taskCount = count) }
     }
 
     fun onColorChange(color: String) {
@@ -82,6 +87,12 @@ class AddHabitViewModel @Inject constructor(
             null
         }
 
+        val taskCount = if (state.habitType == "Task") {
+            state.taskCount
+        } else {
+            null
+        }
+
         val newHabit = Habit(
             id = 0,
             name = state.habitName.trim(),
@@ -92,14 +103,13 @@ class AddHabitViewModel @Inject constructor(
             },
             iconCode = state.emoji,
             durationInMinutes = totalDurationInMinutes,
-            selectedDays = DayOfWeek.entries.map { state.buildHabitDays.contains(it) },
+            taskCount = taskCount,
+            selectedDays = DayOfWeek.entries.map { state.buildHabitDays.contains(it) }.toImmutableList(),
             accentColorHex = state.selectedColor,
             reminderTime = if (state.reminderEnabled) state.reminderTime else null,
             motivation = if (state.motivation.isBlank()) null else state.motivation.trim(),
             isCompleted = false,
-            createdAt = System.currentTimeMillis(),
-            accumulatedTimeMs = 0L,
-            activeSessionStartMs = null
+            createdAt = System.currentTimeMillis()
         )
         viewModelScope.launch {
             try {

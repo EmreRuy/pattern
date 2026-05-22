@@ -1,6 +1,7 @@
 package com.example.pattern.domain.model
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -9,6 +10,9 @@ import java.time.ZoneId
  * Staff Engineer Refactoring:
  * Clean, immutable domain model for a Habit.
  * Optimized with pre-calculated LocalDate to avoid repeated parsing in performance-critical loops.
+ * 
+ * 1. Moved timer state to HabitDailyState (Single Source of Truth).
+ * 2. Switched to ImmutableList for enhanced Compose stability.
  */
 @Immutable
 data class Habit(
@@ -16,15 +20,14 @@ data class Habit(
     val name: String,
     val type: HabitType,
     val durationInMinutes: Int?,
-    val selectedDays: List<Boolean>,
+    val selectedDays: ImmutableList<Boolean>,
     val iconCode: String,
     val isCompleted: Boolean,
     val createdAt: Long,
     val accentColorHex: String,
-    val accumulatedTimeMs: Long = 0L,
-    val activeSessionStartMs: Long? = null,
     val reminderTime: String?,
-    val motivation: String?
+    val motivation: String?,
+    val taskCount: Int? = null
 ) {
     /** 
      * Pre-calculated LocalDate for streak calculations.
@@ -34,12 +37,5 @@ data class Habit(
         Instant.ofEpochMilli(createdAt)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
-    }
-
-    val isTimerRunning: Boolean get() = activeSessionStartMs != null
-
-    fun calculateTotalTimeMs(now: Long = System.currentTimeMillis()): Long {
-        val currentSession = if (activeSessionStartMs != null) (now - activeSessionStartMs) else 0L
-        return (accumulatedTimeMs + currentSession).coerceAtLeast(0L)
     }
 }

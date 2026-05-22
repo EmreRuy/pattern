@@ -34,6 +34,7 @@ fun HabitCardsPager(
     hasAnyHabits: Boolean,
     paddingValues: PaddingValues,
     onTaskCompleted: (Int, LocalDate, Boolean) -> Unit,
+    onTaskIncrement: (Int, LocalDate) -> Unit,
     onTimerFinished: (HabitCardModel, LocalDate) -> Unit,
     onUnfinishTimer: (Int, LocalDate) -> Unit,
     onHabitCardClick: (Int) -> Unit,
@@ -74,6 +75,7 @@ fun HabitCardsPager(
             paddingValues = paddingValues,
             isToday = isToday,
             onTaskCompleted = onTaskCompleted,
+            onTaskIncrement = onTaskIncrement,
             onTimerFinished = onTimerFinished,
             onUnfinishTimer = onUnfinishTimer,
             onHabitCardClick = onHabitCardClick,
@@ -92,6 +94,7 @@ private fun HabitListContent(
     paddingValues: PaddingValues,
     isToday: Boolean,
     onTaskCompleted: (Int, LocalDate, Boolean) -> Unit,
+    onTaskIncrement: (Int, LocalDate) -> Unit,
     onTimerFinished: (HabitCardModel, LocalDate) -> Unit,
     onUnfinishTimer: (Int, LocalDate) -> Unit,
     onHabitCardClick: (Int) -> Unit,
@@ -132,6 +135,7 @@ private fun HabitListContent(
                         habit = habit,
                         isToday = isToday,
                         onTaskCompleted = { id, completed -> onTaskCompleted(id, date, completed) },
+                        onTaskIncrement = { id -> onTaskIncrement(id, date) },
                         onCardClick = onHabitCardClick
                     )
 

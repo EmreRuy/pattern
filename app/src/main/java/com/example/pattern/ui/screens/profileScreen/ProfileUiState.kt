@@ -3,19 +3,21 @@ package com.example.pattern.ui.screens.profileScreen
 import androidx.compose.runtime.Immutable
 import com.example.pattern.domain.model.*
 import com.example.pattern.ui.screens.profileScreen.components.dashboard.SuccessDashboardUiState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class ProfileUiState(
     val levelInfo: LevelInfo? = null,
-    val weeklyXpHistory: List<XPDataPoint> = emptyList(),
-    val xpHistory: List<XPDataPoint> = emptyList(),
-    val yearlyXpHistory: List<XPDataPoint> = emptyList(),
+    val weeklyXpHistory: ImmutableList<XPDataPoint> = persistentListOf(),
+    val xpHistory: ImmutableList<XPDataPoint> = persistentListOf(),
+    val yearlyXpHistory: ImmutableList<XPDataPoint> = persistentListOf(),
     val successDashboard: SuccessDashboardUiState = SuccessDashboardUiState(),
     val xpDistribution: XPDistribution = XPDistribution(),
     val totalHabits: Int = 0,
     val successRate: Float = 0f,
-    val bestStreaks: List<StreakStat> = emptyList(),
+    val bestStreaks: ImmutableList<StreakStat> = persistentListOf(),
     val streakInsight: InsightData? = null,
-    val activeDaysAnalysis: ActiveDaysAnalysis = ActiveDaysAnalysis(emptyList()),
+    val activeDaysAnalysis: ActiveDaysAnalysis = ActiveDaysAnalysis(persistentListOf()),
     val isLoading: Boolean = false
 )

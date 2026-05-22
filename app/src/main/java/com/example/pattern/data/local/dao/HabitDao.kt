@@ -118,7 +118,11 @@ interface HabitDao {
     // Task Completion
     @Query("""
         UPDATE habit_daily_state
-        SET is_task_completed = :completed
+        SET is_task_completed = :completed,
+            completed_count = CASE 
+                WHEN :completed THEN (SELECT COALESCE(task_count, 1) FROM habits WHERE id = :habitId) 
+                ELSE 0 
+            END
         WHERE habit_id = :habitId AND date = :date
     """)
     suspend fun setTaskCompleted(
@@ -126,4 +130,15 @@ interface HabitDao {
         date: String,
         completed: Boolean
     )
+
+    @Query("""
+        UPDATE habit_daily_state
+        SET completed_count = completed_count + 1,
+            is_task_completed = CASE 
+                WHEN completed_count + 1 >= (SELECT COALESCE(task_count, 1) FROM habits WHERE id = :habitId) THEN 1 
+                ELSE 0 
+            END
+        WHERE habit_id = :habitId AND date = :date
+    """)
+    suspend fun incrementTaskCount(habitId: Int, date: String)
 }

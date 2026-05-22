@@ -2,6 +2,9 @@ package com.example.pattern.ui.screens.addHabitScreen
 
 import androidx.compose.runtime.Immutable
 import com.example.pattern.domain.model.HabitType
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import java.time.DayOfWeek
 
 @Immutable
@@ -11,9 +14,10 @@ data class AddHabitUiState(
     val habitType: String = "Grow",
     val emoji: String = "🔥",
     val motivation: String = "",
-    val buildHabitDays: List<DayOfWeek> = DayOfWeek.entries.toList(),
+    val buildHabitDays: ImmutableList<DayOfWeek> = DayOfWeek.entries.toImmutableList(),
     val durationHours: Int = 0,
     val durationMinutes: Int = 30,
+    val taskCount: Int = 1,
     val selectedColor: String = "",
     val reminderEnabled: Boolean = false,
     val reminderTime: String = "09:00",

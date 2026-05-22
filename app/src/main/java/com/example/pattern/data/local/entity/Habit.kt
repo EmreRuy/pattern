@@ -38,17 +38,14 @@ data class Habit(
     @ColumnInfo(name = "accent_color_hex")
     val accentColorHex: String = "#77DD77",
 
-    @ColumnInfo(name = "accumulated_time_ms")
-    val accumulatedTimeMs: Long = 0L,
-
-    @ColumnInfo(name = "active_session_start_ms")
-    val activeSessionStartMs: Long? = null,
-
     @ColumnInfo(name = "reminder_time")
     val reminderTime: String? = null, // Stores in "HH:mm" format
     
     @ColumnInfo(name = "motivation")
-    val motivation: String? = null
+    val motivation: String? = null,
+
+    @ColumnInfo(name = "task_count")
+    val taskCount: Int? = null
 )
 
 enum class HabitType {

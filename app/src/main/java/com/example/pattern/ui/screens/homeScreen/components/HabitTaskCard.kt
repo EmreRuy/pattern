@@ -16,13 +16,17 @@ fun HabitTaskCard(
     isToday: Boolean,
     onCardClick: (Int) -> Unit,
     onTaskCompleted: (habitId: Int, completed: Boolean) -> Unit,
+    onTaskIncrement: (habitId: Int) -> Unit = {}
 ) {
+    val taskCount = habit.taskCount ?: 1
+    val isMultiStep = taskCount > 1
+
     BaseHabitCard(
         habit = habit,
         onCardClick = onCardClick,
         subtitle = {
             Text(
-                text = stringResource(R.string.habit_type_task),
+                text = if (isMultiStep) "$taskCount times goal" else stringResource(R.string.habit_type_task),
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
@@ -34,9 +38,15 @@ fun HabitTaskCard(
         action = {
             TaskRing(
                 checked = habit.isTaskChecked,
+                taskCount = taskCount,
+                completedCount = habit.completedCount,
                 onToggle = {
                     if (isToday) {
-                        onTaskCompleted(habit.id, !habit.isTaskChecked)
+                        if (isMultiStep && !habit.isTaskChecked) {
+                            onTaskIncrement(habit.id)
+                        } else {
+                            onTaskCompleted(habit.id, !habit.isTaskChecked)
+                        }
                     }
                 }
             )

@@ -3,6 +3,7 @@ package com.example.pattern.ui.model
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.pattern.domain.model.HabitType
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Staff Engineer Refactoring:
@@ -16,8 +17,10 @@ data class HabitCardModel(
     val icon: ImageVector,
     val iconEmoji: String? = null,
     val isTaskChecked: Boolean = false,
+    val completedCount: Int = 0,
     val accentColorHex: String,
     val durationInMinutes: Int?,
+    val taskCount: Int? = null,
     val accumulatedTimeMs: Long = 0L,
     val activeSessionStartMs: Long? = null,
     val isCompleted: Boolean = false,
