@@ -6,6 +6,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -17,10 +19,13 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.utils.CalendarDayModel
+import com.example.pattern.utils.CalendarMathProvider
 import com.example.pattern.utils.toCalendarDayModel
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -35,21 +40,20 @@ import java.util.Locale
 fun HomeCalendarSelector(
     pagerState: PagerState,
     selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // The central pivot is "This Week" (the week containing today).
-    // pageIndex 25,000 corresponds to the week of LocalDate.now().
+    val haptic = LocalHapticFeedback.current
     val today = remember { LocalDate.now() }
     val pivotDate = remember(today) { 
-        today.minusDays((today.dayOfWeek.value - 1).toLong()) 
+        today.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     }
 
     val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
 
-    // Derived state for the month title to avoid unnecessary recompositions of the header
     val currentMonthTitle by remember {
         derivedStateOf {
-            val weekOffset = pagerState.currentPage - 25000
+            val weekOffset = pagerState.currentPage - CalendarMathProvider.WEEK_PAGER_PIVOT
             val dateInWeek = pivotDate.plusWeeks(weekOffset.toLong())
             dateInWeek.format(monthFormatter)
         }
@@ -64,9 +68,9 @@ fun HomeCalendarSelector(
             verticalAlignment = Alignment.CenterVertically,
             pageSpacing = 0.dp,
             beyondViewportPageCount = 1,
-            key = { it } // Use page index as key for stability
+            key = { it }
         ) { weekIndex ->
-            val weekOffset = weekIndex - 25000
+            val weekOffset = weekIndex - CalendarMathProvider.WEEK_PAGER_PIVOT
             val weekStartDate = remember(weekOffset) { pivotDate.plusWeeks(weekOffset.toLong()) }
             
             Row(
@@ -85,7 +89,11 @@ fun HomeCalendarSelector(
                     CalendarItem(
                         isSelected = isSelected,
                         isToday = isToday,
-                        day = dayModel
+                        day = dayModel,
+                        onClick = { 
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onDateSelected(date) 
+                        }
                     )
                 }
             }
@@ -121,6 +129,7 @@ private fun CalendarItem(
     isSelected: Boolean,
     isToday: Boolean,
     day: CalendarDayModel,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isWeekend = remember(day.date) {
@@ -139,8 +148,12 @@ private fun CalendarItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null, // Minimalist: no ripple to avoid visual noise
+                onClick = onClick
+            )
             .graphicsLayer {
-                // Subtle lift animation on selection using state value in lambda to avoid recomposition
                 translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgressState.value
             }
     ) {

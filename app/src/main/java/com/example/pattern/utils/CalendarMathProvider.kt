@@ -12,12 +12,14 @@ import java.time.temporal.TemporalAdjusters
 object CalendarMathProvider {
 
     /**
+     * Constants for the infinite pager to ensure smooth scrolling in both directions.
+     */
+    const val WEEK_PAGER_PIVOT = 25000
+    const val DAY_PAGER_PIVOT = WEEK_PAGER_PIVOT * 7
+
+    /**
      * Calculates the Monday of the week for a given pivot date and a page offset.
      * Each page represents one week.
-     *
-     * @param pivot The reference date (anchor).
-     * @param pageOffset The number of weeks from the pivot's week.
-     * @return The LocalDate representing the Monday of the offset week.
      */
     fun getMondayOfWeek(pivot: LocalDate, pageOffset: Int): LocalDate {
         val pivotMonday = pivot.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
@@ -26,9 +28,6 @@ object CalendarMathProvider {
 
     /**
      * Generates a list of 7 dates for the week starting from the provided Monday.
-     *
-     * @param monday The start of the week (must be a Monday).
-     * @return A list of 7 LocalDates from Monday to Sunday.
      */
     fun getDatesForWeek(monday: LocalDate): List<LocalDate> {
         return (0..6).map { monday.plusDays(it.toLong()) }
@@ -36,14 +35,37 @@ object CalendarMathProvider {
 
     /**
      * Computes the number of weeks (pages) between the pivot's week and the target date's week.
-     *
-     * @param pivot The reference date (anchor).
-     * @param targetDate The date to calculate the offset for.
-     * @return The page offset (weeks) relative to the pivot.
      */
     fun computePageOffset(pivot: LocalDate, targetDate: LocalDate): Int {
         val pivotMonday = pivot.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val targetMonday = targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         return ChronoUnit.WEEKS.between(pivotMonday, targetMonday).toInt()
+    }
+
+    /**
+     * Computes the absolute page index for a week based on the pivot.
+     */
+    fun getWeekPageIndex(pivot: LocalDate, targetDate: LocalDate): Int {
+        return WEEK_PAGER_PIVOT + computePageOffset(pivot, targetDate)
+    }
+
+    /**
+     * Computes the absolute page index for a day based on the pivot.
+     */
+    fun getDayPageIndex(pivot: LocalDate, targetDate: LocalDate): Int {
+        val daysBetween = ChronoUnit.DAYS.between(
+            pivot.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
+            targetDate
+        )
+        return DAY_PAGER_PIVOT + daysBetween.toInt()
+    }
+
+    /**
+     * Gets the date from a day page index.
+     */
+    fun getDateFromDayIndex(pivot: LocalDate, dayIndex: Int): LocalDate {
+        val daysFromPivot = (dayIndex - DAY_PAGER_PIVOT).toLong()
+        val pivotMonday = pivot.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        return pivotMonday.plusDays(daysFromPivot)
     }
 }

@@ -43,6 +43,7 @@ class HomeViewModel @Inject constructor(
     private val levelInfoFlow = habitRepository.getSettingsStream()
         .map { settings -> ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0) }
         .distinctUntilChanged()
+        .onStart { emit(ExperienceUtils.getLevelInfo(0)) }
 
     // Key Performance Fix: 
     // We observe structural changes ONLY. This keeps the ViewModel silent during timer ticks.
@@ -52,13 +53,22 @@ class HomeViewModel @Inject constructor(
         _selectedDate,
         habitRepository.getAllHabitsStream(),
         habitRepository.getCompletedDatesStream(),
-        structuralDailyStateFlow
-    ) { date, allHabits, completedDatesByHabit, allDailyStates ->
+        structuralDailyStateFlow,
+        levelInfoFlow
+    ) { date, allHabits, completedDatesByHabit, allDailyStates, level ->
         
-        val dateWindow = listOf(date.minusDays(1), date, date.plusDays(1))
+        val today = LocalDate.now()
+        
+        // High-Performance Staff Strategy:
+        // We pre-calculate a massive 60-day window around today, PLUS a 14-day window 
+        // around the selectedDate. This ensures that whether the user swipes days 
+        // or weeks (7 days at a time), the data is ALWAYS there instantly.
+        val dateWindow = mutableSetOf<LocalDate>()
+        for (i in -30..30) dateWindow.add(today.plusDays(i.toLong()))
+        for (i in -7..7) dateWindow.add(date.plusDays(i.toLong()))
+
         val dailyStateMap = allDailyStates.groupBy { it.date }
         val currentWindowKeys = mutableSetOf<String>()
-        val today = LocalDate.now()
 
         val habitsByDate = dateWindow.associateWith { d ->
             val dateStr = d.toString()
@@ -67,30 +77,29 @@ class HomeViewModel @Inject constructor(
             
             allHabits.mapNotNull { habit ->
                 if (!habit.selectedDays[dayOfWeekIndex]) return@mapNotNull null
-                if (!d.isBefore(habit.createdAtLocalDate)) {
-                    
-                    val dailyState = statesForDay[habit.id]
-                    val completedDates = completedDatesByHabit[habit.id] ?: emptySet()
-                    
-                    // Pre-convert to epoch for zero-allocation streak calculation
-                    val streak = calculateCurrentStreak(
-                        habit, 
-                        completedDates.map { it.toEpochDay() }.toSet(), 
-                        today
-                    )
-                    
-                    val habitHash = habit.hashCode()
-                    val stateHash = dailyState?.hashCode() ?: 0
-                    val cacheKey = "${habit.id}_${dateStr}_${habitHash}_${stateHash}_$streak"
-                    currentWindowKeys.add(cacheKey)
-                    
-                    modelCache.getOrPut(cacheKey) {
-                        HabitWithStatus(habit, dailyState, streak).toCardModel()
-                    }
-                } else null
+                if (d.isBefore(habit.createdAtLocalDate)) return@mapNotNull null
+                
+                val dailyState = statesForDay[habit.id]
+                val completedDates = completedDatesByHabit[habit.id] ?: emptySet()
+                
+                val streak = calculateCurrentStreak(
+                    habit, 
+                    completedDates.map { it.toEpochDay() }.toSet(), 
+                    today
+                )
+                
+                val habitHash = habit.hashCode()
+                val stateHash = dailyState?.hashCode() ?: 0
+                val cacheKey = "${habit.id}_${dateStr}_${habitHash}_${stateHash}_$streak"
+                currentWindowKeys.add(cacheKey)
+                
+                modelCache.getOrPut(cacheKey) {
+                    HabitWithStatus(habit, dailyState, streak).toCardModel()
+                }
             }
         }
 
+        // Clean up cache to prevent memory leaks
         modelCache.keys.retainAll(currentWindowKeys)
 
         HomeUiState.Success(
@@ -99,10 +108,8 @@ class HomeViewModel @Inject constructor(
             habits = (habitsByDate[date] ?: emptyList()).toImmutableList(),
             habitsByDate = habitsByDate.mapValues { it.value.toImmutableList() }.toImmutableMap(),
             hasAnyHabits = allHabits.isNotEmpty(),
-            levelInfo = ExperienceUtils.getLevelInfo(0)
+            levelInfo = level
         )
-    }.combine(levelInfoFlow) { success, level ->
-        success.copy(levelInfo = level)
     }
     .flowOn(defaultDispatcher)
     .stateIn(

@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.ui.screens.homeScreen.components.HabitCardsPager
 import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
+import com.example.pattern.utils.CalendarMathProvider
 import java.time.LocalDate
 
 @Composable
@@ -58,60 +60,69 @@ private fun HomeContent(
     onPremiumClick: () -> Unit
 ) {
     val today = remember { LocalDate.now() }
-    val mondayOfThisWeek = remember(today) { 
-        today.minusDays((today.dayOfWeek.value - 1).toLong()) 
-    }
     
-    // Constants for the infinite pager
-    val weekPivotPage = 25000
-    val dayPivotIndex = weekPivotPage * 7
-
     val calendarPagerState = rememberPagerState(
-        initialPage = weekPivotPage,
+        initialPage = CalendarMathProvider.getWeekPageIndex(today, state.selectedDate),
         pageCount = { 50000 }
     )
 
-    val initialHabitPage = remember(today, dayPivotIndex) {
-        dayPivotIndex + (today.dayOfWeek.value - 1)
-    }
     val habitPagerState = rememberPagerState(
-        initialPage = initialHabitPage,
+        initialPage = CalendarMathProvider.getDayPageIndex(today, state.selectedDate),
         pageCount = { 50000 * 7 }
     )
 
-    // Sync Pager -> ViewModel
-    LaunchedEffect(habitPagerState.currentPage) {
-        val offset = habitPagerState.currentPage - dayPivotIndex
-        val selectedDate = mondayOfThisWeek.plusDays(offset.toLong())
-        
-        if (selectedDate != state.selectedDate) {
-            onEvent(HomeUiEvent.OnDateSelected(selectedDate))
-            
-            val targetWeekPage = habitPagerState.currentPage / 7
-            if (calendarPagerState.currentPage != targetWeekPage) {
-                calendarPagerState.animateScrollToPage(targetWeekPage)
-            }
+    // Visual Source of Truth: The date currently centered in the pager.
+    // Driving the UI selection from this instead of the ViewModel state
+    // provides instant visual feedback while swiping.
+    val visuallySelectedDate by remember {
+        derivedStateOf {
+            CalendarMathProvider.getDateFromDayIndex(today, habitPagerState.currentPage)
         }
     }
 
-    // Sync ViewModel -> Pager
+    // 1. Sync Pager to ViewModel (External changes only)
     LaunchedEffect(state.selectedDate) {
-        val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(mondayOfThisWeek, state.selectedDate)
-        val targetHabitPage = dayPivotIndex + daysBetween.toInt()
-        
-        if (habitPagerState.currentPage != targetHabitPage) {
-            habitPagerState.animateScrollToPage(targetHabitPage)
+        val targetDayPage = CalendarMathProvider.getDayPageIndex(today, state.selectedDate)
+        // Only animate if the difference is caused by something other than the user swiping
+        if (habitPagerState.currentPage != targetDayPage && !habitPagerState.isScrollInProgress) {
+            habitPagerState.animateScrollToPage(targetDayPage)
         }
     }
 
-    // Sync Calendar Pager -> Habit Pager (when user swipes calendar)
-    LaunchedEffect(calendarPagerState.currentPage) {
-        val targetHabitWeekStart = calendarPagerState.currentPage * 7
-        val currentHabitWeekStart = (habitPagerState.currentPage / 7) * 7
-        if (targetHabitWeekStart != currentHabitWeekStart) {
-            // Maintain the same day of week when swiping weeks if possible
+    // 2. Immediate Habit Pager -> Calendar Pager sync
+    val habitWeekPage by remember { derivedStateOf { habitPagerState.currentPage / 7 } }
+    LaunchedEffect(habitWeekPage) {
+        if (calendarPagerState.currentPage != habitWeekPage) {
+            calendarPagerState.scrollToPage(habitWeekPage)
+        }
+    }
+
+    // 3. Proactive ViewModel Update
+    // As the page changes, we update the ViewModel's selectedDate.
+    // Because we have a wide data window in the ViewModel, this won't cause lag.
+    LaunchedEffect(habitPagerState.currentPage) {
+        val dateAtPage = CalendarMathProvider.getDateFromDayIndex(today, habitPagerState.currentPage)
+        if (dateAtPage != state.selectedDate) {
+            onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
+        }
+    }
+
+    // 4. Calendar Pager -> Habit Pager Sync (User Swiping Weeks)
+    // Synchronize the habit list IMMEDIATELY as the user swipes through weeks.
+    val calendarCurrentPage by remember { derivedStateOf { calendarPagerState.currentPage } }
+    LaunchedEffect(calendarCurrentPage) {
+        val currentHabitWeekPage = habitPagerState.currentPage / 7
+        if (calendarCurrentPage != currentHabitWeekPage) {
             val dayOfWeekOffset = habitPagerState.currentPage % 7
-            habitPagerState.animateScrollToPage(targetHabitWeekStart + dayOfWeekOffset)
+            val targetHabitPage = calendarCurrentPage * 7 + dayOfWeekOffset
+            
+            // If the user is swiping the calendar, we move the habit pager instantly 
+            // so the data is already there when they look down.
+            if (calendarPagerState.isScrollInProgress) {
+                habitPagerState.scrollToPage(targetHabitPage)
+            } else {
+                habitPagerState.animateScrollToPage(targetHabitPage)
+            }
         }
     }
 
@@ -130,7 +141,10 @@ private fun HomeContent(
                 )
                 HomeCalendarSelector(
                     pagerState = calendarPagerState,
-                    selectedDate = state.selectedDate
+                    selectedDate = visuallySelectedDate,
+                    onDateSelected = { date ->
+                        onEvent(HomeUiEvent.OnDateSelected(date))
+                    }
                 )
             }
         },
