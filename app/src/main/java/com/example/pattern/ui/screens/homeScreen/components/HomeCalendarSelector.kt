@@ -5,9 +5,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -31,10 +31,12 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Premium, minimalist Calendar Selector for the Home Screen.
- * Engineered for maximum performance and a refined user experience.
+ * Optimized, premium minimalist Calendar Selector for the Home Screen.
+ * Refactored for zero-churn runtime performance and high-frequency interaction.
  */
 @Composable
 fun HomeCalendarSelector(
@@ -45,13 +47,16 @@ fun HomeCalendarSelector(
 ) {
     val haptic = LocalHapticFeedback.current
     val today = remember { LocalDate.now() }
+    
+    // Optimization: Pivot date is stable for the session.
     val pivotDate = remember(today) { 
         today.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     }
 
     val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
 
-    val currentMonthTitle by remember {
+    // Optimization: Defer title reading to CalendarHeader to avoid recomposing the main container on scroll.
+    val currentMonthTitleState = remember(pagerState, pivotDate) {
         derivedStateOf {
             val weekOffset = pagerState.currentPage - CalendarMathProvider.WEEK_PAGER_PIVOT
             val dateInWeek = pivotDate.plusWeeks(weekOffset.toLong())
@@ -60,51 +65,80 @@ fun HomeCalendarSelector(
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        CalendarHeader(title = { currentMonthTitle })
+        CalendarHeader(titleProvider = { currentMonthTitleState.value })
         
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            pageSpacing = 0.dp,
+            userScrollEnabled = false, // Staff Decision: Unified navigation source
             beyondViewportPageCount = 1,
             key = { it }
         ) { weekIndex ->
             val weekOffset = weekIndex - CalendarMathProvider.WEEK_PAGER_PIVOT
-            val weekStartDate = remember(weekOffset) { pivotDate.plusWeeks(weekOffset.toLong()) }
             
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = CalendarSelectorDefaults.VerticalPadding),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(7) { i ->
-                    val date = remember(weekStartDate) { weekStartDate.plusDays(i.toLong()) }
-                    val dayModel = remember(date) { date.toCalendarDayModel() }
-                    val isSelected = selectedDate == date
-                    val isToday = remember(date, today) { date == today }
-                    
-                    CalendarItem(
-                        isSelected = isSelected,
-                        isToday = isToday,
-                        day = dayModel,
-                        onClick = { 
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onDateSelected(date) 
-                        }
-                    )
-                }
+            // Optimization: Pre-calculate week data into a stable list to minimize remember slots.
+            val weekDays = remember(weekOffset, pivotDate) {
+                val weekStartDate = pivotDate.plusWeeks(weekOffset.toLong())
+                List(7) { i ->
+                    weekStartDate.plusDays(i.toLong()).toCalendarDayModel()
+                }.toImmutableList()
             }
+            
+            // Optimization: Isolated scope for week content to prevent parent recomposition.
+            WeekRow(
+                days = weekDays,
+                selectedDate = selectedDate,
+                today = today,
+                onDateSelected = onDateSelected,
+                haptic = haptic
+            )
         }
     }
 }
 
 @Composable
-private fun CalendarHeader(title: () -> String) {
+private fun WeekRow(
+    days: ImmutableList<CalendarDayModel>,
+    selectedDate: LocalDate,
+    today: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback
+) {
+    val currentOnDateSelected by rememberUpdatedState(onDateSelected)
+    
+    Row(
+        modifier = CalendarSelectorDefaults.WeekRowModifier,
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        days.forEach { day ->
+            val date = day.date
+            val isSelected = selectedDate == date
+            val isToday = date == today
+            
+            // Optimization: Stable lambda reference per date prevents CalendarItem from invalidating.
+            val onClick = remember(date) {
+                {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    currentOnDateSelected(date)
+                }
+            }
+
+            CalendarItem(
+                isSelected = isSelected,
+                isToday = isToday,
+                day = day,
+                onClick = onClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarHeader(titleProvider: () -> String) {
+    // Reading the state inside AnimatedContent's scope limits invalidation.
     AnimatedContent(
-        targetState = title(),
+        targetState = titleProvider(),
         transitionSpec = {
             (fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) + 
              slideInVertically { it / 2 })
@@ -114,10 +148,9 @@ private fun CalendarHeader(title: () -> String) {
     ) { targetTitle ->
         Text(
             text = targetTitle,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.8.sp
-            ),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.8.sp,
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
             modifier = Modifier.padding(start = 24.dp, bottom = 4.dp)
         )
@@ -138,10 +171,7 @@ private fun CalendarItem(
 
     val selectionProgressState = animateFloatAsState(
         targetValue = if (isSelected) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = CalendarSelectorDefaults.SelectionAnimation,
         label = "selection_progress"
     )
 
@@ -150,10 +180,11 @@ private fun CalendarItem(
         modifier = modifier
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null, // Minimalist: no ripple to avoid visual noise
+                indication = null, // No ripple for high performance & minimalist aesthetics
                 onClick = onClick
             )
             .graphicsLayer {
+                // Optimization: Read state inside lambda to avoid recomposing Column during animation.
                 translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgressState.value
             }
     ) {
@@ -182,19 +213,21 @@ private fun DayLetterHeader(
     isSelected: Boolean,
     isToday: Boolean
 ) {
-    val color = when {
-        isSelected -> MaterialTheme.colorScheme.primary
-        isToday -> MaterialTheme.colorScheme.secondary
-        isWeekend -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+    val colorScheme = MaterialTheme.colorScheme
+    val color = remember(isSelected, isToday, isWeekend, colorScheme) {
+        when {
+            isSelected -> colorScheme.primary
+            isToday -> colorScheme.secondary
+            isWeekend -> colorScheme.error.copy(alpha = 0.5f)
+            else -> colorScheme.onSurface.copy(alpha = 0.35f)
+        }
     }
 
     Text(
         text = letter.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Medium,
-            letterSpacing = 0.5.sp
-        ),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Medium,
+        letterSpacing = 0.5.sp,
         color = color
     )
 }
@@ -206,21 +239,25 @@ private fun DayNumberCircle(
     isToday: Boolean,
     selectionProgress: () -> Float
 ) {
-    val selectionColor = MaterialTheme.colorScheme.primary
-    val todayColor = MaterialTheme.colorScheme.secondary
-    val surfaceContainerLowest = MaterialTheme.colorScheme.surfaceContainerLowest
+    val colorScheme = MaterialTheme.colorScheme
+    val surfaceContainerLowest = colorScheme.surfaceContainerLowest
+    val onSurface = colorScheme.onSurface
+    val primary = colorScheme.primary
+    val secondary = colorScheme.secondary
 
-    val contentColor = when {
-        isSelected -> selectionColor
-        isToday -> todayColor
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    val contentColor = remember(isSelected, isToday, primary, secondary, onSurface) {
+        when {
+            isSelected -> primary
+            isToday -> secondary
+            else -> onSurface.copy(alpha = 0.7f)
+        }
     }
 
     Box(
         modifier = Modifier
             .size(CalendarSelectorDefaults.NumberCircleSize)
             .graphicsLayer {
-                // Natural scaling effect using lambda for performance
+                // Optimization: Lambda-based property updates avoid recomposition.
                 val progress = selectionProgress()
                 val scale = 0.96f + (0.04f * progress)
                 scaleX = scale
@@ -228,12 +265,10 @@ private fun DayNumberCircle(
             }
             .drawBehind {
                 val progress = selectionProgress()
-                // background color updated to surfaceContainerLowest with smooth alpha transition
                 drawCircle(
                     color = surfaceContainerLowest.copy(alpha = progress),
                 )
                 
-                // Subtle thin border for a refined, minimalistic selection
                 if (progress > 0f) {
                     drawCircle(
                         color = Color.Black.copy(alpha = progress * 0.08f),
@@ -249,10 +284,9 @@ private fun DayNumberCircle(
         ) {
             Text(
                 text = dayNumber,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = if (isSelected || isToday) FontWeight.Medium else FontWeight.Normal,
-                    fontSize = 15.sp
-                ),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (isSelected || isToday) FontWeight.Medium else FontWeight.Normal,
+                fontSize = 15.sp,
                 color = contentColor
             )
             
@@ -262,10 +296,10 @@ private fun DayNumberCircle(
                         .padding(top = 1.dp)
                         .size(3.dp)
                         .graphicsLayer {
-                            // Fade out dot as selection fills up for a cleaner transition
+                            // Smoothly fade out today-dot as selection circle fills.
                             alpha = 1f - (selectionProgress() * 0.5f)
                         }
-                        .background(todayColor, CircleShape)
+                        .background(secondary, CircleShape)
                 )
             }
         }
@@ -276,6 +310,14 @@ private object CalendarSelectorDefaults {
     val NumberCircleSize = 40.dp
     val SelectionLift = 2.dp
     val HeaderSpacing = 8.dp
-    val VerticalPadding = 12.dp
     val SelectionBorderWidth = 0.5.dp
+    
+    val SelectionAnimation = spring<Float>(
+        dampingRatio = Spring.DampingRatioLowBouncy,
+        stiffness = Spring.StiffnessMediumLow
+    )
+
+    val WeekRowModifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 12.dp)
 }

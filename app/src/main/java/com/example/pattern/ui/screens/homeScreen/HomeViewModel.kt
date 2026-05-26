@@ -11,6 +11,8 @@ import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateCurrentStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,6 +31,27 @@ import javax.inject.Inject
  *    Ticking timer updates in the DB are completely ignored by the UI state pipeline.
  * 2. Reduced Mapping: Eliminated the redundant raw stream from the combine block.
  */
+/**
+ * Internal data structure to avoid boxing in the structural data pipeline.
+ */
+private data class HomeStructuralData(
+    val habits: List<com.example.pattern.domain.model.Habit>,
+    val streaks: Map<Int, Int>,
+    val statesByDate: Map<String, List<com.example.pattern.domain.model.HabitDailyState>>,
+    val level: com.example.pattern.domain.model.LevelInfo
+)
+
+/**
+ * Stable Cache Key for Habit Models. 
+ * Optimized to exclude date, allowing model reuse across days with identical state.
+ */
+private data class HabitModelKey(
+    val habitId: Int,
+    val habitHash: Int,
+    val stateHash: Int,
+    val streak: Int
+)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -38,78 +61,103 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
-    private val modelCache = mutableMapOf<String, HabitCardModel>()
+    
+    // Staff Optimization: Model cache with high hit-rate due to day-independent keys.
+    private val modelCache = java.util.concurrent.ConcurrentHashMap<HabitModelKey, HabitCardModel>(500)
 
     private val levelInfoFlow = habitRepository.getSettingsStream()
         .map { settings -> ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0) }
         .distinctUntilChanged()
         .onStart { emit(ExperienceUtils.getLevelInfo(0)) }
 
-    // Key Performance Fix: 
-    // We observe structural changes ONLY. This keeps the ViewModel silent during timer ticks.
-    private val structuralDailyStateFlow = habitRepository.getAllDailyStatesStream()
+    // Staff Optimization: Structural Data Flow. 
+    // This heavy lifting ONLY runs when the database content changes.
+    private val structuralDataFlow = combine(
+        habitRepository.getAllHabitsStream().distinctUntilChanged(),
+        habitRepository.getCompletedDatesStream().distinctUntilChanged(),
+        habitRepository.getAllDailyStatesStream().distinctUntilChanged(),
+        levelInfoFlow
+    ) { habits, completed, states, level ->
+        val today = LocalDate.now()
+        
+        // 1. Pre-calculate Epoch Sets (Once per DB change)
+        val completedEpochsByHabit = completed.mapValues { (_, dates) ->
+            val set = java.util.HashSet<Long>(dates.size)
+            for (d in dates) set.add(d.toEpochDay())
+            set
+        }
+        
+        // 2. Pre-calculate Streaks (Once per DB change)
+        val streaks = habits.associate { 
+            it.id to calculateCurrentStreak(it, completedEpochsByHabit[it.id] ?: emptySet(), today) 
+        }
+        
+        // 3. Group states by ISO date string
+        val statesByDate = states.groupBy { it.date }
+        
+        HomeStructuralData(habits, streaks, statesByDate, level)
+    }.distinctUntilChanged().flowOn(defaultDispatcher)
 
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
-        habitRepository.getAllHabitsStream(),
-        habitRepository.getCompletedDatesStream(),
-        structuralDailyStateFlow,
-        levelInfoFlow
-    ) { date, allHabits, completedDatesByHabit, allDailyStates, level ->
-        
+        structuralDataFlow
+    ) { date, data ->
         val today = LocalDate.now()
+        val dateWindow = calculateDateWindow(today, date)
         
-        // High-Performance Staff Strategy:
-        // We pre-calculate a massive 60-day window around today, PLUS a 14-day window 
-        // around the selectedDate. This ensures that whether the user swipes days 
-        // or weeks (7 days at a time), the data is ALWAYS there instantly.
-        val dateWindow = mutableSetOf<LocalDate>()
-        for (i in -30..30) dateWindow.add(today.plusDays(i.toLong()))
-        for (i in -7..7) dateWindow.add(date.plusDays(i.toLong()))
+        // Staff Optimization: Fast mapping using pre-calculated structural data.
+        // Swiping days is now extremely lightweight as streaks and groupings are already done.
+        val habitsByDate = java.util.HashMap<LocalDate, ImmutableList<HabitCardModel>>(dateWindow.size)
+        val activeKeys = java.util.HashSet<HabitModelKey>(dateWindow.size * data.habits.size)
 
-        val dailyStateMap = allDailyStates.groupBy { it.date }
-        val currentWindowKeys = mutableSetOf<String>()
-
-        val habitsByDate = dateWindow.associateWith { d ->
+        for (d in dateWindow) {
             val dateStr = d.toString()
             val dayOfWeekIndex = d.dayOfWeek.value - 1
-            val statesForDay = dailyStateMap[dateStr]?.associateBy { it.habitId } ?: emptyMap()
+            val statesForDay = data.statesByDate[dateStr]
             
-            allHabits.mapNotNull { habit ->
-                if (!habit.selectedDays[dayOfWeekIndex]) return@mapNotNull null
-                if (d.isBefore(habit.createdAtLocalDate)) return@mapNotNull null
+            val mappedHabits = ArrayList<HabitCardModel>(data.habits.size)
+            for (habit in data.habits) {
+                if (!habit.selectedDays[dayOfWeekIndex]) continue
+                if (d.isBefore(habit.createdAtLocalDate)) continue
                 
-                val dailyState = statesForDay[habit.id]
-                val completedDates = completedDatesByHabit[habit.id] ?: emptySet()
+                // Find state for this specific habit on this day
+                val dailyState = statesForDay?.find { it.habitId == habit.id }
+                val streak = data.streaks[habit.id] ?: 0
                 
-                val streak = calculateCurrentStreak(
-                    habit, 
-                    completedDates.map { it.toEpochDay() }.toSet(), 
-                    today
+                val modelKey = HabitModelKey(
+                    habitId = habit.id,
+                    habitHash = habit.hashCode(),
+                    stateHash = dailyState?.hashCode() ?: 0,
+                    streak = streak
                 )
                 
-                val habitHash = habit.hashCode()
-                val stateHash = dailyState?.hashCode() ?: 0
-                val cacheKey = "${habit.id}_${dateStr}_${habitHash}_${stateHash}_$streak"
-                currentWindowKeys.add(cacheKey)
-                
-                modelCache.getOrPut(cacheKey) {
+                activeKeys.add(modelKey)
+                mappedHabits.add(modelCache.getOrPut(modelKey) {
                     HabitWithStatus(habit, dailyState, streak).toCardModel()
-                }
+                })
             }
+            habitsByDate[d] = mappedHabits.toImmutableList()
         }
 
-        // Clean up cache to prevent memory leaks
-        modelCache.keys.retainAll(currentWindowKeys)
+        // Periodic cleanup to keep memory lean
+        if (modelCache.size > 1000) {
+            modelCache.keys.retainAll(activeKeys)
+        }
+
+        val immutableHabitsByDate = (habitsByDate as Map<LocalDate, ImmutableList<HabitCardModel>>).toImmutableMap()
 
         HomeUiState.Success(
             selectedDate = date,
             isSelectedDateToday = date == today,
-            habits = (habitsByDate[date] ?: emptyList()).toImmutableList(),
-            habitsByDate = habitsByDate.mapValues { it.value.toImmutableList() }.toImmutableMap(),
-            hasAnyHabits = allHabits.isNotEmpty(),
-            levelInfo = level
-        )
+            habits = immutableHabitsByDate[date] ?: persistentListOf(),
+            habitsByDate = immutableHabitsByDate,
+            hasAnyHabits = data.habits.isNotEmpty(),
+            levelInfo = data.level
+        ) as HomeUiState
+    }
+    .catch { e -> 
+        e.printStackTrace()
+        emit(HomeUiState.Error("Connectivity error. Please refresh.")) 
     }
     .flowOn(defaultDispatcher)
     .stateIn(
@@ -118,16 +166,35 @@ class HomeViewModel @Inject constructor(
         initialValue = HomeUiState.Loading
     )
 
+    private fun calculateDateWindow(today: LocalDate, selectedDate: LocalDate): Set<LocalDate> {
+        val window = java.util.LinkedHashSet<LocalDate>(100)
+        // Staff Strategy: High-Density window around selection + today
+        for (i in -30..30) window.add(today.plusDays(i.toLong()))
+        for (i in -7..7) window.add(selectedDate.plusDays(i.toLong()))
+        return window
+    }
+
     fun onEvent(event: HomeUiEvent) {
         when (event) {
             is HomeUiEvent.OnDateSelected -> _selectedDate.value = event.date
-            is HomeUiEvent.OnTimerStart -> viewModelScope.launch { updateHabitProgressUseCase.startTimer(event.habitId, event.date) }
-            is HomeUiEvent.OnTimerPause -> viewModelScope.launch { updateHabitProgressUseCase.pauseTimer(event.habitId, event.date) }
-            is HomeUiEvent.OnTimerResume -> viewModelScope.launch { updateHabitProgressUseCase.resumeTimer(event.habitId, event.date) }
-            is HomeUiEvent.OnTimerFinish -> viewModelScope.launch { updateHabitProgressUseCase.finishTimer(event.habitId, event.date) }
-            is HomeUiEvent.OnTimerUnfinish -> viewModelScope.launch { updateHabitProgressUseCase.unfinishTimer(event.habitId, event.date) }
-            is HomeUiEvent.OnTaskToggle -> viewModelScope.launch { updateHabitProgressUseCase.toggleTask(event.habitId, event.date, event.completed) }
-            is HomeUiEvent.OnTaskIncrement -> viewModelScope.launch { updateHabitProgressUseCase.incrementTask(event.habitId, event.date) }
+            is HomeUiEvent.OnTimerStart -> launchUpdate { updateHabitProgressUseCase.startTimer(event.habitId, event.date) }
+            is HomeUiEvent.OnTimerPause -> launchUpdate { updateHabitProgressUseCase.pauseTimer(event.habitId, event.date) }
+            is HomeUiEvent.OnTimerResume -> launchUpdate { updateHabitProgressUseCase.resumeTimer(event.habitId, event.date) }
+            is HomeUiEvent.OnTimerFinish -> launchUpdate { updateHabitProgressUseCase.finishTimer(event.habitId, event.date) }
+            is HomeUiEvent.OnTimerUnfinish -> launchUpdate { updateHabitProgressUseCase.unfinishTimer(event.habitId, event.date) }
+            is HomeUiEvent.OnTaskToggle -> launchUpdate { updateHabitProgressUseCase.toggleTask(event.habitId, event.date, event.completed) }
+            is HomeUiEvent.OnTaskIncrement -> launchUpdate { updateHabitProgressUseCase.incrementTask(event.habitId, event.date) }
+        }
+    }
+
+    private fun launchUpdate(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                // Log error or update transient error state
+                e.printStackTrace()
+            }
         }
     }
 }

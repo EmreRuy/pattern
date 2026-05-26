@@ -107,25 +107,6 @@ private fun HomeContent(
         }
     }
 
-    // 4. Calendar Pager -> Habit Pager Sync (User Swiping Weeks)
-    // Synchronize the habit list IMMEDIATELY as the user swipes through weeks.
-    val calendarCurrentPage by remember { derivedStateOf { calendarPagerState.currentPage } }
-    LaunchedEffect(calendarCurrentPage) {
-        val currentHabitWeekPage = habitPagerState.currentPage / 7
-        if (calendarCurrentPage != currentHabitWeekPage) {
-            val dayOfWeekOffset = habitPagerState.currentPage % 7
-            val targetHabitPage = calendarCurrentPage * 7 + dayOfWeekOffset
-            
-            // If the user is swiping the calendar, we move the habit pager instantly 
-            // so the data is already there when they look down.
-            if (calendarPagerState.isScrollInProgress) {
-                habitPagerState.scrollToPage(targetHabitPage)
-            } else {
-                habitPagerState.animateScrollToPage(targetHabitPage)
-            }
-        }
-    }
-
     Scaffold(
         topBar = {
             Column(
