@@ -20,24 +20,47 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.utils.CalendarDayModel
 import com.example.pattern.utils.CalendarMathProvider
-import com.example.pattern.utils.toCalendarDayModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Optimized, premium minimalist Calendar Selector for the Home Screen.
- * Refactored for zero-churn runtime performance and high-frequency interaction.
+ * PRODUCTION-GRADE OPTIMIZED CALENDAR SELECTOR
+ * Optimized to eliminate object allocation churn (String, Integer, LayoutNode) and minimize recomposition.
  */
+
+// 1. Static caches to prevent high-frequency string and formatter allocations.
+private object CalendarCache {
+    private val dayNumberStrings = (1..31).associateWith { it.toString() }
+    private val dayLetterCache = mutableMapOf<Pair<DayOfWeek, Locale>, String>()
+
+    fun getDayNumber(day: Int): String = dayNumberStrings[day] ?: day.toString()
+
+    fun getDayLetter(dayOfWeek: DayOfWeek, locale: Locale): String {
+        return dayLetterCache.getOrPut(dayOfWeek to locale) {
+            dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+        }
+    }
+}
+
+private val monthFormatterCache = mutableMapOf<Locale, DateTimeFormatter>()
+private fun getMonthFormatter(locale: Locale): DateTimeFormatter {
+    return monthFormatterCache.getOrPut(locale) {
+        DateTimeFormatter.ofPattern("MMMM yyyy", locale)
+    }
+}
+
 @Composable
 fun HomeCalendarSelector(
     pagerState: PagerState,
@@ -53,10 +76,11 @@ fun HomeCalendarSelector(
         today.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     }
 
-    val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
+    val locale = LocalConfiguration.current.locales[0]
+    val monthFormatter = remember(locale) { getMonthFormatter(locale) }
 
-    // Optimization: Defer title reading to CalendarHeader to avoid recomposing the main container on scroll.
-    val currentMonthTitleState = remember(pagerState, pivotDate) {
+    // Optimization: Defer title reading to CalendarHeader via lambda to avoid main container recomposition.
+    val currentMonthTitleState = remember(pagerState, pivotDate, monthFormatter) {
         derivedStateOf {
             val weekOffset = pagerState.currentPage - CalendarMathProvider.WEEK_PAGER_PIVOT
             val dateInWeek = pivotDate.plusWeeks(weekOffset.toLong())
@@ -64,32 +88,42 @@ fun HomeCalendarSelector(
         }
     }
 
+    // Optimization: Capture changing inputs in stable states to preserve HorizontalPager's content lambda stability.
+    val currentOnDateSelected by rememberUpdatedState(onDateSelected)
+    val currentSelectedDate by rememberUpdatedState(selectedDate)
+
     Column(modifier = modifier.fillMaxWidth()) {
         CalendarHeader(titleProvider = { currentMonthTitleState.value })
         
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth(),
-            userScrollEnabled = false, // Staff Decision: Unified navigation source
+            userScrollEnabled = false,
             beyondViewportPageCount = 1,
             key = { it }
         ) { weekIndex ->
             val weekOffset = weekIndex - CalendarMathProvider.WEEK_PAGER_PIVOT
             
-            // Optimization: Pre-calculate week data into a stable list to minimize remember slots.
-            val weekDays = remember(weekOffset, pivotDate) {
+            // Optimization: Memoize the week data calculation. Use cached strings to prevent allocation churn.
+            val weekDays = remember(weekOffset, pivotDate, locale) {
                 val weekStartDate = pivotDate.plusWeeks(weekOffset.toLong())
                 List(7) { i ->
-                    weekStartDate.plusDays(i.toLong()).toCalendarDayModel()
+                    val date = weekStartDate.plusDays(i.toLong())
+                    CalendarDayModel(
+                        date = date,
+                        dayLetter = CalendarCache.getDayLetter(date.dayOfWeek, locale),
+                        dayNumber = CalendarCache.getDayNumber(date.dayOfMonth),
+                        fullDateString = "" // Unused in UI, avoid toString() allocation
+                    )
                 }.toImmutableList()
             }
             
-            // Optimization: Isolated scope for week content to prevent parent recomposition.
+            // Optimization: Isolated scope for week content.
             WeekRow(
                 days = weekDays,
-                selectedDate = selectedDate,
+                selectedDate = currentSelectedDate,
                 today = today,
-                onDateSelected = onDateSelected,
+                onDateSelected = currentOnDateSelected,
                 haptic = haptic
             )
         }
@@ -104,8 +138,6 @@ private fun WeekRow(
     onDateSelected: (LocalDate) -> Unit,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback
 ) {
-    val currentOnDateSelected by rememberUpdatedState(onDateSelected)
-    
     Row(
         modifier = CalendarSelectorDefaults.WeekRowModifier,
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -116,11 +148,11 @@ private fun WeekRow(
             val isSelected = selectedDate == date
             val isToday = date == today
             
-            // Optimization: Stable lambda reference per date prevents CalendarItem from invalidating.
-            val onClick = remember(date) {
+            // Optimization: Stable lambda reference per date prevents item invalidation.
+            val onClick = remember(date, haptic) {
                 {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    currentOnDateSelected(date)
+                    onDateSelected(date)
                 }
             }
 
@@ -136,7 +168,6 @@ private fun WeekRow(
 
 @Composable
 private fun CalendarHeader(titleProvider: () -> String) {
-    // Reading the state inside AnimatedContent's scope limits invalidation.
     AnimatedContent(
         targetState = titleProvider(),
         transitionSpec = {
@@ -175,17 +206,20 @@ private fun CalendarItem(
         label = "selection_progress"
     )
 
+    // Optimization: Defer selection state read via lambda to avoid recomposing the whole Column.
+    val progressProvider = remember(selectionProgressState) { { selectionProgressState.value } }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null, // No ripple for high performance & minimalist aesthetics
+                indication = null, 
                 onClick = onClick
             )
             .graphicsLayer {
-                // Optimization: Read state inside lambda to avoid recomposing Column during animation.
-                translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgressState.value
+                // Optimization: Read state inside lambda to avoid recomposing during animation.
+                translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * progressProvider()
             }
     ) {
         DayLetterHeader(
@@ -201,7 +235,7 @@ private fun CalendarItem(
             dayNumber = day.dayNumber,
             isSelected = isSelected,
             isToday = isToday,
-            selectionProgress = { selectionProgressState.value }
+            selectionProgress = progressProvider
         )
     }
 }
@@ -257,7 +291,6 @@ private fun DayNumberCircle(
         modifier = Modifier
             .size(CalendarSelectorDefaults.NumberCircleSize)
             .graphicsLayer {
-                // Optimization: Lambda-based property updates avoid recomposition.
                 val progress = selectionProgress()
                 val scale = 0.96f + (0.04f * progress)
                 scaleX = scale
@@ -296,7 +329,6 @@ private fun DayNumberCircle(
                         .padding(top = 1.dp)
                         .size(3.dp)
                         .graphicsLayer {
-                            // Smoothly fade out today-dot as selection circle fills.
                             alpha = 1f - (selectionProgress() * 0.5f)
                         }
                         .background(secondary, CircleShape)
