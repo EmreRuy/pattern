@@ -29,7 +29,10 @@ data class SettingsEntity(
     val endTime: String = "08:00",
 
     @ColumnInfo(name = "total_xp")
-    val totalXP: Int = 0
+    val totalXP: Int = 0,
+
+    @ColumnInfo(name = "is_premium", defaultValue = "0")
+    val isPremium: Boolean = false
 ) {
     fun isQuietTime(now: LocalTime = LocalTime.now()): Boolean {
         if (!quietHoursEnabled) return false

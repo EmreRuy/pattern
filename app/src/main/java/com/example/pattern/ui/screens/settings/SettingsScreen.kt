@@ -1,5 +1,7 @@
 package com.example.pattern.ui.screens.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
@@ -29,6 +33,7 @@ import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +64,27 @@ import com.example.pattern.utils.SupportUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.backupStatus) {
+        when (val status = uiState.backupStatus) {
+            is BackupStatus.Success -> {
+                snackbarHostState.showSnackbar(status.message)
+                viewModel.clearBackupStatus()
+            }
+            is BackupStatus.Error -> {
+                snackbarHostState.showSnackbar(status.message)
+                viewModel.clearBackupStatus()
+            }
+            else -> {}
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -82,35 +107,47 @@ fun SettingsScreen(onBack: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            SettingsContent()
+            SettingsContent(viewModel = viewModel)
         }
     }
 }
 
 @Composable
 fun SettingsContent(
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { viewModel.exportBackup(it) }
+    }
+
+    val openDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { viewModel.importBackup(it) }
+    }
+
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
+        modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 24.dp)
+        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
     ) {
         item {
             SettingsSection(title = stringResource(R.string.settings_section_preferences)) {
@@ -124,6 +161,24 @@ fun SettingsContent(
                 )
             }
         }
+
+        item {
+            SettingsSection(title = stringResource(R.string.settings_section_data_management)) {
+                SettingsNavigationItem(
+                    icon = Icons.Default.FileUpload,
+                    title = stringResource(R.string.settings_item_export_backup),
+                    subtitle = stringResource(R.string.settings_item_export_backup_desc),
+                    onClick = { createDocumentLauncher.launch("pattern_backup_${System.currentTimeMillis()}.json") }
+                )
+                SettingsNavigationItem(
+                    icon = Icons.Default.FileDownload,
+                    title = stringResource(R.string.settings_item_import_backup),
+                    subtitle = stringResource(R.string.settings_item_import_backup_desc),
+                    onClick = { openDocumentLauncher.launch(arrayOf("application/json")) }
+                )
+            }
+        }
+
         item {
             SettingsSection(title = stringResource(R.string.settings_section_notifications)) {
                 SettingsSwitchItem(
@@ -144,7 +199,7 @@ fun SettingsContent(
 
                 Column(modifier = Modifier.alpha(contentAlpha)) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 24.dp),
+                        modifier = Modifier.padding(start = 72.dp, end = 16.dp),
                         thickness = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
@@ -164,14 +219,6 @@ fun SettingsContent(
                         onClick = { if (settings.quietHoursEnabled) showEndTimePicker = true }
                     )
                 }
-
-                /*   SettingsSwitchItem(
-                       icon = Icons.Default.Alarm,
-                       title = "Smart reminders",
-                       iconTint = MossGreen,
-                       checked = true,
-                       onCheckedChange = { /* ... */ }
-                   ) */
             }
         }
 
@@ -179,7 +226,7 @@ fun SettingsContent(
             SettingsSection(title = stringResource(R.string.settings_section_about)) {
                 SettingsNavigationItem(
                     icon = Icons.Default.Share,
-                    title = "Share with your friends ",
+                    title = stringResource(R.string.settings_item_share_app),
                     onClick = { ShareUtils.shareApp(context) }
                 )
                 SettingsNavigationItem(
@@ -221,13 +268,14 @@ fun SettingsContent(
         )
     }
 }
+
 @Composable
 fun SettingsSection(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-       SectionHeader(title, modifier =  Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+       SectionHeader(title, modifier =  Modifier.padding(horizontal = 14.dp).padding(bottom = 8.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -238,6 +286,7 @@ fun SettingsSection(
         }
     }
 }
+
 @Composable
 fun SettingsNavigationItem(
     icon: ImageVector,

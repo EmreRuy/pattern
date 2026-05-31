@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
+import com.example.pattern.utils.PremiumPlanScreen
 import kotlinx.coroutines.launch
 
 enum class AddHabitStep {
@@ -87,6 +88,7 @@ fun AddHabitScreen(
         taskCount = uiState.taskCount,
         showPermissionDialog = uiState.showPermissionDialog,
         showTimePicker = uiState.showTimePicker,
+        isPremium = uiState.isPremium,
         screenTitle = screenTitle,
         isSaveEnabled = isSaveEnabled,
         snackbarHostState = snackbarHostState,
@@ -158,6 +160,7 @@ fun AddHabitScreenContent(
     taskCount: Int,
     showPermissionDialog: Boolean,
     showTimePicker: Boolean,
+    isPremium: Boolean,
     screenTitle: String,
     isSaveEnabled: Boolean,
     snackbarHostState: SnackbarHostState,
@@ -240,6 +243,7 @@ fun AddHabitScreenContent(
                     AddHabitStep.Color -> {
                         ColorPickerView(
                             selectedColor = selectedColor,
+                            isPremium = isPremium,
                             onColorSelected = { 
                                 onColorChange(it)
                                 onStepChange(AddHabitStep.Main)

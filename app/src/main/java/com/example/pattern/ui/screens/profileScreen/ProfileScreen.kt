@@ -29,12 +29,31 @@ import com.example.pattern.ui.screens.profileScreen.components.dashboard.Profile
  * By using LazyColumn, we achieve "Visual Parity" while only composing cards as they 
  * enter the viewport, drastically reducing the initial frame budget.
  */
+import com.example.pattern.ui.components.PremiumGuard
+
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     onOpenMenuSheet: () -> Unit,
     onPremiumClick: () -> Unit,
     onOpenSettings: () -> Unit = {}
+) {
+    PremiumGuard {
+        ProfileScreenContent(
+            viewModel = viewModel,
+            onOpenMenuSheet = onOpenMenuSheet,
+            onPremiumClick = onPremiumClick,
+            onOpenSettings = onOpenSettings
+        )
+    }
+}
+
+@Composable
+private fun ProfileScreenContent(
+    viewModel: ProfileViewModel,
+    onOpenMenuSheet: () -> Unit,
+    onPremiumClick: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()

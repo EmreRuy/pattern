@@ -243,7 +243,7 @@ private fun StreakTimeline(
                     activeColor = accentColor,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(top = 18.dp)
+                        .padding(top = 17.dp)
                 )
             }
         }

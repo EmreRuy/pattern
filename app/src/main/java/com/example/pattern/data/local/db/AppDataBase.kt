@@ -17,13 +17,14 @@ import com.example.pattern.data.local.entity.SettingsEntity
 
 @Database(
     entities = [Habit::class, HabitDailyState::class, SettingsEntity::class],
-    version = 5, // Incremented to remove redundant timer fields from Habit table
+    version = 6, // Added isPremium to SettingsEntity
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDataBase.MigrationFrom1To2::class),
         AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4),
-        AutoMigration(from = 4, to = 5, spec = AppDataBase.MigrationFrom4To5::class)
+        AutoMigration(from = 4, to = 5, spec = AppDataBase.MigrationFrom4To5::class),
+        AutoMigration(from = 5, to = 6)
     ]
 )
 @TypeConverters(Converters::class)

@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -107,10 +108,8 @@ fun HabitCardDetailsScreen(
             // ⚡ PROGRESS / XP CARD
             HabitProgressCard(habit, accentColor)
 
-            if (!habit.motivation.isNullOrBlank()) {
-                Spacer(Modifier.height(24.dp))
-                MotivationCard(motivation = habit.motivation)
-            }
+            Spacer(Modifier.height(24.dp))
+            MotivationCard(motivation = habit.motivation)
 
             Spacer(Modifier.height(24.dp))
             
@@ -122,7 +121,7 @@ fun HabitCardDetailsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            ManagementCard(habit = habit)
+            ManagementCard(habit = habit, accentColor = accentColor)
 
             Spacer(Modifier.height(48.dp))
         }
@@ -141,33 +140,62 @@ fun HabitCardDetailsScreen(
 }
 
 @Composable
-private fun MotivationCard(motivation: String) {
+private fun MotivationCard(motivation: String?) {
+    val displayMotivation = motivation ?: stringResource(R.string.detail_default_motivation)
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        Column(
-            modifier = Modifier.padding(28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            SectionHeader(title = stringResource(R.string.detail_section_motivation))
-            Spacer(Modifier.height(24.dp))
-            Text(
-                text = "“$motivation”",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    lineHeight = 32.sp,
-                    textAlign = TextAlign.Center,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = when {
-                        motivation.length > 150 -> 16.sp
-                        motivation.length > 80 -> 18.sp
-                        else -> 22.sp
-                    }
-                ),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                fontWeight = FontWeight.Medium
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // Premium Design Element: Large, extremely subtle quote icon as a background watermark
+            Icon(
+                imageVector = Icons.Rounded.FormatQuote,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(80.dp)
+                    .align(Alignment.TopEnd)
+                    .offset(x = (10).dp, y = (-10).dp)
+                    .alpha(0.03f),
+                tint = MaterialTheme.colorScheme.onSurface
             )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                SectionHeader(
+                    title = stringResource(R.string.detail_section_motivation),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Text(
+                    text = "“$displayMotivation”",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        lineHeight = 32.sp,
+                        textAlign = TextAlign.Center,
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.ExtraLight,
+                        letterSpacing = 0.5.sp,
+                        fontSize = when {
+                            displayMotivation.length > 150 -> 15.sp
+                            displayMotivation.length > 80 -> 18.sp
+                            else -> 22.sp
+                        }
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                )
+            }
         }
     }
 }
@@ -199,7 +227,7 @@ private fun ActivityCard(
 }
 
 @Composable
-private fun ManagementCard(habit: HabitDetailsUi) {
+private fun ManagementCard(habit: HabitDetailsUi, accentColor: Color) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
@@ -214,22 +242,26 @@ private fun ManagementCard(habit: HabitDetailsUi) {
             DetailRow(
                 Icons.Rounded.StarOutline,
                 stringResource(R.string.detail_label_goal),
-                habit.goal
+                habit.goal,
+                accentColor = accentColor
             )
             DetailRow(
                 Icons.Rounded.Repeat,
                 stringResource(R.string.detail_label_frequency),
-                habit.frequency
+                habit.frequency,
+                accentColor = accentColor
             )
             DetailRow(
                 Icons.Rounded.Notifications,
                 stringResource(R.string.detail_label_reminder),
-                habit.reminderTime ?: stringResource(R.string.detail_no_reminder)
+                habit.reminderTime ?: stringResource(R.string.detail_no_reminder),
+                accentColor = accentColor
             )
             DetailRow(
                 Icons.Rounded.CalendarToday,
                 stringResource(R.string.detail_label_created),
                 habit.createdOn,
+                accentColor = accentColor,
                 isLast = true
             )
         }
@@ -241,6 +273,7 @@ private fun DetailRow(
     icon: ImageVector,
     label: String,
     value: String,
+    accentColor: Color,
     isLast: Boolean = false
 ) {
     Row(
@@ -251,14 +284,14 @@ private fun DetailRow(
     ) {
         Surface(
             modifier = Modifier.size(36.dp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            color = accentColor.copy(alpha = 0.15f),
             shape = CircleShape
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = accentColor,
                     modifier = Modifier.size(18.dp)
                 )
             }

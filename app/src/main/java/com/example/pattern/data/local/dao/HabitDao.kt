@@ -45,6 +45,9 @@ interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY created_at DESC")
     fun getAllHabits(): Flow<List<Habit>>
 
+    @Query("SELECT * FROM habits")
+    suspend fun getAllHabitsOnce(): List<Habit>
+
     // Daily State
 
     @Upsert
@@ -77,6 +80,9 @@ interface HabitDao {
 
     @Query("SELECT * FROM habit_daily_state")
     fun getAllDailyStates(): Flow<List<HabitDailyState>>
+
+    @Query("SELECT * FROM habit_daily_state")
+    suspend fun getAllDailyStatesOnce(): List<HabitDailyState>
 
     @Query("""
         SELECT date FROM habit_daily_state

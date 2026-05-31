@@ -43,6 +43,7 @@
     <string name="detail_delete_keep">Keep Habit</string>
     <string name="detail_edit_desc">Edit habit details</string>
     <string name="detail_delete_desc">Delete this habit</string>
+    <string name="detail_default_motivation">Step by step, walk the thousand mile road.</string>
 
     <!-- Streak Motivations -->
     <string name="streak_motivation_0">BEGIN YOUR TRANSFORMATION</string>
@@ -67,6 +68,12 @@
     <string name="settings_item_ends_at">Ends at</string>
     <string name="settings_item_smart_reminders">Smart reminders</string>
     <string name="settings_section_about">About</string>
+    <string name="settings_section_data_management">Data Management</string>
+    <string name="settings_item_export_backup">Export Backup</string>
+    <string name="settings_item_export_backup_desc">Save your data to a JSON file</string>
+    <string name="settings_item_import_backup">Import Backup</string>
+    <string name="settings_item_import_backup_desc">Restore data from a JSON file</string>
+    <string name="settings_item_share_app">Share with your friends</string>
     <string name="settings_item_contact_support">Contact support</string>
     <string name="settings_select_time">Select Time</string>
     <string name="settings_rate_us">Support our journey (Rate Us)</string>

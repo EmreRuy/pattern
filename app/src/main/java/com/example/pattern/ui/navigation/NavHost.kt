@@ -126,7 +126,7 @@ fun NavHost(
             exitTransition = { fadeExit() }
         ) {
             PremiumPlanScreen(
-                onPurchase = { actions.popBackStack() }
+                onBack = { actions.popBackStack() }
             )
         }
     }

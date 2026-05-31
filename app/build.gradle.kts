@@ -125,5 +125,8 @@ dependencies {
     implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.datastore.preferences)
 
+    // Billing Library
+    implementation(libs.google.play.billing)
+
     ksp(libs.androidx.hilt.compiler)
 }

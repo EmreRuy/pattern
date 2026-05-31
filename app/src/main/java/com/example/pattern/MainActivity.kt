@@ -33,6 +33,7 @@ import com.example.pattern.ui.navigation.LocalNavActions
 import com.example.pattern.ui.navigation.NavActions
 import com.example.pattern.ui.navigation.NavHost
 import com.example.pattern.ui.navigation.Screens
+import com.example.pattern.domain.usecase.HabitLimitStatus
 import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -107,6 +108,7 @@ class MainActivity : ComponentActivity() {
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
+        val habitLimitStatus by viewModel.habitLimitStatus.collectAsStateWithLifecycle()
 
         CompositionLocalProvider(LocalNavActions provides actions) {
             Scaffold(
@@ -116,7 +118,11 @@ class MainActivity : ComponentActivity() {
                         CustomBottomBar(
                             currentRoute = currentRoute,
                             onItemClick = { item -> 
-                                actions.navigateToBottomBarRoute(item.route) 
+                                if (item.route == Screens.Add.route && habitLimitStatus is HabitLimitStatus.Reached) {
+                                    actions.navigateToPremium()
+                                } else {
+                                    actions.navigateToBottomBarRoute(item.route) 
+                                }
                             }
                         )
                     }

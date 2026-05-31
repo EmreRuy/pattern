@@ -21,85 +21,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.repository.HabitRepository
-import com.example.pattern.notifications.ReminderManager
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
-import javax.inject.Inject
-
-@HiltViewModel
-class EditHabitViewModel @Inject constructor(
-    private val repository: HabitRepository,
-    private val reminderManager: ReminderManager,
-    savedStateHandle: SavedStateHandle
-) : ViewModel() {
-    private val habitId: Int = checkNotNull(savedStateHandle["habitId"])
-    
-    private val _habit = MutableStateFlow<Habit?>(null)
-    val habit: StateFlow<Habit?> = _habit.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            _habit.value = repository.getHabitOnce(habitId)
-        }
-    }
-
-    fun updateHabit(
-        name: String,
-        type: String,
-        durationHours: Int,
-        durationMinutes: Int,
-        selectedDays: List<DayOfWeek>,
-        emoji: String,
-        colorHex: String,
-        reminderEnabled: Boolean,
-        reminderTime: String?,
-        motivation: String?,
-        taskCount: Int?
-    ) {
-        val currentHabit = _habit.value ?: return
-        
-        val daysList = DayOfWeek.entries.map { selectedDays.contains(it) }
-        
-        val updatedHabit = currentHabit.copy(
-            name = name.trim(),
-            type = when(type) {
-                "Grow" -> HabitType.BUILD
-                "Drop" -> HabitType.QUIT
-                else -> HabitType.TASK
-            },
-            durationInMinutes = if (type == "Grow") (durationHours * 60) + durationMinutes else null,
-            taskCount = if (type == "Task") taskCount else null,
-            selectedDays = daysList.toImmutableList(),
-            iconCode = emoji,
-            accentColorHex = colorHex,
-            reminderTime = if (reminderEnabled) reminderTime else null,
-            motivation = if (motivation.isNullOrBlank()) null else motivation.trim()
-        )
-        viewModelScope.launch {
-            repository.updateHabit(updatedHabit)
-            if (updatedHabit.reminderTime != null) {
-                reminderManager.scheduleReminder(updatedHabit)
-            } else {
-                reminderManager.cancelReminder(updatedHabit.id)
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,7 +39,8 @@ fun EditHabitScreen(
     onBack: () -> Unit,
     viewModel: EditHabitViewModel = hiltViewModel()
 ) {
-    val habit by viewModel.habit.collectAsState()
+    val habit by viewModel.habit.collectAsStateWithLifecycle()
+    val isPremium by viewModel.isPremium.collectAsStateWithLifecycle()
 
     if (habit == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -119,7 +51,6 @@ fun EditHabitScreen(
 
     val initialHabit = habit!!
     
-    // Initialize states with existing habit data
     var currentStep by remember { mutableStateOf(AddHabitStep.Main) }
     var habitName by remember { mutableStateOf(initialHabit.name) }
     var habitType by remember { 
@@ -235,141 +166,141 @@ fun EditHabitScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets.statusBars
     ) { padding ->
-        AnimatedContent(
-            targetState = currentStep,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(padding),
-            label = "ScreenTransition"
-        ) { step ->
-            when (step) {
-                AddHabitStep.Main -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 12.dp)
-                            .pointerInput(Unit) {
-                                detectTapGestures { focusManager.clearFocus() }
-                            },
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        SectionHeader("The Basics")
-                        
-                        HabitNameCard(
-                            name = habitName,
-                            onNameChange = { habitName = it }
-                        )
-                        
-                        // We could also reuse the inline editor from AddHabitScreen or keep it simple
-                        // For consistency, let's use a similar layout
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                EmojiSelector(
-                                    selectedEmoji = emoji,
-                                    onOpen = { currentStep = AddHabitStep.Emoji }
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1f)) {
-                                ColorSelector(
-                                    selectedColor = selectedColor,
-                                    onOpen = { currentStep = AddHabitStep.Color }
-                                )
-                            }
-                        }
-
-                        SectionHeader("Structure")
-                        
-                        HabitTypeSelectorCard(
-                            selectedType = habitType,
-                            onOpen = { currentStep = AddHabitStep.Category }
-                        )
-                        
-                        HabitReminderCard(
-                            isEnabled = reminderEnabled,
-                            reminderTime = reminderTime,
-                            onEnabledChange = { reminderEnabled = it },
-                            onOpenTimePicker = { showTimePicker = true }
-                        )
-
-                        SectionHeader("Mindset")
-
-                        MotivationCard(
-                            onOpen = { currentStep = AddHabitStep.Motivation }
-                        )
-
-                        Spacer(modifier = Modifier.height(40.dp))
-                    }
-                }
-                
-                AddHabitStep.Category -> {
-                    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                        HabitTypeSelectorModern(
-                            selectedType = habitType,
-                            onTypeChange = { habitType = it },
-                            selectedDays = buildHabitDays,
-                            onDaysChange = { buildHabitDays = it.toImmutableList() },
-                            durationHours = durationHours,
-                            durationMinutes = durationMinutes,
-                            onDurationChange = { h, m ->
-                                durationHours = h
-                                durationMinutes = m
-                            },
-                            taskCount = taskCount,
-                            onTaskCountChange = { taskCount = it }
-                        )
-                    }
-                }
-                
-                AddHabitStep.Color -> {
-                    ColorPickerView(
-                        selectedColor = selectedColor,
-                        onColorSelected = { 
-                            selectedColor = it
-                            currentStep = AddHabitStep.Main
-                        }
-                    )
-                }
-                
-                AddHabitStep.Emoji -> {
-                    EmojiPickerView(
-                        selectedEmoji = emoji,
-                        onEmojiSelected = { 
-                            emoji = it
-                            currentStep = AddHabitStep.Main
-                        }
-                    )
-                }
-                
-                AddHabitStep.Motivation -> {
-                    Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-                        BasicTextField(
-                            value = motivation,
-                            onValueChange = { motivation = it },
+        Box(modifier = Modifier.fillMaxSize()) {
+            AnimatedContent(
+                targetState = currentStep,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(padding),
+                label = "ScreenTransition"
+            ) { step ->
+                when (step) {
+                    AddHabitStep.Main -> {
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                            decorationBox = { innerTextField ->
-                                if (motivation.isEmpty()) {
-                                    Text(
-                                        text = "Add a reason or reminder...",
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                        )
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 20.dp, vertical = 12.dp)
+                                .pointerInput(Unit) {
+                                    detectTapGestures { focusManager.clearFocus() }
+                                },
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            SectionHeader("The Basics")
+                            
+                            HabitNameCard(
+                                name = habitName,
+                                onNameChange = { habitName = it }
+                            )
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    EmojiSelector(
+                                        selectedEmoji = emoji,
+                                        onOpen = { currentStep = AddHabitStep.Emoji }
                                     )
                                 }
-                                innerTextField()
+                                Box(modifier = Modifier.weight(1f)) {
+                                    ColorSelector(
+                                        selectedColor = selectedColor,
+                                        onOpen = { currentStep = AddHabitStep.Color }
+                                    )
+                                }
+                            }
+
+                            SectionHeader("Structure")
+                            
+                            HabitTypeSelectorCard(
+                                selectedType = habitType,
+                                onOpen = { currentStep = AddHabitStep.Category }
+                            )
+                            
+                            HabitReminderCard(
+                                isEnabled = reminderEnabled,
+                                reminderTime = reminderTime,
+                                onEnabledChange = { reminderEnabled = it },
+                                onOpenTimePicker = { showTimePicker = true }
+                            )
+
+                            SectionHeader("Mindset")
+
+                            MotivationCard(
+                                onOpen = { currentStep = AddHabitStep.Motivation }
+                            )
+
+                            Spacer(modifier = Modifier.height(40.dp))
+                        }
+                    }
+                    
+                    AddHabitStep.Category -> {
+                        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                            HabitTypeSelectorModern(
+                                selectedType = habitType,
+                                onTypeChange = { habitType = it },
+                                selectedDays = buildHabitDays,
+                                onDaysChange = { buildHabitDays = it.toImmutableList() },
+                                durationHours = durationHours,
+                                durationMinutes = durationMinutes,
+                                onDurationChange = { h, m ->
+                                    durationHours = h
+                                    durationMinutes = m
+                                },
+                                taskCount = taskCount,
+                                onTaskCountChange = { taskCount = it }
+                            )
+                        }
+                    }
+                    
+                    AddHabitStep.Color -> {
+                        ColorPickerView(
+                            selectedColor = selectedColor,
+                            isPremium = isPremium,
+                            onColorSelected = { 
+                                selectedColor = it
+                                currentStep = AddHabitStep.Main
                             }
                         )
+                    }
+                    
+                    AddHabitStep.Emoji -> {
+                        EmojiPickerView(
+                            selectedEmoji = emoji,
+                            onEmojiSelected = { 
+                                emoji = it
+                                currentStep = AddHabitStep.Main
+                            }
+                        )
+                    }
+                    
+                    AddHabitStep.Motivation -> {
+                        Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                            BasicTextField(
+                                value = motivation,
+                                onValueChange = { motivation = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ),
+                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                decorationBox = { innerTextField ->
+                                    if (motivation.isEmpty()) {
+                                        Text(
+                                            text = "Add a reason or reminder...",
+                                            style = MaterialTheme.typography.bodyLarge.copy(
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                            )
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            )
+                        }
                     }
                 }
             }
