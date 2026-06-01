@@ -57,6 +57,7 @@ import com.example.pattern.ui.components.DebouncedIconButton
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.theme.MossGreen
+import com.example.pattern.utils.PremiumPlanScreen
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils
@@ -70,6 +71,7 @@ fun SettingsScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showPaywall by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.backupStatus) {
         when (val status = uiState.backupStatus) {
@@ -85,44 +87,54 @@ fun SettingsScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.settings_title),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 2.sp
+    Box {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            stringResource(R.string.settings_title),
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 2.sp
+                            )
                         )
+                    },
+                    navigationIcon = {
+                        DebouncedIconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowBackIosNew,
+                                contentDescription = stringResource(R.string.back),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
                     )
-                },
-                navigationIcon = {
-                    DebouncedIconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = stringResource(R.string.back),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
                 )
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
-            SettingsContent(viewModel = viewModel)
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                SettingsContent(
+                    viewModel = viewModel,
+                    onShowPaywall = { showPaywall = true }
+                )
+            }
+        }
+
+        if (showPaywall) {
+            PremiumPlanScreen(onBack = { showPaywall = false })
         }
     }
 }
 
 @Composable
 fun SettingsContent(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
+    onShowPaywall: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
@@ -168,13 +180,27 @@ fun SettingsContent(
                     icon = Icons.Default.FileUpload,
                     title = stringResource(R.string.settings_item_export_backup),
                     subtitle = stringResource(R.string.settings_item_export_backup_desc),
-                    onClick = { createDocumentLauncher.launch("pattern_backup_${System.currentTimeMillis()}.json") }
+                    isPro = !uiState.isPremium,
+                    onClick = {
+                        if (uiState.isPremium) {
+                            createDocumentLauncher.launch("pattern_backup_${System.currentTimeMillis()}.json")
+                        } else {
+                            onShowPaywall()
+                        }
+                    }
                 )
                 SettingsNavigationItem(
                     icon = Icons.Default.FileDownload,
                     title = stringResource(R.string.settings_item_import_backup),
                     subtitle = stringResource(R.string.settings_item_import_backup_desc),
-                    onClick = { openDocumentLauncher.launch(arrayOf("application/json")) }
+                    isPro = !uiState.isPremium,
+                    onClick = {
+                        if (uiState.isPremium) {
+                            openDocumentLauncher.launch(arrayOf("application/json"))
+                        } else {
+                            onShowPaywall()
+                        }
+                    }
                 )
             }
         }
@@ -293,6 +319,7 @@ fun SettingsNavigationItem(
     title: String,
     subtitle: String? = null,
     iconTint: Color = MossGreen,
+    isPro: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     Row(
@@ -320,16 +347,35 @@ fun SettingsNavigationItem(
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                letterSpacing = 0.5.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    letterSpacing = 0.5.sp
+                )
+                if (isPro) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            "PRO",
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 9.sp
+                            )
+                        )
+                    }
+                }
+            }
             subtitle?.let {
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             }
         }

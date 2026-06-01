@@ -22,23 +22,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.pattern.R
 import com.example.pattern.data.billing.BillingManager
 import com.example.pattern.data.repository.PremiumStatus
 import com.example.pattern.ui.screens.premiumScreen.PremiumViewModel
 import kotlinx.coroutines.launch
-import java.util.Locale
 
-// Helper for formatting price
-private fun Double.format(digits: Int) = "%.${digits}f".format(Locale.ENGLISH, this)
-
+// Professional Pricing Implementation
 @Composable
 fun PremiumPlanScreen(
     onBack: () -> Unit = {},
@@ -51,26 +47,40 @@ fun PremiumPlanScreen(
     val premiumStatus by viewModel.premiumStatus.collectAsStateWithLifecycle()
     var selectedPlan by remember { mutableIntStateOf(1) }
 
-    // Dynamic Prices from Billing
-    val lifetimePrice = (premiumStatus as? PremiumStatus.Loaded)
-        ?.productDetails?.get(BillingManager.PRODUCT_LIFETIME)
-        ?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$99.99"
-    
-    val annualDetails = (premiumStatus as? PremiumStatus.Loaded)
-        ?.productDetails?.get(BillingManager.PRODUCT_ANNUAL)
-        ?.subscriptionOfferDetails?.firstOrNull()
-        ?.pricingPhases?.pricingPhaseList?.firstOrNull()
-    
-    val annualPrice = annualDetails?.formattedPrice ?: "$29.99"
-    val annualMonthlyEquivalent = if (annualDetails != null) {
-        val monthlyMicros = annualDetails.priceAmountMicros / 12
-        "~${(monthlyMicros / 1000000.0).format(2)} ${annualDetails.priceCurrencyCode} / mo"
-    } else "$2.49 / month"
+    // Professional Price Resolution
+    val pricingTiers = remember(premiumStatus) {
+        val status = premiumStatus as? PremiumStatus.Loaded
+        val productDetails = status?.productDetails ?: emptyMap()
 
-    val monthlyPrice = (premiumStatus as? PremiumStatus.Loaded)
-        ?.productDetails?.get(BillingManager.PRODUCT_MONTHLY)
-        ?.subscriptionOfferDetails?.firstOrNull()
-        ?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice ?: "$4.99"
+        val lifetime = productDetails[BillingManager.PRODUCT_LIFETIME]
+        val annual = productDetails[BillingManager.PRODUCT_ANNUAL]
+        val monthly = productDetails[BillingManager.PRODUCT_MONTHLY]
+
+        listOf(
+            PricingTier(
+                id = 0,
+                title = "Lifetime",
+                subtitle = "Unlimited access forever",
+                price = lifetime?.oneTimePurchaseOfferDetails?.formattedPrice ?: "—",
+                isLoading = premiumStatus is PremiumStatus.Loading
+            ),
+            PricingTier(
+                id = 1,
+                title = "Annual",
+                subtitle = annual?.let { formatMonthlyEquivalent(it) } ?: "Best value",
+                price = annual?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice ?: "—",
+                tag = "BEST VALUE",
+                isLoading = premiumStatus is PremiumStatus.Loading
+            ),
+            PricingTier(
+                id = 2,
+                title = "Monthly",
+                subtitle = "Flexible, cancel anytime",
+                price = monthly?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice ?: "—",
+                isLoading = premiumStatus is PremiumStatus.Loading
+            )
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -120,7 +130,7 @@ fun PremiumPlanScreen(
             // Brand Section
             Surface(
                 color = colorScheme.primary,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(32.dp),
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
                 Row(
@@ -134,13 +144,13 @@ fun PremiumPlanScreen(
             }
 
             Text(
-                text = "Level Up Your Habits",
+                text = "Master Your Patterns",
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
                 textAlign = TextAlign.Center
             )
             
             Text(
-                text = "Unlock advanced insights, unlimited habits, and premium customization.",
+                text = "Unlock advanced insights, unlimited habits, and full customization.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,
@@ -149,28 +159,17 @@ fun PremiumPlanScreen(
 
             // Pricing Tiers
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                PremiumPlanCard(
-                    title = "Lifetime",
-                    subtitle = "One-time payment",
-                    price = lifetimePrice,
-                    isSelected = selectedPlan == 0,
-                    onClick = { selectedPlan = 0 }
-                )
-                PremiumPlanCard(
-                    title = "Annual",
-                    subtitle = annualMonthlyEquivalent,
-                    price = annualPrice,
-                    tag = "BEST VALUE",
-                    isSelected = selectedPlan == 1,
-                    onClick = { selectedPlan = 1 }
-                )
-                PremiumPlanCard(
-                    title = "Monthly",
-                    subtitle = "Cancel anytime",
-                    price = monthlyPrice,
-                    isSelected = selectedPlan == 2,
-                    onClick = { selectedPlan = 2 }
-                )
+                pricingTiers.forEach { tier ->
+                    PremiumPlanCard(
+                        title = tier.title,
+                        subtitle = tier.subtitle,
+                        price = tier.price,
+                        tag = tier.tag,
+                        isSelected = selectedPlan == tier.id,
+                        isLoading = tier.isLoading,
+                        onClick = { selectedPlan = tier.id }
+                    )
+                }
             }
 
             if (premiumStatus is PremiumStatus.Loading) {
@@ -191,10 +190,10 @@ fun PremiumPlanScreen(
                     .padding(20.dp)
             ) {
                 val features = listOf(
-                    "Unlimited Habit Patterns",
+                    "Unlimited Habits",
                     "Advanced Behavioral Analysis",
                     "Premium Color Palette",
-                    "Cross-Device Sync (Coming Soon)",
+                    "Backup Habits",
                     "Priority Support"
                 )
                 features.forEach { feature ->
@@ -217,36 +216,44 @@ fun PremiumPlanScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // CTA
-            val ctaText = if (premiumStatus.isPremium) "Already Pro" 
-                          else if (selectedPlan == 0) "Get Lifetime Access" 
-                          else "Start Free Trial"
+            val isPremium = premiumStatus.isPremium
+            val ctaText = when {
+                isPremium -> "Already Pro"
+                selectedPlan == 0 -> "Unlock Lifetime"
+                else -> "Start Your Journey"
+            }
 
             Button(
                 onClick = { 
-                    if (premiumStatus.isPremium) {
+                    if (isPremium) {
                         viewModel.onManageSubscriptionClick(context as Activity)
                     } else {
                         viewModel.onPurchaseClick(context as Activity, selectedPlan)
                     }
                 },
+                enabled = premiumStatus !is PremiumStatus.Loading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (premiumStatus.isPremium) colorScheme.primary else colorScheme.onSurface
+                    containerColor = if (isPremium) colorScheme.primary else colorScheme.onSurface
                 )
             ) {
                 Text(
                     text = ctaText,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = if (premiumStatus.isPremium) colorScheme.onPrimary else colorScheme.surface
+                    color = if (isPremium) colorScheme.onPrimary else colorScheme.surface
                 )
             }
 
+            // Footer Links
             Row(
-                modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 24.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
                 TextButton(
                     onClick = {
@@ -261,22 +268,39 @@ fun PremiumPlanScreen(
                     }
                 ) {
                     Text(
-                        "Restore Purchase",
+                        "Restore",
                         style = MaterialTheme.typography.labelMedium,
                         color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
 
-                if (premiumStatus.isPremium) {
-                    TextButton(
-                        onClick = { viewModel.onManageSubscriptionClick(context as Activity) }
-                    ) {
-                        Text(
-                            "Manage Subscriptions",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colorScheme.primary
-                        )
+                DotSeparator(colorScheme)
+
+                TextButton(
+                    onClick = { viewModel.onManageSubscriptionClick(context as Activity) }
+                ) {
+                    Text(
+                        "Subscriptions",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+
+                DotSeparator(colorScheme)
+
+                TextButton(
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                            data = "https://www.google.com".toUri() // Replace with your actual policy URL
+                        }
+                        context.startActivity(intent)
                     }
+                ) {
+                    Text(
+                        "Privacy Policy",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
                 }
             }
         }
@@ -289,12 +313,48 @@ fun PremiumPlanScreen(
 }
 
 @Composable
+private fun DotSeparator(colorScheme: ColorScheme) {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 4.dp)
+            .size(3.dp)
+            .background(colorScheme.onSurfaceVariant.copy(alpha = 0.2f), CircleShape)
+    )
+}
+
+private data class PricingTier(
+    val id: Int,
+    val title: String,
+    val subtitle: String,
+    val price: String,
+    val tag: String? = null,
+    val isLoading: Boolean
+)
+
+private fun formatMonthlyEquivalent(productDetails: com.android.billingclient.api.ProductDetails): String {
+    val phase = productDetails.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull() 
+        ?: return "Best value"
+    
+    return try {
+        val monthlyAmount = phase.priceAmountMicros / 12 / 1000000.0
+        val format = java.text.NumberFormat.getCurrencyInstance().apply {
+            currency = java.util.Currency.getInstance(phase.priceCurrencyCode)
+            maximumFractionDigits = 2
+        }
+        "~${format.format(monthlyAmount)} / month"
+    } catch (_: Exception) {
+        "Best value"
+    }
+}
+
+@Composable
 private fun PremiumPlanCard(
     title: String,
     subtitle: String,
     price: String,
     tag: String? = null,
     isSelected: Boolean,
+    isLoading: Boolean,
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -304,7 +364,7 @@ private fun PremiumPlanCard(
     val backgroundColor by transition.animateColor(label = "BgColor") { if (it) colorScheme.primary.copy(alpha = 0.05f) else Color.Transparent }
 
     Surface(
-        onClick = onClick,
+        onClick = if (isLoading) ({}) else onClick,
         shape = RoundedCornerShape(24.dp),
         border = BorderStroke(if (isSelected) 2.dp else 1.dp, colorScheme.primary.copy(alpha = borderAlpha)),
         color = backgroundColor,
@@ -329,9 +389,18 @@ private fun PremiumPlanCard(
                         }
                     }
                 }
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                Text(
+                    text = subtitle, 
+                    style = MaterialTheme.typography.bodySmall, 
+                    color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.then(if (isLoading && subtitle == "—") Modifier.width(80.dp).background(colorScheme.surfaceVariant, CircleShape) else Modifier)
+                )
             }
-            Text(price, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black))
+            if (isLoading && price == "—") {
+                Box(modifier = Modifier.size(width = 60.dp, height = 24.dp).clip(CircleShape).background(colorScheme.surfaceVariant))
+            } else {
+                Text(price, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black))
+            }
         }
     }
 }
