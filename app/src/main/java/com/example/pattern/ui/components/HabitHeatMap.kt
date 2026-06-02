@@ -14,13 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.ImmutableSet
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
 fun HabitHeatMap(
-    completedDates: Set<String>, // "YYYY-MM-DD"
+    completedDates: ImmutableSet<String>, // "YYYY-MM-DD" - Stable collection for better performance
     accentColor: Color,
     createdAt: LocalDate,
     modifier: Modifier = Modifier

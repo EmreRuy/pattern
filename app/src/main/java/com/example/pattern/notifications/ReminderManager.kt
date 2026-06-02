@@ -2,7 +2,6 @@ package com.example.pattern.notifications
 
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.scheduler.ReminderScheduler
-import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,22 +28,6 @@ class ReminderManager @Inject constructor(
     }
 
     fun cancelReminder(habitId: Int) {
-        // We need a Habit object to cancel, but we only have an ID.
-        // We can create a dummy habit with just the ID since our scheduler 
-        // uses the ID to identify the PendingIntent.
-        val dummyHabit = Habit(
-            id = habitId,
-            name = "",
-            type = com.example.pattern.domain.model.HabitType.BUILD,
-            durationInMinutes = null,
-            selectedDays = persistentListOf<Boolean>(),
-            iconCode = "",
-            isCompleted = false,
-            createdAt = 0,
-            accentColorHex = "",
-            reminderTime = null,
-            motivation = null
-        )
-        scheduler.cancel(dummyHabit)
+        scheduler.cancel(habitId)
     }
 }

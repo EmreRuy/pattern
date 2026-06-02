@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithHistory
@@ -24,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.core.graphics.toColorInt
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
@@ -91,7 +91,7 @@ class HabitDetailsViewModel @Inject constructor(
             totalXP = totalXP,
             reminderTime = habit.reminderTime,
             motivation = habit.motivation,
-            completedDates = CompletedDates(dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toSet())
+            completedDates = CompletedDates(dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toImmutableSet())
         )
     }
 }

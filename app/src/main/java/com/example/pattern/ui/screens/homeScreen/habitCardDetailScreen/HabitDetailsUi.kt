@@ -2,10 +2,12 @@ package com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 import java.time.LocalDate
 
 @Immutable
-data class CompletedDates(val dates: Set<String>)
+data class CompletedDates(val dates: ImmutableSet<String> = persistentSetOf())
 
 @Immutable
 data class HabitDetailsUi(
@@ -22,5 +24,5 @@ data class HabitDetailsUi(
     val totalXP: Int,
     val reminderTime: String? = null,
     val motivation: String? = null,
-    val completedDates: CompletedDates = CompletedDates(emptySet())
+    val completedDates: CompletedDates = CompletedDates()
 )

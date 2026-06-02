@@ -75,13 +75,13 @@ class AndroidReminderScheduler(
         }
     }
 
-    override fun cancel(habit: Habit) {
+    override fun cancel(habitId: Int) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = "com.example.pattern.ACTION_REMINDER"
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            habit.id,
+            habitId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

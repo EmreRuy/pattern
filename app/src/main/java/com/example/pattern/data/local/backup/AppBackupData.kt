@@ -14,11 +14,11 @@ data class AppBackupData(
     val backupVersion: Int = 1,
     
     @SerializedName("habits")
-    val habits: List<Habit>,
+    val habits: List<Habit>? = null,
     
     @SerializedName("habit_daily_states")
-    val habitDailyStates: List<HabitDailyState>,
+    val habitDailyStates: List<HabitDailyState>? = null,
     
     @SerializedName("settings")
-    val settings: SettingsEntity?
+    val settings: SettingsEntity? = null
 )

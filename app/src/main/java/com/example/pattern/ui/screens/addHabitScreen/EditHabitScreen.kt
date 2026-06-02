@@ -1,5 +1,8 @@
 package com.example.pattern.ui.screens.addHabitScreen
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -16,15 +19,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
-import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
@@ -41,6 +48,8 @@ fun EditHabitScreen(
 ) {
     val habit by viewModel.habit.collectAsStateWithLifecycle()
     val isPremium by viewModel.isPremium.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     if (habit == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -79,8 +88,24 @@ fun EditHabitScreen(
     
     val snackbarHostState = remember { SnackbarHostState() }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showPermissionDialog by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
+
+    // Sync switch state when returning from settings
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val isAllowed = NotificationManagerCompat.from(context).areNotificationsEnabled()
+                if (isAllowed && showPermissionDialog) {
+                    reminderEnabled = true
+                    showPermissionDialog = false
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val screenTitle = remember(currentStep) {
         when (currentStep) {
@@ -222,8 +247,24 @@ fun EditHabitScreen(
                             HabitReminderCard(
                                 isEnabled = reminderEnabled,
                                 reminderTime = reminderTime,
-                                onEnabledChange = { reminderEnabled = it },
-                                onOpenTimePicker = { showTimePicker = true }
+                                onEnabledChange = { enabled ->
+                                    if (enabled) {
+                                        if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                                            reminderEnabled = true
+                                        } else {
+                                            showPermissionDialog = true
+                                        }
+                                    } else {
+                                        reminderEnabled = false
+                                    }
+                                },
+                                onOpenTimePicker = {
+                                    if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                                        showTimePicker = true
+                                    } else {
+                                        showPermissionDialog = true
+                                    }
+                                }
                             )
 
                             SectionHeader("Mindset")
@@ -303,6 +344,24 @@ fun EditHabitScreen(
                         }
                     }
                 }
+            }
+
+            // Notification Permission Dialog at the bottom
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
+            ) {
+                NotificationPermissionDialog(
+                    isVisible = showPermissionDialog,
+                    onOpenSettings = {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
+                    },
+                    onDismiss = { showPermissionDialog = false }
+                )
             }
         }
     }

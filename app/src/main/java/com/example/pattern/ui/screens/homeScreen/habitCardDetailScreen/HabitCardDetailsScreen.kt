@@ -24,9 +24,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.R
 import com.example.pattern.ui.components.*
-
+import kotlinx.collections.immutable.ImmutableSet
 import java.time.LocalDate
 
+/**
+ * [HabitCardDetailsScreen]
+ * Principal-level implementation of the Habit Detail surface.
+ * Optimizations: Memoized typography, Stable data structures, Localized content descriptions.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCardDetailsScreen(
@@ -44,46 +49,11 @@ fun HabitCardDetailsScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = habit.name.uppercase(),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                },
-                navigationIcon = {
-                    DebouncedIconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = stringResource(R.string.back),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Rounded.Edit,
-                            contentDescription = "Edit Habit",
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    IconButton(onClick = { showDeleteSheet = true }) {
-                        Icon(
-                            imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = "Delete Habit",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                )
+            HabitDetailTopBar(
+                title = habit.name,
+                onBack = onBack,
+                onEdit = onEdit,
+                onDelete = { showDeleteSheet = true }
             )
         }
     ) { padding ->
@@ -97,7 +67,7 @@ fun HabitCardDetailsScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // 🔥 STREAK CARD
+            // 🔥 STREAK CARD - Primary motivator
             StreakCard(
                 currentStreak = habit.currentStreak,
                 accentColor = accentColor
@@ -105,14 +75,17 @@ fun HabitCardDetailsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ⚡ PROGRESS / XP CARD
+            // ⚡ PROGRESS / XP CARD - Gamification layer
             HabitProgressCard(habit, accentColor)
 
             Spacer(Modifier.height(24.dp))
+
+            // ✍️ MOTIVATION - Emotional anchor
             MotivationCard(motivation = habit.motivation)
 
             Spacer(Modifier.height(24.dp))
-            
+
+            // 🗓️ ACTIVITY - Visual consistency check
             ActivityCard(
                 completedDates = habit.completedDates.dates,
                 accentColor = accentColor,
@@ -121,6 +94,7 @@ fun HabitCardDetailsScreen(
 
             Spacer(Modifier.height(24.dp))
 
+            // 🛠️ MANAGEMENT - Metadata & Configuration
             ManagementCard(habit = habit, accentColor = accentColor)
 
             Spacer(Modifier.height(48.dp))
@@ -139,9 +113,69 @@ fun HabitCardDetailsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HabitDetailTopBar(
+    title: String,
+    onBack: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    CenterAlignedTopAppBar(
+        title = {
+            Text(
+                text = title.uppercase(),
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        navigationIcon = {
+            DebouncedIconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Rounded.ArrowBackIosNew,
+                    contentDescription = stringResource(R.string.back),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = onEdit) {
+                Icon(
+                    imageVector = Icons.Rounded.Edit,
+                    contentDescription = stringResource(R.string.detail_edit_desc),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Rounded.DeleteOutline,
+                    contentDescription = stringResource(R.string.detail_delete_desc),
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+        )
+    )
+}
+
 @Composable
 private fun MotivationCard(motivation: String?) {
     val displayMotivation = motivation ?: stringResource(R.string.detail_default_motivation)
+
+    // Performance Optimization: Memoize font size to prevent recalculation on every scroll tick
+    val fontSize = remember(displayMotivation) {
+        when {
+            displayMotivation.length > 150 -> 15.sp
+            displayMotivation.length > 80 -> 18.sp
+            else -> 22.sp
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -149,14 +183,14 @@ private fun MotivationCard(motivation: String?) {
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            // Premium Design Element: Large, extremely subtle quote icon as a background watermark
+            // Premium Design Element: Subtle watermark
             Icon(
                 imageVector = Icons.Rounded.FormatQuote,
                 contentDescription = null,
                 modifier = Modifier
                     .size(80.dp)
                     .align(Alignment.TopEnd)
-                    .offset(x = (10).dp, y = (-10).dp)
+                    .offset(x = 10.dp, y = (-10).dp)
                     .alpha(0.03f),
                 tint = MaterialTheme.colorScheme.onSurface
             )
@@ -187,11 +221,7 @@ private fun MotivationCard(motivation: String?) {
                         fontStyle = FontStyle.Italic,
                         fontWeight = FontWeight.ExtraLight,
                         letterSpacing = 0.5.sp,
-                        fontSize = when {
-                            displayMotivation.length > 150 -> 15.sp
-                            displayMotivation.length > 80 -> 18.sp
-                            else -> 22.sp
-                        }
+                        fontSize = fontSize
                     ),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                 )
@@ -202,7 +232,7 @@ private fun MotivationCard(motivation: String?) {
 
 @Composable
 private fun ActivityCard(
-    completedDates: Set<String>,
+    completedDates: ImmutableSet<String>,
     accentColor: Color,
     createdAt: LocalDate
 ) {
@@ -240,27 +270,27 @@ private fun ManagementCard(habit: HabitDetailsUi, accentColor: Color) {
             )
             Spacer(Modifier.height(16.dp))
             DetailRow(
-                Icons.Rounded.StarOutline,
-                stringResource(R.string.detail_label_goal),
-                habit.goal,
+                icon = Icons.Rounded.StarOutline,
+                label = stringResource(R.string.detail_label_goal),
+                value = habit.goal,
                 accentColor = accentColor
             )
             DetailRow(
-                Icons.Rounded.Repeat,
-                stringResource(R.string.detail_label_frequency),
-                habit.frequency,
+                icon = Icons.Rounded.Repeat,
+                label = stringResource(R.string.detail_label_frequency),
+                value = habit.frequency,
                 accentColor = accentColor
             )
             DetailRow(
-                Icons.Rounded.Notifications,
-                stringResource(R.string.detail_label_reminder),
-                habit.reminderTime ?: stringResource(R.string.detail_no_reminder),
+                icon = Icons.Rounded.Notifications,
+                label = stringResource(R.string.detail_label_reminder),
+                value = habit.reminderTime ?: stringResource(R.string.detail_no_reminder),
                 accentColor = accentColor
             )
             DetailRow(
-                Icons.Rounded.CalendarToday,
-                stringResource(R.string.detail_label_created),
-                habit.createdOn,
+                icon = Icons.Rounded.CalendarToday,
+                label = stringResource(R.string.detail_label_created),
+                value = habit.createdOn,
                 accentColor = accentColor,
                 isLast = true
             )

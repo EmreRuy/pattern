@@ -56,18 +56,25 @@ class BackupRepositoryImpl @Inject constructor(
             val backupData = gson.fromJson(jsonString, AppBackupData::class.java)
                 ?: throw Exception("Failed to parse backup file")
 
+            // --- DATA INTEGRITY VALIDATION ---
+            // Ensure essential data structures are present to prevent DB corruption
+            if (backupData.habits == null) throw Exception("Invalid backup: Missing habits data")
+
             database.withTransaction {
-                // Clear existing data
+                // Clear existing data - Atomic operation
                 database.clearAllTables()
 
                 // Restore Habits
                 val habitDao = database.habitDao()
                 backupData.habits.forEach { habit ->
-                    habitDao.upsertHabit(habit)
+                    // Additional check to prevent inserting empty/corrupt records
+                    if (habit.id != 0 && habit.name.isNotBlank()) {
+                        habitDao.upsertHabit(habit)
+                    }
                 }
 
                 // Restore Daily States
-                backupData.habitDailyStates.forEach { state ->
+                backupData.habitDailyStates?.forEach { state ->
                     habitDao.upsertDailyState(state)
                 }
 
