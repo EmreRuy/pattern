@@ -17,13 +17,14 @@ class PremiumRepository @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        // High-level SSoT sync: Always prefer Billing data if Success, otherwise use DB
+        // High-level SSoT sync: Only sync when Billing state is authoritative (Success)
         scope.launch {
-            billingManager.state.collectLatest { state ->
-                if (state is BillingState.Success) {
+            billingManager.state
+                .filterIsInstance<BillingState.Success>()
+                .distinctUntilChanged { old, new -> old.isPremium == new.isPremium }
+                .collectLatest { state ->
                     syncLocalCache(state.isPremium)
                 }
-            }
         }
     }
 
@@ -50,7 +51,7 @@ class PremiumRepository @Inject constructor(
             is BillingState.Error -> PremiumStatus.Error(billingState.message, localIsPremium)
             else -> PremiumStatus.Loading(localIsPremium)
         }
-    }
+    }.flowOn(Dispatchers.Default)
 
     fun launchPurchaseFlow(activity: android.app.Activity, productId: String) {
         billingManager.launchPurchaseFlow(activity, productId)
@@ -69,14 +70,19 @@ class PremiumRepository @Inject constructor(
 
     /**
      * Staff-Level SSoT: Combines Local DB (instant) and Billing (authoritative).
-     * This eliminates the "flicker" where UI shows free then premium.
+     * This eliminates the "flicker" and ensures offline support.
      */
     fun isPremiumUser(): Flow<Boolean> = combine(
-        settingsDao.getSettingsFlow().map { it?.isPremium ?: false },
+        settingsDao.getSettingsFlow().map { it?.isPremium ?: false }.distinctUntilChanged(),
         billingManager.state
     ) { local, billing ->
-        if (billing is BillingState.Success) billing.isPremium else local
+        when (billing) {
+            is BillingState.Success -> billing.isPremium // Authoritative when available
+            is BillingState.Error, BillingState.Disconnected -> local // Fallback to DB on network issues
+            else -> local // Default to DB while Initializing/Loading
+        }
     }.distinctUntilChanged()
+    .flowOn(Dispatchers.Default)
 }
 
 sealed interface PremiumStatus {

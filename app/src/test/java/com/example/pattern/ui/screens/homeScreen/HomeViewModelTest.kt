@@ -6,6 +6,7 @@ import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.Settings
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
+import com.example.pattern.domain.util.DataResult
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -37,10 +38,10 @@ class HomeViewModelTest {
         updateHabitProgressUseCase = mockk<UpdateHabitProgressUseCase>(relaxed = true)
         
         // Default mocks - Ensure EVERY flow in the combine block is mocked and emits!
-        every { repository.getSettingsStream() } returns flowOf(Settings(totalXP = 100))
-        every { repository.getAllHabitsStream() } returns flowOf(emptyList())
-        every { repository.getAllDailyStatesStream() } returns flowOf(emptyList())
-        every { repository.getCompletedDatesStream() } returns flowOf(emptyMap())
+        every { repository.getSettingsStream() } returns flowOf(DataResult.Success(Settings(totalXP = 100)))
+        every { repository.getAllHabitsStream() } returns flowOf(DataResult.Success(emptyList()))
+        every { repository.getAllDailyStatesStream() } returns flowOf(DataResult.Success(emptyList()))
+        every { repository.getCompletedDatesStream() } returns flowOf(DataResult.Success(emptyMap()))
     }
 
     @AfterEach
@@ -69,15 +70,13 @@ class HomeViewModelTest {
                 isCompleted = false,
                 createdAt = System.currentTimeMillis(),
                 accentColorHex = "#77DD77",
-                accumulatedTimeMs = 0L,
-                activeSessionStartMs = null,
                 reminderTime = null,
                 motivation = null
             )
         )
         
-        every { repository.getAllHabitsStream() } returns flowOf(habits)
-        every { repository.getSettingsStream() } returns flowOf(Settings(totalXP = 500))
+        every { repository.getAllHabitsStream() } returns flowOf(DataResult.Success(habits))
+        every { repository.getSettingsStream() } returns flowOf(DataResult.Success(Settings(totalXP = 500)))
         
         viewModel = HomeViewModel(repository, updateHabitProgressUseCase, testDispatcher)
         

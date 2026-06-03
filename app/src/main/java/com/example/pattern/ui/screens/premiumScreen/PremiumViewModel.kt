@@ -23,9 +23,10 @@ class PremiumViewModel @Inject constructor(
     private val restorePurchasesUseCase: RestorePurchasesUseCase
 ) : ViewModel() {
 
-    // Simple boolean state for guards
-    val isPremium = isPremiumUserUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    // Simple boolean state for guards (null = Initializing, true = Premium, false = Free)
+    // We use SharingStarted.Eagerly to start the flow immediately and minimize the null duration.
+    val isPremium: StateFlow<Boolean?> = isPremiumUserUseCase()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     // Rich state for the paywall
     val premiumStatus: StateFlow<PremiumStatus> = premiumRepository.premiumStatus

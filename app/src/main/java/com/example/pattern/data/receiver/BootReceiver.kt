@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.Intent
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.scheduler.ReminderScheduler
+import com.example.pattern.domain.util.DataResult
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,8 +45,11 @@ class BootReceiver : BroadcastReceiver() {
             scope.launch {
                 try {
                     // Fetch all habits and reschedule those that have reminders
-                    val habits = repository.getAllHabitsStream().first()
-                    habits.forEach { habit ->
+                    val result = repository.getAllHabitsStream()
+                        .filterIsInstance<DataResult.Success<List<com.example.pattern.domain.model.Habit>>>()
+                        .first()
+                    
+                    result.data.forEach { habit ->
                         if (habit.reminderTime != null) {
                             scheduler.schedule(habit)
                         }

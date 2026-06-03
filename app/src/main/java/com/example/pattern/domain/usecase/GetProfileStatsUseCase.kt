@@ -2,12 +2,13 @@ package com.example.pattern.domain.usecase
 
 import com.example.pattern.domain.model.*
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.util.DataResult
+import com.example.pattern.domain.util.combineResults
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateStreakFromDates
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -16,18 +17,13 @@ import javax.inject.Inject
 
 /**
  * Staff-engineered UseCase optimized for performance and scalability.
- * 
- * Key optimizations:
- * 1. Zero-Allocation Dates: Uses Set<LocalDate> directly from the repository.
- * 2. Reference Performance: Uses pre-calculated habit.createdAtLocalDate.
- * 3. Single-pass XP distribution and ranking generation.
- * 4. Offloads all computations to Dispatchers.Default.
+ * Now integrated with DataResult for consistent data handling.
  */
 class GetProfileStatsUseCase @Inject constructor(
     private val repository: HabitRepository
 ) {
-    operator fun invoke(): Flow<ProfileStats> {
-        return combine(
+    operator fun invoke(): Flow<DataResult<ProfileStats>> {
+        return combineResults(
             repository.getAllHabitsStream(),
             repository.getCompletedDatesStream()
         ) { habits, completedDatesMap ->
@@ -49,7 +45,7 @@ class GetProfileStatsUseCase @Inject constructor(
                 totalDone += habitDone
 
                 val habitXpPerCompletion = getXPForHabit(habit)
-                val totalHabitXp = habitDone * habitXpPerCompletion
+                val totalHabitXp = (habitDone * habitXpPerCompletion).coerceAtLeast(0)
                 totalXP += totalHabitXp
 
                 when (habit.type) {
@@ -59,7 +55,8 @@ class GetProfileStatsUseCase @Inject constructor(
                 }
 
                 completionDates.forEach { date ->
-                    dailyXpGains[date] = (dailyXpGains[date] ?: 0) + habitXpPerCompletion
+                    val currentXp = dailyXpGains[date] ?: 0
+                    dailyXpGains[date] = currentXp + habitXpPerCompletion
                 }
 
                 val creationDate = habit.createdAtLocalDate
@@ -79,9 +76,11 @@ class GetProfileStatsUseCase @Inject constructor(
 
             val totalMissed = habitStatsList.sumOf { it.first.third }
             val totalAttempts = totalDone + totalMissed
-            val successRate = if (totalAttempts > 0) totalDone.toFloat() / totalAttempts else 0f
+            val successRate = if (totalAttempts > 0) {
+                (totalDone.toFloat() / totalAttempts).coerceIn(0f, 1f)
+            } else 0f
 
-            val levelInfo = ExperienceUtils.getLevelInfo(totalXP)
+            val levelInfo = ExperienceUtils.getLevelInfo(totalXP.coerceAtLeast(0))
 
             // 3. XP History (Weekly, Monthly, Yearly) - Uses pre-parsed dates
             val weeklyXpHistory = calculateCumulativeHistory(dailyXpGains, today.minusDays(6), 7, false, today)
@@ -137,19 +136,25 @@ class GetProfileStatsUseCase @Inject constructor(
         return when (habit.type) {
             HabitType.TASK -> 15
             HabitType.QUIT -> 20
-            HabitType.BUILD -> 10 + ((habit.durationInMinutes ?: 0) / 15) * 5
+            HabitType.BUILD -> 10 + ((habit.durationInMinutes?.coerceAtLeast(0) ?: 0) / 15) * 5
         }
     }
 
     private fun countScheduledDays(startDate: LocalDate, endDate: LocalDate, selectedDays: List<Boolean>): Int {
         if (startDate.isAfter(endDate)) return 0
-        val daysBetween = ChronoUnit.DAYS.between(startDate, endDate.plusDays(1)).toInt()
+        // Defensive range check to prevent overflow on corrupted dates
+        val daysBetweenLong = ChronoUnit.DAYS.between(startDate, endDate.plusDays(1))
+        if (daysBetweenLong <= 0) return 0
+        if (daysBetweenLong > 200_000) return 0 // ~500 years limit for sanity
+        
+        val daysBetween = daysBetweenLong.toInt()
         val fullWeeks = daysBetween / 7
         val remainingDays = daysBetween % 7
         
         var count = fullWeeks * selectedDays.count { it }
         for (i in 0 until remainingDays) {
-            val dayIdx = startDate.plusDays(i.toLong()).dayOfWeek.value - 1
+            val date = startDate.plusDays(i.toLong())
+            val dayIdx = date.dayOfWeek.value - 1
             if (selectedDays.getOrNull(dayIdx) == true) count++
         }
         return count
@@ -182,7 +187,7 @@ class GetProfileStatsUseCase @Inject constructor(
 
         val dailyRates = (0..6).map { i ->
             val rate = if (scheduledCounts[i] > 0) {
-                completedCounts[i].toFloat() / scheduledCounts[i]
+                (completedCounts[i].toFloat() / scheduledCounts[i]).coerceIn(0f, 1f)
             } else 0f
             DayCompletionRate(i + 1, rate)
         }
@@ -192,9 +197,15 @@ class GetProfileStatsUseCase @Inject constructor(
             .minByOrNull { i -> completedCounts[i].toFloat() / scheduledCounts[i] }
 
         val insight = worstDayIndex?.let { idx ->
-            val rate = if (scheduledCounts[idx] > 0) completedCounts[idx].toFloat() / scheduledCounts[idx] else 1f
+            val rate = if (scheduledCounts[idx] > 0) {
+                (completedCounts[idx].toFloat() / scheduledCounts[idx]).coerceIn(0f, 1f)
+            } else 1f
             if (rate < 0.9f) {
-                val dayName = today.with(java.time.DayOfWeek.of(idx + 1)).format(DateTimeFormatter.ofPattern("EEEE"))
+                val dayName = try {
+                    today.with(java.time.DayOfWeek.of(idx + 1)).format(DateTimeFormatter.ofPattern("EEEE"))
+                } catch (_: Exception) {
+                    "this day"
+                }
                 val avgRate = dailyRates.map { it.rate }.average().toFloat()
                 val diff = (avgRate - rate) * 100
                 if (diff > 10) "You are ${diff.toInt()}% more likely to miss habits on ${dayName}s." else null
@@ -224,8 +235,8 @@ class GetProfileStatsUseCase @Inject constructor(
         today: LocalDate
     ): List<XPDataPoint> {
         val formatter = DateTimeFormatter.ofPattern(if (isMonthly) "MMM" else "MMM dd")
-        
-        // Calculate baseline XP earned before the window starts - optimized O(history)
+
+        // Pre-calculate running total for baseline XP earned before window
         var runningTotal = 0f
         dailyXpGains.forEach { (date, xp) ->
             if (date.isBefore(startDate)) {
@@ -233,22 +244,23 @@ class GetProfileStatsUseCase @Inject constructor(
             }
         }
 
+        // Optimization: Pre-group gains by month to avoid O(N*M) complexity
+        val monthlyGains = if (isMonthly) {
+            dailyXpGains.entries
+                .filter { !it.key.isBefore(startDate) && !it.key.isAfter(today) }
+                .groupBy { it.key.withDayOfMonth(1) }
+                .mapValues { it.value.sumOf { entry -> entry.value } }
+        } else null
+
         return List(count) { i ->
             val date = if (isMonthly) startDate.plusMonths(i.toLong()) else startDate.plusDays(i.toLong())
-            
+
             val periodGains = if (isMonthly) {
-                var monthSum = 0
-                val nextPeriod = date.plusMonths(1)
-                dailyXpGains.forEach { (d, xp) ->
-                    if (!d.isBefore(date) && d.isBefore(nextPeriod) && !d.isAfter(today)) {
-                        monthSum += xp
-                    }
-                }
-                monthSum
+                monthlyGains?.get(date.withDayOfMonth(1)) ?: 0
             } else {
                 dailyXpGains[date] ?: 0
             }
-            
+
             runningTotal += periodGains
             XPDataPoint(i + 1, date.format(formatter), runningTotal)
         }

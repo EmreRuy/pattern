@@ -8,16 +8,13 @@ import com.example.pattern.data.repository.BackupRepository
 import com.example.pattern.data.repository.PremiumRepository
 import com.example.pattern.domain.model.Settings
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.util.DataResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -49,10 +46,13 @@ class SettingsViewModel @Inject constructor(
         repository.getSettingsStream(),
         _backupStatus,
         premiumRepository.isPremiumUser()
-    ) { settings, backupStatus, isPremium ->
+    ) { settingsRes, backupStatus, isPremium ->
+        val settings = (settingsRes as? DataResult.Success)?.data ?: Settings()
+        val isLoading = settingsRes is DataResult.Loading
+        
         SettingsUiState(
-            settings = settings ?: Settings(),
-            isLoading = false,
+            settings = settings,
+            isLoading = isLoading,
             backupStatus = backupStatus,
             isPremium = isPremium
         )

@@ -3,6 +3,7 @@ package com.example.pattern.ui.screens.profileScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.usecase.GetProfileStatsUseCase
+import com.example.pattern.domain.util.DataResult
 import com.example.pattern.ui.screens.profileScreen.mapper.ProfileStateMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -11,8 +12,7 @@ import javax.inject.Inject
 
 /**
  * Staff-level ProfileViewModel.
- * Focused exclusively on data orchestration and state exposure.
- * Logic is delegated to Domain UseCases and UI Mappers.
+ * Now integrated with DataResult for unified state handling.
  */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -20,7 +20,13 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<ProfileUiState> = getProfileStatsUseCase()
-        .map { stats -> ProfileStateMapper.mapToUiState(stats) }
+        .map { result ->
+            when (result) {
+                is DataResult.Loading -> ProfileUiState(isLoading = true)
+                is DataResult.Error -> ProfileUiState(isLoading = false, errorMessage = result.exception.message)
+                is DataResult.Success -> ProfileStateMapper.mapToUiState(result.data).copy(isLoading = false)
+            }
+        }
         .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,

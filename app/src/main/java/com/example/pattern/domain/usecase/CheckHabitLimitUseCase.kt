@@ -2,24 +2,28 @@ package com.example.pattern.domain.usecase
 
 import com.example.pattern.data.repository.PremiumRepository
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.util.DataResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
  * Staff-Level Business Logic:
- * Centralizes the freemium habit limit rule.
- * Returns true if the user is allowed to add a new habit.
+ * Centralizes the freemium habit limit rule with DataResult integration.
  */
 class CheckHabitLimitUseCase @Inject constructor(
     private val habitRepository: HabitRepository,
     private val premiumRepository: PremiumRepository
 ) {
     operator fun invoke(): Flow<HabitLimitStatus> = combine(
-        habitRepository.getAllHabitsStream().map { it.size },
+        habitRepository.getAllHabitsStream(),
         premiumRepository.isPremiumUser()
-    ) { habitCount, isPremium ->
+    ) { habitsRes, isPremium ->
+        if (habitsRes is DataResult.Loading) return@combine HabitLimitStatus.Loading
+        if (habitsRes is DataResult.Error) return@combine HabitLimitStatus.Error
+        
+        val habitCount = (habitsRes as DataResult.Success).data.size
+        
         if (isPremium) {
             HabitLimitStatus.Unlimited
         } else {
@@ -37,6 +41,8 @@ class CheckHabitLimitUseCase @Inject constructor(
 }
 
 sealed interface HabitLimitStatus {
+    data object Loading : HabitLimitStatus
+    data object Error : HabitLimitStatus
     data object Unlimited : HabitLimitStatus
     data class Allowed(val currentCount: Int, val limit: Int) : HabitLimitStatus
     data class Reached(val limit: Int) : HabitLimitStatus

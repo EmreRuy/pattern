@@ -9,6 +9,7 @@ import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.util.DataResult
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.calculateStreak
 import com.example.pattern.utils.toUiDate
@@ -46,11 +47,18 @@ class HabitDetailsViewModel @Inject constructor(
 
     val uiState: StateFlow<HabitDetailsUiState> = repository.getHabitWithHistoryStream(habitId)
         .distinctUntilChanged()
-        .map { habitWithHistory ->
-            if (habitWithHistory == null) {
-                HabitDetailsUiState.Error
-            } else {
-                HabitDetailsUiState.Success(habitWithHistory.toUi())
+        .map { result ->
+            when (result) {
+                is DataResult.Loading -> HabitDetailsUiState.Loading
+                is DataResult.Error -> HabitDetailsUiState.Error
+                is DataResult.Success -> {
+                    val habitWithHistory = result.data
+                    if (habitWithHistory == null) {
+                        HabitDetailsUiState.Error
+                    } else {
+                        HabitDetailsUiState.Success(habitWithHistory.toUi())
+                    }
+                }
             }
         }
         .flowOn(Dispatchers.Default)

@@ -122,6 +122,15 @@ interface HabitDao {
     suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState>
 
     // Task Completion
+    @Transaction
+    suspend fun safeSetTaskCompleted(habitId: Int, date: String, completed: Boolean) {
+        val existing = getDailyStateOnce(habitId, date)
+        if (existing == null) {
+            upsertDailyState(HabitDailyState(habitId = habitId, date = date))
+        }
+        internalSetTaskCompleted(habitId, date, completed)
+    }
+
     @Query("""
         UPDATE habit_daily_state
         SET is_task_completed = :completed,
@@ -131,11 +140,20 @@ interface HabitDao {
             END
         WHERE habit_id = :habitId AND date = :date
     """)
-    suspend fun setTaskCompleted(
+    suspend fun internalSetTaskCompleted(
         habitId: Int,
         date: String,
         completed: Boolean
     )
+
+    @Transaction
+    suspend fun safeIncrementTaskCount(habitId: Int, date: String) {
+        val existing = getDailyStateOnce(habitId, date)
+        if (existing == null) {
+            upsertDailyState(HabitDailyState(habitId = habitId, date = date))
+        }
+        internalIncrementTaskCount(habitId, date)
+    }
 
     @Query("""
         UPDATE habit_daily_state
@@ -146,5 +164,5 @@ interface HabitDao {
             END
         WHERE habit_id = :habitId AND date = :date
     """)
-    suspend fun incrementTaskCount(habitId: Int, date: String)
+    suspend fun internalIncrementTaskCount(habitId: Int, date: String)
 }

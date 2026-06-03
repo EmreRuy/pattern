@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.util.DataResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -30,34 +31,40 @@ sealed interface HabitListUiState {
 
 /**
  * Optimized ViewModel for the Home Screen.
- * 
- * Performance Fix:
- * Instead of fetching ALL historical daily states and filtering in memory (O(History)),
- * it now only observes today's states from the database (O(1)).
+ * Now integrated with DataResult for unified state handling.
  */
 @HiltViewModel
 class HabitListViewModel @Inject constructor(
     private val repository: HabitRepository
 ) : ViewModel() {
 
-    // Optimized stream using specific today's data
     val uiState: StateFlow<HabitListUiState> = combine(
         repository.getAllHabitsStream(),
-        // Only observe today's states - massive performance win for long-term users
         repository.getDailyStatesForDate(LocalDate.now().toString())
-    ) { habits, todayStates ->
-        val todayStatesMap = todayStates.associateBy { it.habitId }
+    ) { habitsRes, todayStatesRes ->
+        
+        if (habitsRes is DataResult.Error) return@combine HabitListUiState.Error(habitsRes.exception.message ?: "Sync error")
+        if (todayStatesRes is DataResult.Error) return@combine HabitListUiState.Error(todayStatesRes.exception.message ?: "Sync error")
 
-        HabitListUiState.Success(
-            habits = HabitList(habits),
-            todayStates = DailyStateMap(todayStatesMap)
-        ) as HabitListUiState
+        if (habitsRes is DataResult.Loading || todayStatesRes is DataResult.Loading) {
+            return@combine HabitListUiState.Loading
+        }
+
+        if (habitsRes is DataResult.Success && todayStatesRes is DataResult.Success) {
+            val habits = habitsRes.data
+            val todayStates = todayStatesRes.data
+            val todayStatesMap = todayStates.associateBy { it.habitId }
+
+            HabitListUiState.Success(
+                habits = HabitList(habits),
+                todayStates = DailyStateMap(todayStatesMap)
+            )
+        } else {
+            HabitListUiState.Loading
+        }
     }
     .distinctUntilChanged()
     .flowOn(Dispatchers.Default)
-    .catch { e ->
-        emit(HabitListUiState.Error(e.message ?: "Unknown error"))
-    }
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

@@ -19,5 +19,6 @@ data class ProfileUiState(
     val bestStreaks: ImmutableList<StreakStat> = persistentListOf(),
     val streakInsight: InsightData? = null,
     val activeDaysAnalysis: ActiveDaysAnalysis = ActiveDaysAnalysis(persistentListOf()),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )

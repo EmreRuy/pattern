@@ -15,7 +15,7 @@ class BillingManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) : PurchasesUpdatedListener {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _state = MutableStateFlow<BillingState>(BillingState.Initializing)
     val state = _state.asStateFlow()

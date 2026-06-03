@@ -11,11 +11,22 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -25,6 +36,7 @@ import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.utils.CalendarMathProvider
 import java.time.LocalDate
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun HomeScreen(
@@ -46,7 +58,10 @@ fun HomeScreen(
             onHabitClick = onHabitClick,
             onPremiumClick = onPremiumClick
         )
-        is HomeUiState.Error -> ErrorScreen(state.message)
+        is HomeUiState.Error -> ErrorScreen(
+            message = state.message,
+            onRetry = { viewModel.onEvent(HomeUiEvent.OnRetry) }
+        )
     }
 }
 
@@ -80,30 +95,45 @@ private fun HomeContent(
         }
     }
 
-    // 1. Sync Pager to ViewModel (External changes only)
+    // 1. Sync Pager to ViewModel (External changes only, like tapping a calendar date)
     LaunchedEffect(state.selectedDate) {
         val targetDayPage = CalendarMathProvider.getDayPageIndex(today, state.selectedDate)
-        // Only animate if the difference is caused by something other than the user swiping
         if (habitPagerState.currentPage != targetDayPage && !habitPagerState.isScrollInProgress) {
-            habitPagerState.animateScrollToPage(targetDayPage)
+            // Use scrollToPage instead of animateScrollToPage if it's a large jump to prevent lag
+            val diff = kotlin.math.abs(habitPagerState.currentPage - targetDayPage)
+            if (diff > 7) {
+                habitPagerState.scrollToPage(targetDayPage)
+            } else {
+                habitPagerState.animateScrollToPage(targetDayPage)
+            }
         }
     }
 
-    // 2. Immediate Habit Pager -> Calendar Pager sync
-    val habitWeekPage by remember { derivedStateOf { habitPagerState.currentPage / 7 } }
-    LaunchedEffect(habitWeekPage) {
-        if (calendarPagerState.currentPage != habitWeekPage) {
-            calendarPagerState.scrollToPage(habitWeekPage)
+    // 2. Sync Calendar Pager to Habit Pager & Proactive ViewModel Update
+    // Consolidate into one snapshotFlow to ensure Unidirectional Data Flow and prevent loops
+    LaunchedEffect(habitPagerState) {
+        snapshotFlow { habitPagerState.currentPage }.collect { currentPage ->
+            // Sync Calendar
+            val targetWeekPage = currentPage / 7
+            if (calendarPagerState.currentPage != targetWeekPage) {
+                calendarPagerState.scrollToPage(targetWeekPage)
+            }
+
+            // Sync ViewModel
+            val dateAtPage = CalendarMathProvider.getDateFromDayIndex(today, currentPage)
+            if (dateAtPage != state.selectedDate && !habitPagerState.isScrollInProgress) {
+                onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
+            }
         }
     }
 
-    // 3. Proactive ViewModel Update
-    // As the page changes, we update the ViewModel's selectedDate.
-    // Because we have a wide data window in the ViewModel, this won't cause lag.
-    LaunchedEffect(habitPagerState.currentPage) {
-        val dateAtPage = CalendarMathProvider.getDateFromDayIndex(today, habitPagerState.currentPage)
-        if (dateAtPage != state.selectedDate) {
-            onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
+    // Ensure ViewModel is updated when scrolling SETTLES to avoid constant updates during drag
+    LaunchedEffect(habitPagerState.isScrollInProgress) {
+        if (!habitPagerState.isScrollInProgress) {
+            val dateAtPage = CalendarMathProvider.getDateFromDayIndex(today, habitPagerState.currentPage)
+            if (dateAtPage != state.selectedDate) {
+                onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
+            }
         }
     }
 
@@ -155,8 +185,29 @@ private fun LoadingScreen() {
 }
 
 @Composable
-private fun ErrorScreen(message: String) {
+private fun ErrorScreen(message: String, onRetry: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = message, color = MaterialTheme.colorScheme.error)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Retry")
+            }
+        }
     }
 }

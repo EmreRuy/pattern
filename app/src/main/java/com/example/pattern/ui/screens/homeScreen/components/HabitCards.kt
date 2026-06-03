@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,9 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.CalendarMathProvider
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import java.time.LocalDate
 
 @Immutable
@@ -31,7 +36,7 @@ data class HabitCardList(val items: List<HabitCardModel>)
 @Composable
 fun HabitCardsPager(
     pagerState: PagerState,
-    habitsByDate: Map<LocalDate, List<HabitCardModel>>,
+    habitsByDate: ImmutableMap<LocalDate, ImmutableList<HabitCardModel>>,
     hasAnyHabits: Boolean,
     paddingValues: PaddingValues,
     onTaskCompleted: (Int, LocalDate, Boolean) -> Unit,
