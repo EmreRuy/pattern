@@ -5,9 +5,9 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.repository.BackupRepository
-import com.example.pattern.data.repository.PremiumRepository
 import com.example.pattern.domain.model.Settings
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.usecase.IsPremiumUserUseCase
 import com.example.pattern.domain.util.DataResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +37,7 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val repository: HabitRepository,
     private val backupRepository: BackupRepository,
-    private val premiumRepository: PremiumRepository
+    private val isPremiumUserUseCase: IsPremiumUserUseCase
 ) : ViewModel() {
 
     private val _backupStatus = MutableStateFlow<BackupStatus>(BackupStatus.Idle)
@@ -45,7 +45,7 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         repository.getSettingsStream(),
         _backupStatus,
-        premiumRepository.isPremiumUser()
+        isPremiumUserUseCase()
     ) { settingsRes, backupStatus, isPremium ->
         val settings = (settingsRes as? DataResult.Success)?.data ?: Settings()
         val isLoading = settingsRes is DataResult.Loading

@@ -1,6 +1,5 @@
 package com.example.pattern.domain.usecase
 
-import com.example.pattern.data.repository.PremiumRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.util.DataResult
 import kotlinx.coroutines.flow.Flow
@@ -13,11 +12,11 @@ import javax.inject.Inject
  */
 class CheckHabitLimitUseCase @Inject constructor(
     private val habitRepository: HabitRepository,
-    private val premiumRepository: PremiumRepository
+    private val isPremiumUserUseCase: IsPremiumUserUseCase
 ) {
     operator fun invoke(): Flow<HabitLimitStatus> = combine(
         habitRepository.getAllHabitsStream(),
-        premiumRepository.isPremiumUser()
+        isPremiumUserUseCase()
     ) { habitsRes, isPremium ->
         if (habitsRes is DataResult.Loading) return@combine HabitLimitStatus.Loading
         if (habitsRes is DataResult.Error) return@combine HabitLimitStatus.Error

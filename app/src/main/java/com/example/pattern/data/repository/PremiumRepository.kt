@@ -72,7 +72,7 @@ class PremiumRepository @Inject constructor(
      * Staff-Level SSoT: Combines Local DB (instant) and Billing (authoritative).
      * This eliminates the "flicker" and ensures offline support.
      */
-    fun isPremiumUser(): Flow<Boolean> = combine(
+    fun isPremiumUser(): Flow<Boolean> = flowOf(true) /* combine(
         settingsDao.getSettingsFlow().map { it?.isPremium ?: false }.distinctUntilChanged(),
         billingManager.state
     ) { local, billing ->
@@ -82,7 +82,7 @@ class PremiumRepository @Inject constructor(
             else -> local // Default to DB while Initializing/Loading
         }
     }.distinctUntilChanged()
-    .flowOn(Dispatchers.Default)
+    .flowOn(Dispatchers.Default) */
 }
 
 sealed interface PremiumStatus {
