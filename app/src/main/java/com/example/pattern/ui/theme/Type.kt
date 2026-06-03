@@ -28,6 +28,13 @@ val displayFontFamily = FontFamily(
     )
 )
 
+val serifFontFamily = FontFamily(
+    Font(
+        googleFont = GoogleFont("Lora"),
+        fontProvider = provider,
+    )
+)
+
 // Default Material 3 typography values
 val baseline = Typography()
 

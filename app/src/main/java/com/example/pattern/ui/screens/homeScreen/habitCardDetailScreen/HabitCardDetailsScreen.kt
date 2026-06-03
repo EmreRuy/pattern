@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.R
 import com.example.pattern.ui.components.*
+import com.example.pattern.ui.theme.serifFontFamily
 import kotlinx.collections.immutable.ImmutableSet
 import java.time.LocalDate
 
@@ -168,12 +170,12 @@ private fun HabitDetailTopBar(
 private fun MotivationCard(motivation: String?) {
     val displayMotivation = motivation ?: stringResource(R.string.detail_default_motivation)
 
-    // Performance Optimization: Memoize font size to prevent recalculation on every scroll tick
+    // Editorial sizing: Let the text dominate the canvas
     val fontSize = remember(displayMotivation) {
         when {
-            displayMotivation.length > 150 -> 15.sp
-            displayMotivation.length > 80 -> 18.sp
-            else -> 22.sp
+            displayMotivation.length > 150 -> 18.sp
+            displayMotivation.length > 80 -> 22.sp
+            else -> 25.sp
         }
     }
 
@@ -182,49 +184,75 @@ private fun MotivationCard(motivation: String?) {
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            // Premium Design Element: Subtle watermark
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 240.dp)
+                .padding(24.dp)
+        ) {
+            // Refined Quotation Mark Icon: Fully inside, low opacity
             Icon(
                 imageVector = Icons.Rounded.FormatQuote,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(64.dp)
                     .align(Alignment.TopEnd)
-                    .offset(x = 10.dp, y = (-10).dp)
-                    .alpha(0.03f),
+                    .alpha(0.05f),
                 tint = MaterialTheme.colorScheme.onSurface
             )
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.matchParentSize()
             ) {
-                SectionHeader(
-                    title = stringResource(R.string.detail_section_motivation),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                )
-
-                Spacer(Modifier.height(24.dp))
-
+                // Editorial Header: High tracking, top-left
                 Text(
-                    text = "“$displayMotivation”",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp),
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        lineHeight = 32.sp,
-                        textAlign = TextAlign.Center,
-                        fontStyle = FontStyle.Italic,
-                        fontWeight = FontWeight.ExtraLight,
-                        letterSpacing = 0.5.sp,
-                        fontSize = fontSize
+                    text = stringResource(R.string.detail_section_motivation).uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        fontSize = 10.sp
                     ),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
+
+                // Vertically centered content area relative to remaining space
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = displayMotivation,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                        style = TextStyle(
+                            fontFamily = serifFontFamily,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = fontSize,
+                            lineHeight = fontSize * 1.45f,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = (-0.2).sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(Modifier.height(20.dp))
+
+                    // Author Attribution: Subtle, low-contrast
+                    Text(
+                        text = "— Miyamoto Musashi",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    )
+                }
             }
         }
     }
