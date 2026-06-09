@@ -3,7 +3,9 @@ package com.example.pattern.di
 import com.example.pattern.data.repository.BackupRepository
 import com.example.pattern.data.repository.BackupRepositoryImpl
 import com.example.pattern.data.repository.HabitRepositoryImpl
+import com.example.pattern.data.repository.UserRepositoryImpl
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindBackupRepository(
         backupRepositoryImpl: BackupRepositoryImpl
     ): BackupRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        userRepositoryImpl: UserRepositoryImpl
+    ): UserRepository
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.repository.UserRepository
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.di.DefaultDispatcher
 import com.example.pattern.domain.util.DataResult
@@ -43,6 +44,7 @@ private data class HabitModelKey(
 class HomeViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val habitRepository: HabitRepository,
+    private val userRepository: UserRepository,
     private val updateHabitProgressUseCase: UpdateHabitProgressUseCase,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
@@ -50,7 +52,7 @@ class HomeViewModel @Inject constructor(
     private val _selectedDate = savedStateHandle.getStateFlow("selected_date", LocalDate.now())
     private val modelCache = java.util.concurrent.ConcurrentHashMap<HabitModelKey, HabitCardModel>(500)
 
-    val levelInfo: StateFlow<DataResult<com.example.pattern.domain.model.LevelInfo>> = habitRepository.getSettingsStream()
+    val levelInfo: StateFlow<DataResult<com.example.pattern.domain.model.LevelInfo>> = userRepository.getSettingsStream()
         .mapResult { settings -> ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0) }
         .distinctUntilChanged()
         .flowOn(defaultDispatcher)

@@ -4,14 +4,11 @@ import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
 import androidx.room.withTransaction
 import com.example.pattern.data.local.dao.HabitDao
-import com.example.pattern.data.local.dao.SettingsDao
 import com.example.pattern.data.local.db.AppDataBase
-import com.example.pattern.data.local.entity.SettingsEntity
 import com.example.pattern.data.mapper.toDomain
 import com.example.pattern.data.mapper.toLocal
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
-import com.example.pattern.domain.model.Settings
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.util.DataResult
 import com.example.pattern.domain.util.asResult
@@ -24,27 +21,12 @@ import javax.inject.Singleton
 @Singleton
 class HabitRepositoryImpl @Inject constructor(
     private val database: AppDataBase,
-    private val habitDao: HabitDao,
-    private val settingsDao: SettingsDao
+    private val habitDao: HabitDao
 ) : HabitRepository {
 
     override fun getAllHabitsStream(): Flow<DataResult<List<Habit>>> {
         return habitDao.getAllHabits()
-            .distinctUntilChanged { old, new ->
-                if (old.size != new.size) return@distinctUntilChanged false
-                old.zip(new).all { (o, n) ->
-                    o.id == n.id &&
-                    o.name == n.name &&
-                    o.type == n.type &&
-                    o.taskCount == n.taskCount &&
-                    o.durationInMinutes == n.durationInMinutes &&
-                    o.isCompleted == n.isCompleted &&
-                    o.selectedDays == n.selectedDays &&
-                    o.iconCode == n.iconCode &&
-                    o.accentColorHex == n.accentColorHex &&
-                    o.reminderTime == n.reminderTime
-                }
-            }
+            .distinctUntilChanged()
             .map { list -> list.map { it.toDomain() } }
             .flowOn(Dispatchers.Default)
             .asResult()
@@ -98,17 +80,7 @@ class HabitRepositoryImpl @Inject constructor(
 
     override fun getAllDailyStatesStream(): Flow<DataResult<List<HabitDailyState>>> =
         habitDao.getAllDailyStates()
-            .distinctUntilChanged { old, new ->
-                if (old.size != new.size) return@distinctUntilChanged false
-                old.zip(new).all { (o, n) ->
-                    o.habitId == n.habitId && 
-                    o.date == n.date && 
-                    o.isCompleted == n.isCompleted && 
-                    o.isTaskCompleted == n.isTaskCompleted &&
-                    o.completedCount == n.completedCount &&
-                    o.activeSessionStartMs == n.activeSessionStartMs
-                }
-            }
+            .distinctUntilChanged()
             .map { list -> list.map { it.toDomain() } }
             .flowOn(Dispatchers.Default)
             .asResult()
@@ -166,44 +138,6 @@ class HabitRepositoryImpl @Inject constructor(
             habitDao.safeIncrementTaskCount(habitId, date)
         } catch (e: Exception) {
             Log.e("HabitRepository", "Error in incrementTaskCount for habit $habitId", e)
-        }
-    }
-
-    override fun getTotalXPStream(): Flow<DataResult<Int>> = 
-        habitDao.getTotalXP()
-            .distinctUntilChanged()
-            .map { it ?: 0 }
-            .flowOn(Dispatchers.Default)
-            .asResult()
-
-    override fun getSettingsStream(): Flow<DataResult<Settings?>> = 
-        settingsDao.getSettingsFlow()
-            .distinctUntilChanged()
-            .map { it?.toDomain() }
-            .flowOn(Dispatchers.Default)
-            .asResult()
-
-    override suspend fun getSettingsOnce(): Settings? = settingsDao.getSettingsOnce()?.toDomain()
-
-    override suspend fun updateQuietHours(enabled: Boolean, start: String, end: String) {
-        database.withTransaction {
-            val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
-            settingsDao.upsertSettings(
-                current.copy(
-                    quietHoursEnabled = enabled,
-                    startTime = start,
-                    endTime = end
-                )
-            )
-        }
-    }
-
-    override suspend fun addXP(xpToAdd: Int) {
-        database.withTransaction {
-            val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
-            settingsDao.upsertSettings(
-                current.copy(totalXP = current.totalXP + xpToAdd)
-            )
         }
     }
 

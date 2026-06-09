@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.repository.BackupRepository
 import com.example.pattern.domain.model.Settings
-import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.repository.UserRepository
 import com.example.pattern.domain.usecase.IsPremiumUserUseCase
 import com.example.pattern.domain.util.DataResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +35,7 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: HabitRepository,
+    private val userRepository: UserRepository,
     private val backupRepository: BackupRepository,
     private val isPremiumUserUseCase: IsPremiumUserUseCase
 ) : ViewModel() {
@@ -43,7 +43,7 @@ class SettingsViewModel @Inject constructor(
     private val _backupStatus = MutableStateFlow<BackupStatus>(BackupStatus.Idle)
 
     val uiState: StateFlow<SettingsUiState> = combine(
-        repository.getSettingsStream(),
+        userRepository.getSettingsStream(),
         _backupStatus,
         isPremiumUserUseCase()
     ) { settingsRes, backupStatus, isPremium ->
@@ -64,7 +64,7 @@ class SettingsViewModel @Inject constructor(
 
     fun updateQuietHours(enabled: Boolean, start: String, end: String) {
         viewModelScope.launch {
-            repository.updateQuietHours(enabled, start, end)
+            userRepository.updateQuietHours(enabled, start, end)
         }
     }
 

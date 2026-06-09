@@ -28,11 +28,5 @@ interface HabitRepository {
     suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean)
     suspend fun incrementTaskCount(habitId: Int, date: String)
     
-    fun getTotalXPStream(): Flow<DataResult<Int>>
-    fun getSettingsStream(): Flow<DataResult<Settings?>>
-    suspend fun getSettingsOnce(): Settings?
-    suspend fun updateQuietHours(enabled: Boolean, start: String, end: String)
-    suspend fun addXP(xpToAdd: Int)
-    
     suspend fun <R> withTransaction(block: suspend () -> R): R
 }

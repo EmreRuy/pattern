@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.repository.UserRepository
 import com.example.pattern.domain.scheduler.ReminderScheduler
 import com.example.pattern.notifications.NotificationHelper
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,6 +27,9 @@ class AlarmReceiver : BroadcastReceiver() {
     lateinit var repository: HabitRepository
 
     @Inject
+    lateinit var userRepository: UserRepository
+
+    @Inject
     lateinit var scheduler: ReminderScheduler
 
     @Inject
@@ -44,7 +48,7 @@ class AlarmReceiver : BroadcastReceiver() {
         scope.launch {
             try {
                 val habit = repository.getHabitOnce(habitId) ?: return@launch
-                val settings = repository.getSettingsOnce()
+                val settings = userRepository.getSettingsOnce()
 
                 // Check if reminders are still enabled for this habit
                 if (habit.reminderTime != null) {
