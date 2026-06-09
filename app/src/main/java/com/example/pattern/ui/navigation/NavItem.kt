@@ -16,6 +16,7 @@ sealed class Screens(val route: String, val showBottomBar: Boolean = false) {
     val rootRoute: String = route.substringBefore("/").substringBefore("?")
 
     data object Onboarding : Screens("onboarding_route")
+    data object MainShell : Screens("main_shell_route")
     data object Home : Screens("home_route", showBottomBar = true)
     data object Add : Screens("add_route")
     data object Profile : Screens("profile_route", showBottomBar = true)
@@ -35,7 +36,7 @@ sealed class Screens(val route: String, val showBottomBar: Boolean = false) {
     companion object {
         private val allScreens by lazy {
             listOf(
-                Onboarding, Home, Add, Profile, HabitDetail, 
+                Onboarding, MainShell, Home, Add, Profile, HabitDetail,
                 EditHabit, HabitList, Settings, Premium
             )
         }

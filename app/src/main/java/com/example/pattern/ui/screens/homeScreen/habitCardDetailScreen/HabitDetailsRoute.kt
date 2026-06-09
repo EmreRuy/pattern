@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+
 /**
  * Staff-level Route implementation.
  * Uses Crossfade to prevent "hard pops" between loading and content states.
@@ -33,31 +36,36 @@ fun HabitDetailsRoute(
 
     if (isDeleting) return
 
-    Crossfade(
-        targetState = uiState,
-        animationSpec = tween(durationMillis = 300),
-        label = "screen_transition"
-    ) { state ->
-        when (state) {
-            HabitDetailsUiState.Loading -> {
-                Box(Modifier.fillMaxSize())
-            }
-            HabitDetailsUiState.Error -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error loading habit")
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Crossfade(
+            targetState = uiState,
+            animationSpec = tween(durationMillis = 300),
+            label = "screen_transition"
+        ) { state ->
+            when (state) {
+                HabitDetailsUiState.Loading -> {
+                    Box(Modifier.fillMaxSize())
                 }
-            }
-            is HabitDetailsUiState.Success -> {
-                HabitCardDetailsScreen(
-                    habit = state.habit,
-                    onBack = onBack,
-                    onDelete = {
-                        isDeleting = true
-                        viewModel.deleteHabit(state.habit.id)
-                        onBack()
-                    },
-                    onEdit = onEdit
-                )
+                HabitDetailsUiState.Error -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Error loading habit")
+                    }
+                }
+                is HabitDetailsUiState.Success -> {
+                    HabitCardDetailsScreen(
+                        habit = state.habit,
+                        onBack = onBack,
+                        onDelete = {
+                            isDeleting = true
+                            viewModel.deleteHabit(state.habit.id)
+                            onBack()
+                        },
+                        onEdit = onEdit
+                    )
+                }
             }
         }
     }

@@ -25,18 +25,10 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
-/**
- * Staff Engineer Final Performance Pass (Zero-Chatter Edition).
- * 
- * Final Optimization:
- * 1. Result Wrapper: Integrated DataResult to handle Loading/Error states explicitly.
- * 2. High Hit-Rate Cache: Model cache remains for performance during date swipes.
- */
 private data class HomeStructuralData(
     val habits: List<com.example.pattern.domain.model.Habit>,
     val streaks: Map<Int, Int>,
-    val statesByDate: Map<String, List<com.example.pattern.domain.model.HabitDailyState>>,
-    val level: com.example.pattern.domain.model.LevelInfo
+    val statesByDate: Map<String, List<com.example.pattern.domain.model.HabitDailyState>>
 )
 
 private data class HabitModelKey(
@@ -58,33 +50,35 @@ class HomeViewModel @Inject constructor(
     private val _selectedDate = savedStateHandle.getStateFlow("selected_date", LocalDate.now())
     private val modelCache = java.util.concurrent.ConcurrentHashMap<HabitModelKey, HabitCardModel>(500)
 
-    private val levelInfoFlow = habitRepository.getSettingsStream()
+    val levelInfo: StateFlow<DataResult<com.example.pattern.domain.model.LevelInfo>> = habitRepository.getSettingsStream()
         .mapResult { settings -> ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0) }
         .distinctUntilChanged()
+        .flowOn(defaultDispatcher)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DataResult.Loading)
 
-    private val structuralDataFlow = combine(
+    private val dailyStatesWindowFlow = _selectedDate
+        .flatMapLatest { selected ->
+            val startDate = selected.minusDays(14).toString()
+            habitRepository.getDailyStatesFromDateStream(startDate)
+        }.distinctUntilChanged()
+
+    private val habitDataFlow = combine(
         habitRepository.getAllHabitsStream(),
         habitRepository.getCompletedDatesStream(),
-        habitRepository.getAllDailyStatesStream(),
-        levelInfoFlow
-    ) { habitsRes, completedRes, statesRes, levelRes ->
+        dailyStatesWindowFlow
+    ) { habitsRes, completedRes, statesRes ->
         if (habitsRes is DataResult.Error) return@combine DataResult.Error(habitsRes.exception)
         if (completedRes is DataResult.Error) return@combine DataResult.Error(completedRes.exception)
         if (statesRes is DataResult.Error) return@combine DataResult.Error(statesRes.exception)
-        if (levelRes is DataResult.Error) return@combine DataResult.Error(levelRes.exception)
 
-        if (habitsRes is DataResult.Loading || completedRes is DataResult.Loading || 
-            statesRes is DataResult.Loading || levelRes is DataResult.Loading) {
+        if (habitsRes is DataResult.Loading || completedRes is DataResult.Loading || statesRes is DataResult.Loading) {
             return@combine DataResult.Loading
         }
 
-        if (habitsRes is DataResult.Success && completedRes is DataResult.Success && 
-            statesRes is DataResult.Success && levelRes is DataResult.Success) {
-            
+        if (habitsRes is DataResult.Success && completedRes is DataResult.Success && statesRes is DataResult.Success) {
             val habits = habitsRes.data
             val completed = completedRes.data
             val states = statesRes.data
-            val level = levelRes.data
 
             val today = LocalDate.now()
             val completedEpochsByHabit = completed.mapValues { (_, dates) ->
@@ -99,7 +93,7 @@ class HomeViewModel @Inject constructor(
             
             val statesByDate = states.groupBy { it.date }
             
-            DataResult.Success(HomeStructuralData(habits, streaks, statesByDate, level))
+            DataResult.Success(HomeStructuralData(habits, streaks, statesByDate))
         } else {
             DataResult.Loading
         }
@@ -107,16 +101,18 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
-        structuralDataFlow
-    ) { date, dataResult ->
+        habitDataFlow,
+        levelInfo
+    ) { date, dataResult, levelRes ->
         when (dataResult) {
             is DataResult.Loading -> HomeUiState.Loading
             is DataResult.Error -> HomeUiState.Error(dataResult.exception.message ?: "Sync error")
             is DataResult.Success -> {
                 val data = dataResult.data
+                val level = (levelRes as? DataResult.Success)?.data ?: com.example.pattern.domain.model.LevelInfo(0, "", 0, 100, 0f)
                 val today = LocalDate.now()
-                val dateWindow = calculateDateWindow(today, date)
                 
+                val dateWindow = calculateTightDateWindow(today, date)
                 val habitsByDate = java.util.HashMap<LocalDate, ImmutableList<HabitCardModel>>(dateWindow.size)
                 val activeKeys = java.util.HashSet<HabitModelKey>(dateWindow.size * data.habits.size)
 
@@ -150,29 +146,38 @@ class HomeViewModel @Inject constructor(
 
                 if (modelCache.size > 1000) modelCache.keys.retainAll(activeKeys)
 
-                val immutableHabitsByDate = (habitsByDate as Map<LocalDate, ImmutableList<HabitCardModel>>).toImmutableMap()
-
                 HomeUiState.Success(
                     selectedDate = date,
                     isSelectedDateToday = date == today,
-                    habits = immutableHabitsByDate[date] ?: persistentListOf(),
-                    habitsByDate = immutableHabitsByDate,
+                    habits = habitsByDate[date] ?: persistentListOf(),
+                    habitsByDate = habitsByDate.toImmutableMap(),
                     hasAnyHabits = data.habits.isNotEmpty(),
-                    levelInfo = data.level
+                    levelInfo = level
                 )
             }
+        }
+    }
+    .distinctUntilChanged { old, new ->
+        if (old is HomeUiState.Success && new is HomeUiState.Success) {
+            old.selectedDate == new.selectedDate && 
+            old.habitsByDate == new.habitsByDate &&
+            old.levelInfo == new.levelInfo
+        } else {
+            old == new
         }
     }
     .flowOn(defaultDispatcher)
     .stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Lazily,
         initialValue = HomeUiState.Loading
     )
 
-    private fun calculateDateWindow(today: LocalDate, selectedDate: LocalDate): Set<LocalDate> {
-        val window = java.util.LinkedHashSet<LocalDate>(100)
-        for (i in -30..30) window.add(today.plusDays(i.toLong()))
+    private fun calculateTightDateWindow(today: LocalDate, selectedDate: LocalDate): Set<LocalDate> {
+        val window = java.util.LinkedHashSet<LocalDate>(45)
+        // Optimization 4: Align window with Pager's beyondViewportPageCount (7).
+        // This ensures data is pre-mapped and ready the moment the Pager requests it.
+        for (i in -7..7) window.add(today.plusDays(i.toLong()))
         for (i in -7..7) window.add(selectedDate.plusDays(i.toLong()))
         return window
     }

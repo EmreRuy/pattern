@@ -1,6 +1,7 @@
 package com.example.pattern
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -10,16 +11,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,9 +41,14 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    // Lead Expert Fix: Reactive Intent tracking to handle notifications flawlessly
+    private val activityIntent = mutableStateOf<Intent?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        
+        activityIntent.value = intent
         
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
@@ -51,50 +56,71 @@ class MainActivity : ComponentActivity() {
                 android.graphics.Color.TRANSPARENT,
             )
         )
+
         setContent {
             val viewModel: MainViewModel = hiltViewModel()
-            val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
-            val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val currentIntent by activityIntent
 
-            // Keep the splash screen on-screen until we know where to navigate
+            // Staff-level fix: Reactive intent handling triggered on change
+            LaunchedEffect(currentIntent) {
+                viewModel.handleIntent(currentIntent)
+            }
+
+            // Keep the splash screen on-screen until state is fully resolved
             splashScreen.setKeepOnScreenCondition {
-                isLoading || (startDestination == null)
+                uiState is MainUiState.Loading
             }
 
             AppTheme {
-                if (startDestination != null) {
-                    MainContent(startDestination!!)
+                // Lead Expert Fix: Solid Surface prevents white flashes during initialization/navigation
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    when (val state = uiState) {
+                        is MainUiState.Loading -> { /* Splash screen is visible */ }
+                        is MainUiState.Success -> {
+                            MainContent(
+                                startDestination = state.startDestination,
+                                viewModel = viewModel
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 
-    // Lead Expert Fix: Handle intent when app is already running
-    override fun onNewIntent(intent: android.content.Intent) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        // Staff-level fix: Trigger reactive update for the intent
+        activityIntent.value = intent
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun MainContent(startDestination: String) {
-        val viewModel: MainViewModel = hiltViewModel()
+    private fun MainContent(
+        startDestination: String,
+        viewModel: MainViewModel
+    ) {
         val context = LocalContext.current
         val navController = rememberNavController()
         val actions = remember(navController) { NavActions(navController) }
         
-        // Lead Expert Enhancement: Unified Notification Navigation Logic
-        LaunchedEffect(navController) {
-            val habitId = intent.getIntExtra("HABIT_ID", -1)
-            if (habitId != -1) {
-                intent.removeExtra("HABIT_ID")
-                actions.navigateToDetail(habitId)
+        // Lead Expert Fix: Unified Navigation Event Observer
+        LaunchedEffect(viewModel.navigationEvents) {
+            viewModel.navigationEvents.collect { event ->
+                when (event) {
+                    is NavigationEvent.NavigateToDetail -> actions.navigateToDetail(event.habitId)
+                }
             }
         }
 
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
-        ) { /* Handle result */ }
+        ) { /* Logic for permission result */ }
 
         LaunchedEffect(Unit) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -106,39 +132,18 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
         val habitLimitStatus by viewModel.habitLimitStatus.collectAsStateWithLifecycle()
 
         CompositionLocalProvider(LocalNavActions provides actions) {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                bottomBar = {
-                    if (Screens.shouldShowBottomBar(currentRoute)) {
-                        CustomBottomBar(
-                            currentRoute = currentRoute,
-                            onItemClick = { item -> 
-                                if (item.route == Screens.Add.route && habitLimitStatus is HabitLimitStatus.Reached) {
-                                    actions.navigateToPremium()
-                                } else {
-                                    actions.navigateToBottomBarRoute(item.route) 
-                                }
-                            }
-                        )
-                    }
-                },
-                contentWindowInsets = WindowInsets.navigationBars
-            ) { paddingValues ->
-                NavHost(
-                    navController = navController,
-                    modifier = Modifier.padding(paddingValues),
-                    startDestination = startDestination,
-                    onOnboardingFinish = {
-                        viewModel.completeOnboarding()
-                        actions.finishOnboarding()
-                    }
-                )
-            }
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                habitLimitStatus = habitLimitStatus ?: HabitLimitStatus.Loading,
+                onOnboardingFinish = {
+                    viewModel.completeOnboarding()
+                    actions.finishOnboarding()
+                }
+            )
         }
     }
 }

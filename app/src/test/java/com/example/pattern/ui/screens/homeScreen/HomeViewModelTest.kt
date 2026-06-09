@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
@@ -9,6 +10,7 @@ import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.domain.util.DataResult
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -27,6 +29,7 @@ class HomeViewModelTest {
     private val repository = mockk<HabitRepository>(relaxed = true)
     private lateinit var updateHabitProgressUseCase: UpdateHabitProgressUseCase
     private lateinit var viewModel: HomeViewModel
+    private lateinit var savedStateHandle: SavedStateHandle
     
     // Lead Expert Tip: Use UnconfinedTestDispatcher for StateFlow/Turbine tests 
     // to ensure emissions are handled eagerly and synchronously.
@@ -36,6 +39,7 @@ class HomeViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         updateHabitProgressUseCase = mockk<UpdateHabitProgressUseCase>(relaxed = true)
+        savedStateHandle = SavedStateHandle()
         
         // Default mocks - Ensure EVERY flow in the combine block is mocked and emits!
         every { repository.getSettingsStream() } returns flowOf(DataResult.Success(Settings(totalXP = 100)))
@@ -51,7 +55,7 @@ class HomeViewModelTest {
 
     @Test
     fun `initial state is loading or success`() = runTest {
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, testDispatcher)
+        viewModel = HomeViewModel(savedStateHandle, repository, updateHabitProgressUseCase, testDispatcher)
         val state = viewModel.uiState.value
         assertTrue(state is HomeUiState.Loading || state is HomeUiState.Success,
             "Initial state should be Loading or Success, but was $state")
@@ -65,7 +69,7 @@ class HomeViewModelTest {
                 name = "Test Habit",
                 type = HabitType.BUILD,
                 durationInMinutes = 30,
-                selectedDays = List(7) { true },
+                selectedDays = List(7) { true }.toImmutableList(),
                 iconCode = "🔥",
                 isCompleted = false,
                 createdAt = System.currentTimeMillis(),
@@ -78,7 +82,7 @@ class HomeViewModelTest {
         every { repository.getAllHabitsStream() } returns flowOf(DataResult.Success(habits))
         every { repository.getSettingsStream() } returns flowOf(DataResult.Success(Settings(totalXP = 500)))
         
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, testDispatcher)
+        viewModel = HomeViewModel(savedStateHandle, repository, updateHabitProgressUseCase, testDispatcher)
         
         viewModel.uiState.test {
             // With UnconfinedTestDispatcher, the initial emission is already there.
@@ -103,7 +107,7 @@ class HomeViewModelTest {
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
         
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, testDispatcher)
+        viewModel = HomeViewModel(savedStateHandle, repository, updateHabitProgressUseCase, testDispatcher)
         
         viewModel.uiState.test {
             // Wait for initial Success state (today)

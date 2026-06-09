@@ -9,15 +9,19 @@ import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.util.DataResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
 import javax.inject.Inject
 
 @Immutable
-data class HabitList(val items: List<Habit>)
+data class HabitList(val items: ImmutableList<Habit>)
 
 @Immutable
-data class DailyStateMap(val states: Map<Int, HabitDailyState>)
+data class DailyStateMap(val states: ImmutableMap<Int, HabitDailyState>)
 
 @Immutable
 sealed interface HabitListUiState {
@@ -56,8 +60,8 @@ class HabitListViewModel @Inject constructor(
             val todayStatesMap = todayStates.associateBy { it.habitId }
 
             HabitListUiState.Success(
-                habits = HabitList(habits),
-                todayStates = DailyStateMap(todayStatesMap)
+                habits = HabitList(habits.toImmutableList()),
+                todayStates = DailyStateMap(todayStatesMap.toImmutableMap())
             )
         } else {
             HabitListUiState.Loading

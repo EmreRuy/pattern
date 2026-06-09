@@ -3,16 +3,17 @@ package com.example.pattern.utils
 import com.example.pattern.domain.model.Habit as DomainHabit
 import com.example.pattern.domain.model.HabitDailyState as DomainHabitDailyState
 import com.example.pattern.domain.model.HabitType
+import kotlinx.collections.immutable.toImmutableList
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDate
 
 class StreakUtilsTest {
 
-    private val everyDay = List(7) { true }
-    private val weekDays = listOf(true, true, true, true, true, false, false)
+    private val everyDay = List(7) { true }.toImmutableList()
+    private val weekDays = listOf(true, true, true, true, true, false, false).toImmutableList()
 
-    private fun createHabit(selectedDays: List<Boolean> = everyDay): DomainHabit {
+    private fun createHabit(selectedDays: kotlinx.collections.immutable.ImmutableList<Boolean> = everyDay): DomainHabit {
         return DomainHabit(
             id = 1,
             name = "Test Habit",
@@ -23,8 +24,6 @@ class StreakUtilsTest {
             isCompleted = false,
             createdAt = 1704067200000L, // Jan 1st 2024
             accentColorHex = "#77DD77",
-            accumulatedTimeMs = 0L,
-            activeSessionStartMs = null,
             reminderTime = null,
             motivation = null
         )
@@ -129,5 +128,25 @@ class StreakUtilsTest {
         
         assertEquals(0, result.currentStreak)
         assertEquals(1, result.totalCompletions)
+    }
+    
+    @Test
+    fun `calculateStreak handles longest streak correctly`() {
+        val habit = createHabit(everyDay)
+        val today = LocalDate.of(2024, 5, 20)
+        val dailyStates = listOf(
+            createState(today),
+            createState(today.minusDays(1)),
+            // break at today - 2
+            createState(today.minusDays(3)),
+            createState(today.minusDays(4)),
+            createState(today.minusDays(5))
+        )
+        
+        val result = calculateStreak(habit, dailyStates, today)
+        
+        assertEquals(2, result.currentStreak)
+        assertEquals(3, result.longestStreak)
+        assertEquals(5, result.totalCompletions)
     }
 }

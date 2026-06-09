@@ -11,7 +11,15 @@ class NavActions(private val navController: NavHostController) {
             return
         }
 
-        navController.navigate(route) {
+        // If trying to navigate to Home or Profile from root (e.g. from Onboarding),
+        // target the MainShell instead.
+        val targetRoute = if (route == Screens.Home.route || route == Screens.Profile.route) {
+            Screens.MainShell.route
+        } else {
+            route
+        }
+
+        navController.navigate(targetRoute) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
             }
@@ -21,7 +29,7 @@ class NavActions(private val navController: NavHostController) {
     }
 
     fun finishOnboarding() {
-        navController.navigate(Screens.Home.route) {
+        navController.navigate(Screens.MainShell.route) {
             popUpTo(Screens.Onboarding.route) { inclusive = true }
         }
     }

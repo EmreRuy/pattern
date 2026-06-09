@@ -25,7 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +40,11 @@ import com.example.pattern.utils.CalendarMathProvider
 import java.time.LocalDate
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+
+import com.example.pattern.ui.util.TimerTickerProvider
+
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
@@ -48,20 +55,65 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    when (val state = uiState) {
-        is HomeUiState.Loading -> LoadingScreen()
-        is HomeUiState.Success -> HomeContent(
-            state = state,
-            onEvent = viewModel::onEvent,
-            onOpenMenuScreen = onOpenMenuScreen,
-            onSettingsClick = onSettingsClick,
-            onHabitClick = onHabitClick,
-            onPremiumClick = onPremiumClick
-        )
-        is HomeUiState.Error -> ErrorScreen(
-            message = state.message,
-            onRetry = { viewModel.onEvent(HomeUiEvent.OnRetry) }
-        )
+    // Lead Expert Fix: Maintain a "last success state" to prevent blinking to loading 
+    // when returning to the screen or during fast refreshes.
+    var lastSuccessState by remember { mutableStateOf<HomeUiState.Success?>(null) }
+    
+    LaunchedEffect(uiState) {
+        if (uiState is HomeUiState.Success) {
+            lastSuccessState = uiState as HomeUiState.Success
+        }
+    }
+
+    // Optimization: If we are "Loading" but have old data, show the old data 
+    // to keep the UI stable while the fresh data is being processed.
+    val displayState = remember(uiState, lastSuccessState) {
+        if (uiState is HomeUiState.Loading && lastSuccessState != null) {
+            lastSuccessState!!
+        } else {
+            uiState
+        }
+    }
+
+    // Staff Fix: Use a discriminator for Crossfade so it only animates between 
+    // TOP-LEVEL states (Loading/Success/Error), not between different Success instances.
+    val stateKey = remember(displayState) {
+        when (displayState) {
+            is HomeUiState.Loading -> "loading"
+            is HomeUiState.Success -> "success"
+            is HomeUiState.Error -> "error"
+        }
+    }
+
+    Crossfade(
+        targetState = stateKey,
+        label = "HomeScreenStateTransition",
+        animationSpec = tween(durationMillis = 400)
+    ) { key ->
+        when (key) {
+            "loading" -> LoadingScreen()
+            "success" -> {
+                // Cast is safe here because of the stateKey logic
+                val successState = displayState as HomeUiState.Success
+                TimerTickerProvider {
+                    HomeContent(
+                        state = successState,
+                        onEvent = viewModel::onEvent,
+                        onOpenMenuScreen = onOpenMenuScreen,
+                        onSettingsClick = onSettingsClick,
+                        onHabitClick = onHabitClick,
+                        onPremiumClick = onPremiumClick
+                    )
+                }
+            }
+            "error" -> {
+                val errorState = displayState as HomeUiState.Error
+                ErrorScreen(
+                    message = errorState.message,
+                    onRetry = { viewModel.onEvent(HomeUiEvent.OnRetry) }
+                )
+            }
+        }
     }
 }
 
@@ -95,11 +147,10 @@ private fun HomeContent(
         }
     }
 
-    // 1. Sync Pager to ViewModel (External changes only, like tapping a calendar date)
+    // 1. External Sync: ViewModel -> Pager (Only when NOT scrolling)
     LaunchedEffect(state.selectedDate) {
         val targetDayPage = CalendarMathProvider.getDayPageIndex(today, state.selectedDate)
         if (habitPagerState.currentPage != targetDayPage && !habitPagerState.isScrollInProgress) {
-            // Use scrollToPage instead of animateScrollToPage if it's a large jump to prevent lag
             val diff = kotlin.math.abs(habitPagerState.currentPage - targetDayPage)
             if (diff > 7) {
                 habitPagerState.scrollToPage(targetDayPage)
@@ -109,33 +160,36 @@ private fun HomeContent(
         }
     }
 
-    // 2. Sync Calendar Pager to Habit Pager & Proactive ViewModel Update
-    // Consolidate into one snapshotFlow to ensure Unidirectional Data Flow and prevent loops
-    LaunchedEffect(habitPagerState) {
-        snapshotFlow { habitPagerState.currentPage }.collect { currentPage ->
-            // Sync Calendar
-            val targetWeekPage = currentPage / 7
-            if (calendarPagerState.currentPage != targetWeekPage) {
-                calendarPagerState.scrollToPage(targetWeekPage)
-            }
-
-            // Sync ViewModel
-            val dateAtPage = CalendarMathProvider.getDateFromDayIndex(today, currentPage)
-            if (dateAtPage != state.selectedDate && !habitPagerState.isScrollInProgress) {
-                onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
-            }
+    // 2. Internal Sync: Habit Pager -> Calendar Pager (Instant visual sync)
+    LaunchedEffect(habitPagerState.currentPage) {
+        val targetWeekPage = habitPagerState.currentPage / 7
+        if (calendarPagerState.currentPage != targetWeekPage) {
+            // Calendar is small, scroll is fast
+            calendarPagerState.scrollToPage(targetWeekPage)
         }
     }
 
-    // Ensure ViewModel is updated when scrolling SETTLES to avoid constant updates during drag
-    LaunchedEffect(habitPagerState.isScrollInProgress) {
+    // 3. ViewModel Sync: Habit Pager -> ViewModel (Only after SETTLING)
+    // This is the "Zero-Blink" secret: don't disturb the ViewModel while the finger is on the screen.
+    LaunchedEffect(habitPagerState.isScrollInProgress, habitPagerState.currentPage) {
         if (!habitPagerState.isScrollInProgress) {
             val dateAtPage = CalendarMathProvider.getDateFromDayIndex(today, habitPagerState.currentPage)
-            if (dateAtPage != state.selectedDate) {
+            // Use an epsilon-check to avoid redundant events
+            if (dateAtPage.toEpochDay() != state.selectedDate.toEpochDay()) {
                 onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
             }
         }
     }
+
+    // Optimization: Memoize callbacks to prevent HabitCardsPager from recomposing 
+    // just because HomeContent recomposed due to a date selection change.
+    val onTimerFinished = remember(onEvent) { { habit: com.example.pattern.ui.model.HabitCardModel, date: LocalDate -> onEvent(HomeUiEvent.OnTimerFinish(habit.id, date)) } }
+    val onUnfinishTimer = remember(onEvent) { { id: Int, date: LocalDate -> onEvent(HomeUiEvent.OnTimerUnfinish(id, date)) } }
+    val onStartTimer = remember(onEvent) { { habit: com.example.pattern.ui.model.HabitCardModel, date: LocalDate -> onEvent(HomeUiEvent.OnTimerStart(habit.id, date)) } }
+    val onPauseTimer = remember(onEvent) { { habit: com.example.pattern.ui.model.HabitCardModel, date: LocalDate -> onEvent(HomeUiEvent.OnTimerPause(habit.id, date)) } }
+    val onResumeTimer = remember(onEvent) { { habit: com.example.pattern.ui.model.HabitCardModel, date: LocalDate -> onEvent(HomeUiEvent.OnTimerResume(habit.id, date)) } }
+    val onTaskCompleted = remember(onEvent) { { id: Int, date: LocalDate, completed: Boolean -> onEvent(HomeUiEvent.OnTaskToggle(id, date, completed)) } }
+    val onTaskIncrement = remember(onEvent) { { id: Int, date: LocalDate -> onEvent(HomeUiEvent.OnTaskIncrement(id, date)) } }
 
     Scaffold(
         topBar = {
@@ -152,6 +206,7 @@ private fun HomeContent(
                 )
                 HomeCalendarSelector(
                     pagerState = calendarPagerState,
+                    // Use visuallySelectedDate for the Calendar UI so it moves instantly with the swipe
                     selectedDate = visuallySelectedDate,
                     onDateSelected = { date ->
                         onEvent(HomeUiEvent.OnDateSelected(date))
@@ -165,13 +220,13 @@ private fun HomeContent(
             habitsByDate = state.habitsByDate,
             hasAnyHabits = state.hasAnyHabits,
             paddingValues = paddingValues,
-            onTimerFinished = { habit, date -> onEvent(HomeUiEvent.OnTimerFinish(habit.id, date)) },
-            onUnfinishTimer = { id, date -> onEvent(HomeUiEvent.OnTimerUnfinish(id, date)) },
-            onStartTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerStart(habit.id, date)) },
-            onPauseTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerPause(habit.id, date)) },
-            onResumeTimer = { habit, date -> onEvent(HomeUiEvent.OnTimerResume(habit.id, date)) },
-            onTaskCompleted = { id, date, completed -> onEvent(HomeUiEvent.OnTaskToggle(id, date, completed)) },
-            onTaskIncrement = { id, date -> onEvent(HomeUiEvent.OnTaskIncrement(id, date)) },
+            onTimerFinished = onTimerFinished,
+            onUnfinishTimer = onUnfinishTimer,
+            onStartTimer = onStartTimer,
+            onPauseTimer = onPauseTimer,
+            onResumeTimer = onResumeTimer,
+            onTaskCompleted = onTaskCompleted,
+            onTaskIncrement = onTaskIncrement,
             onHabitCardClick = onHabitClick
         )
     }

@@ -102,16 +102,28 @@ class UpdateHabitProgressUseCase @Inject constructor(
 
             if (wasCompleted == completed) return@withTransaction
 
-            val taskCount = habit.taskCount ?: 1
-            val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
-                isTaskCompleted = completed,
-                isCompleted = completed,
-                completedCount = if (completed) taskCount else 0
-            )
-            repository.upsertDailyState(updatedState)
+            // Calculate XP change based on the COMPLETED state
+            val xpValue = if (completed) {
+                val taskCount = habit.taskCount ?: 1
+                val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
+                    isTaskCompleted = true,
+                    isCompleted = true,
+                    completedCount = taskCount
+                )
+                repository.upsertDailyState(updatedState)
+                ExperienceUtils.calculateHabitXP(habit, updatedState)
+            } else {
+                val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
+                    isTaskCompleted = false,
+                    isCompleted = false,
+                    completedCount = 0
+                )
+                val xpToSubtract = currentDaily?.let { ExperienceUtils.calculateHabitXP(habit, it) } ?: 0
+                repository.upsertDailyState(updatedState)
+                -xpToSubtract
+            }
 
-            val xpChange = ExperienceUtils.calculateHabitXP(habit, updatedState)
-            repository.addXP(if (completed) xpChange else -xpChange)
+            repository.addXP(xpValue)
         }
     }
 

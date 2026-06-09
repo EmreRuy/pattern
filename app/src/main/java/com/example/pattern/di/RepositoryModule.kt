@@ -14,7 +14,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
-    @Binds
+   @Binds
     @Singleton
     abstract fun bindHabitRepository(
         habitRepositoryImpl: HabitRepositoryImpl

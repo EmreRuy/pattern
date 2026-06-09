@@ -12,26 +12,27 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.pattern.ui.screens.addHabitScreen.AddHabitScreen
 import com.example.pattern.ui.screens.addHabitScreen.EditHabitScreen
-import com.example.pattern.ui.screens.homeScreen.HomeScreen
 import com.example.pattern.ui.screens.homeScreen.components.HabitListScreen
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
-import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import com.example.pattern.ui.screens.settings.SettingsScreen
 import com.example.pattern.utils.PremiumPlanScreen
+
+import com.example.pattern.domain.usecase.HabitLimitStatus
 
 @Composable
 fun NavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     isPro: Boolean = false,
-    startDestination: String = Screens.Home.route,
+    habitLimitStatus: HabitLimitStatus = HabitLimitStatus.Unlimited,
+    startDestination: String = Screens.MainShell.route,
     onOnboardingFinish: () -> Unit = {}
 ) {
     val actions = remember(navController) { NavActions(navController) }
 
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = if (startDestination == Screens.Home.route || startDestination == Screens.Profile.route) Screens.MainShell.route else startDestination,
         modifier = modifier
     ) {
         composable(Screens.Onboarding.route) {
@@ -40,12 +41,10 @@ fun NavHost(
             )
         }
 
-        composable(Screens.Home.route) {
-            HomeScreen(
-                onOpenMenuScreen = { actions.navigateToHabitList() },
-                onSettingsClick = { actions.navigateToSettings() },
-                onHabitClick = { id -> actions.navigateToDetail(id) },
-                onPremiumClick = { actions.navigateToPremium() }
+        composable(Screens.MainShell.route) {
+            MainAppShell(
+                rootActions = actions,
+                habitLimitStatus = habitLimitStatus
             )
         }
 
@@ -75,19 +74,15 @@ fun NavHost(
             )
         }
 
-        composable(Screens.Profile.route) {
-            ProfileScreen(
-                onOpenMenuSheet = { actions.navigateToHabitList() },
-                onOpenSettings = { actions.navigateToSettings() },
-                onPremiumClick = { actions.navigateToPremium() }
-            )
-        }
-
         composable(
             route = Screens.HabitDetail.route,
             arguments = listOf(
                 navArgument("habitId") { type = NavType.IntType }
-            )
+            ),
+            enterTransition = { slideUpEnter() },
+            exitTransition = { slideDownExit() },
+            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+            popExitTransition = { slideDownExit() }
         ) { backStackEntry ->
             val habitId = backStackEntry.arguments?.getInt("habitId") ?: 0
             HabitDetailsRoute(

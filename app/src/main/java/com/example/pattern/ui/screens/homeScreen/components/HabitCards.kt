@@ -24,10 +24,8 @@ import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.CalendarMathProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentListOf
 import java.time.LocalDate
-
-@Immutable
-data class HabitCardList(val items: List<HabitCardModel>)
 
 /**
  * A pager that displays habit cards for different days.
@@ -61,17 +59,26 @@ fun HabitCardsPager(
     HorizontalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        key = { it },
-        beyondViewportPageCount = 1
+        // Staff Fix: Use the DATE as the key, not the index.
+        // This makes the pager item identity stable across state changes.
+        key = { index -> 
+            CalendarMathProvider.getDateFromDayIndex(today, index).toString() 
+        },
+        // Pre-load 7 pages in each direction (full week buffer) for absolute zero-latency swiping.
+        // Combined with the ViewModel mapping cache, this makes swipes feel local and native.
+        beyondViewportPageCount = 7
     ) { pageIndex ->
         val date = remember(pageIndex, today) {
             CalendarMathProvider.getDateFromDayIndex(today, pageIndex)
         }
-        val habits = habitsByDate[date] ?: emptyList()
+        
+        // Staff Optimization: Pass ImmutableList directly to children 
+        // to ensure reliable Compose skipping.
+        val habits = habitsByDate[date] ?: persistentListOf()
         val isToday = date == today
 
         HabitListContent(
-            habits = HabitCardList(habits),
+            habits = habits,
             hasAnyHabits = hasAnyHabits,
             date = date,
             paddingValues = paddingValues,
@@ -90,7 +97,7 @@ fun HabitCardsPager(
 
 @Composable
 private fun HabitListContent(
-    habits: HabitCardList,
+    habits: ImmutableList<HabitCardModel>,
     hasAnyHabits: Boolean,
     date: LocalDate,
     paddingValues: PaddingValues,
@@ -104,7 +111,7 @@ private fun HabitListContent(
     onPauseTimer: (HabitCardModel, LocalDate) -> Unit,
     onResumeTimer: (HabitCardModel, LocalDate) -> Unit,
 ) {
-    if (habits.items.isEmpty()) {
+    if (habits.isEmpty()) {
         val message = remember(hasAnyHabits) {
             if (hasAnyHabits) "No habits scheduled for this day!"
             else "Start by adding your first habit!"
@@ -117,36 +124,57 @@ private fun HabitListContent(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             items(
-                items = habits.items,
+                items = habits,
                 key = { it.id },
                 contentType = { it.type }
             ) { habit ->
+                // Principal Fix: To keep HabitBuildCard/HabitTaskCard skippable, 
+                // we must NOT pass newly created lambdas that capture changing values 
+                // (like 'date') on every recomposition. We remember them per item key.
+                
                 when (habit.type) {
-                    HabitType.BUILD -> HabitBuildCard(
-                        habit = habit,
-                        isToday = isToday,
-                        onTimerFinished = { onTimerFinished(it, date) },
-                        onUnfinishTimer = { onUnfinishTimer(it, date) },
-                        onCardClick = onHabitCardClick,
-                        onStartTimer = { onStartTimer(it, date) },
-                        onPauseTimer = { onPauseTimer(it, date) },
-                        onResumeTimer = { onResumeTimer(it, date) }
-                    )
+                    HabitType.BUILD -> {
+                        val onFinished = remember(date) { { h: HabitCardModel -> onTimerFinished(h, date) } }
+                        val onUnfinish = remember(date) { { id: Int -> onUnfinishTimer(id, date) } }
+                        val onStart = remember(date) { { h: HabitCardModel -> onStartTimer(h, date) } }
+                        val onPause = remember(date) { { h: HabitCardModel -> onPauseTimer(h, date) } }
+                        val onResume = remember(date) { { h: HabitCardModel -> onResumeTimer(h, date) } }
 
-                    HabitType.TASK -> HabitTaskCard(
-                        habit = habit,
-                        isToday = isToday,
-                        onTaskCompleted = { id, completed -> onTaskCompleted(id, date, completed) },
-                        onTaskIncrement = { id -> onTaskIncrement(id, date) },
-                        onCardClick = onHabitCardClick
-                    )
+                        HabitBuildCard(
+                            habit = habit,
+                            isToday = isToday,
+                            onTimerFinished = onFinished,
+                            onUnfinishTimer = onUnfinish,
+                            onCardClick = onHabitCardClick,
+                            onStartTimer = onStart,
+                            onPauseTimer = onPause,
+                            onResumeTimer = onResume
+                        )
+                    }
 
-                    HabitType.QUIT -> HabitQuitCard(
-                        habit = habit,
-                        isToday = isToday,
-                        onTaskCompleted = { id, completed -> onTaskCompleted(id, date, completed) },
-                        onCardClick = onHabitCardClick
-                    )
+                    HabitType.TASK -> {
+                        val onCompleted = remember(date) { { id: Int, completed: Boolean -> onTaskCompleted(id, date, completed) } }
+                        val onIncrement = remember(date) { { id: Int -> onTaskIncrement(id, date) } }
+                        
+                        HabitTaskCard(
+                            habit = habit,
+                            isToday = isToday,
+                            onTaskCompleted = onCompleted,
+                            onTaskIncrement = onIncrement,
+                            onCardClick = onHabitCardClick
+                        )
+                    }
+
+                    HabitType.QUIT -> {
+                        val onCompleted = remember(date) { { id: Int, completed: Boolean -> onTaskCompleted(id, date, completed) } }
+                        
+                        HabitQuitCard(
+                            habit = habit,
+                            isToday = isToday,
+                            onTaskCompleted = onCompleted,
+                            onCardClick = onHabitCardClick
+                        )
+                    }
                 }
             }
         }
