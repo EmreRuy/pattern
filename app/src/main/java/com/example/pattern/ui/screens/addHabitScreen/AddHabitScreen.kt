@@ -30,6 +30,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.pattern.ui.components.DebouncedIconButton
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
@@ -318,7 +319,7 @@ private fun AddHabitTopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = {
+            DebouncedIconButton(onClick = {
                 if (currentStep == AddHabitStep.Main) onBack()
                 else onStepChange(AddHabitStep.Main)
             }) {

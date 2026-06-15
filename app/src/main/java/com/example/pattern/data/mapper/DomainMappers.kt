@@ -82,7 +82,7 @@ fun HabitDailyState.toLocal(): LocalDailyState = LocalDailyState(
 
 fun LocalHabitWithHistory.toDomain(): HabitWithHistory = HabitWithHistory(
     habit = habit.toDomain(),
-    history = history.map { it.toDomain() }
+    history = history.map { it.toDomain() }.toImmutableList()
 )
 
 fun SettingsEntity.toDomain(): Settings = Settings(

@@ -28,5 +28,11 @@ interface HabitRepository {
     suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean)
     suspend fun incrementTaskCount(habitId: Int, date: String)
     
+    // Atomic Timer Operations
+    suspend fun startTimer(habitId: Int, date: String, timestamp: Long)
+    suspend fun pauseTimer(habitId: Int, date: String, timestamp: Long)
+    suspend fun resumeTimer(habitId: Int, date: String, timestamp: Long)
+    suspend fun finishTimer(habitId: Int, date: String, timestamp: Long): HabitDailyState?
+
     suspend fun <R> withTransaction(block: suspend () -> R): R
 }

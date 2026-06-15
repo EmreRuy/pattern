@@ -10,72 +10,37 @@ import javax.inject.Inject
 
 /**
  * Staff Engineer Refactoring:
- * Optimized timer transitions using the State Machine pattern. 
- * This reduces arithmetic complexity and improves database consistency.
+ * Optimized timer transitions using a state-machine approach delegated to the Repository. 
+ * This ensures architectural Single Source of Truth and atomic database consistency.
+ * 
+ * 1. Delegation: Complex state transitions are now handled atomically within the Repository/DAO.
+ * 2. transactional Integrity: UseCase ensures that State changes and XP rewards are synced.
+ * 3. Compose Stability: Domain models use ImmutableList and @Immutable for optimal rendering.
  */
 class UpdateHabitProgressUseCase @Inject constructor(
     private val habitRepository: HabitRepository,
     private val userRepository: UserRepository
 ) {
     suspend fun startTimer(habitId: Int, date: LocalDate) {
-        val dateStr = date.toString()
-        habitRepository.getHabitOnce(habitId) ?: return
-        val currentDaily = habitRepository.getDailyStateOnce(habitId, dateStr)
-        if (currentDaily?.isCompleted == true) return
-        
-        val updated = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
-            activeSessionStartMs = System.currentTimeMillis(),
-            isCompleted = false
-        )
-        habitRepository.upsertDailyState(updated)
+        habitRepository.startTimer(habitId, date.toString(), System.currentTimeMillis())
     }
 
     suspend fun pauseTimer(habitId: Int, date: LocalDate) {
-        val dateStr = date.toString()
-        val currentDaily = habitRepository.getDailyStateOnce(habitId, dateStr) ?: return
-        
-        // Safety check: can't pause if already completed or not running
-        if (currentDaily.isCompleted || currentDaily.activeSessionStartMs == null) return
-        
-        val now = System.currentTimeMillis()
-        val sessionDuration = (now - currentDaily.activeSessionStartMs).coerceAtLeast(0L)
-        
-        habitRepository.upsertDailyState(currentDaily.copy(
-            accumulatedTimeMs = currentDaily.accumulatedTimeMs + sessionDuration,
-            activeSessionStartMs = null
-        ))
+        habitRepository.pauseTimer(habitId, date.toString(), System.currentTimeMillis())
     }
 
     suspend fun resumeTimer(habitId: Int, date: LocalDate) {
-        val dateStr = date.toString()
-        val currentDaily = habitRepository.getDailyStateOnce(habitId, dateStr) ?: return
-        
-        // Safety check: can't resume if already completed or already running
-        if (currentDaily.isCompleted || habitRepository.getDailyStateOnce(habitId, dateStr)?.activeSessionStartMs != null) return
-        
-        habitRepository.upsertDailyState(currentDaily.copy(
-            activeSessionStartMs = System.currentTimeMillis()
-        ))
+        habitRepository.resumeTimer(habitId, date.toString(), System.currentTimeMillis())
     }
 
     suspend fun finishTimer(habitId: Int, date: LocalDate) {
         habitRepository.withTransaction {
-            val dateStr = date.toString()
             val habit = habitRepository.getHabitOnce(habitId) ?: return@withTransaction
-            val currentDaily = habitRepository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
+            val updatedState = habitRepository.finishTimer(habitId, date.toString(), System.currentTimeMillis())
             
-            if (currentDaily.isCompleted) return@withTransaction
-            
-            val now = System.currentTimeMillis()
-            val finalAccumulated = currentDaily.calculateTotalTimeMs(now)
-
-            val updated = currentDaily.copy(
-                isCompleted = true, 
-                accumulatedTimeMs = finalAccumulated,
-                activeSessionStartMs = null
-            )
-            habitRepository.upsertDailyState(updated)
-            userRepository.addXP(ExperienceUtils.calculateHabitXP(habit, updated))
+            if (updatedState != null) {
+                userRepository.addXP(ExperienceUtils.calculateHabitXP(habit, updatedState))
+            }
         }
     }
 
@@ -86,8 +51,11 @@ class UpdateHabitProgressUseCase @Inject constructor(
             val currentDaily = habitRepository.getDailyStateOnce(habitId, dateStr) ?: return@withTransaction
             if (!currentDaily.isCompleted) return@withTransaction
             
+            val xpToSubtract = ExperienceUtils.calculateHabitXP(habit, currentDaily)
+            
+            // We reuse the basic upsert here for 'unfinish' as it's a simple state flip
             habitRepository.upsertDailyState(currentDaily.copy(isCompleted = false))
-            userRepository.addXP(-ExperienceUtils.calculateHabitXP(habit, currentDaily))
+            userRepository.addXP(-xpToSubtract)
         }
     }
 
@@ -95,36 +63,27 @@ class UpdateHabitProgressUseCase @Inject constructor(
         habitRepository.withTransaction {
             val dateStr = date.toString()
             val habit = habitRepository.getHabitOnce(habitId) ?: return@withTransaction
-            val currentDaily = habitRepository.getDailyStateOnce(habitId, dateStr)
             
+            // Get state before update to check if transition is needed
+            val stateBefore = habitRepository.getDailyStateOnce(habitId, dateStr)
             val wasCompleted = when(habit.type) {
-                HabitType.TASK, HabitType.QUIT -> currentDaily?.isTaskCompleted == true
-                HabitType.BUILD -> currentDaily?.isCompleted == true
+                HabitType.TASK, HabitType.QUIT -> stateBefore?.isTaskCompleted == true
+                HabitType.BUILD -> stateBefore?.isCompleted == true
             }
 
             if (wasCompleted == completed) return@withTransaction
 
-            // Calculate XP change based on the COMPLETED state
+            // Atomic state change
+            habitRepository.setTaskCompleted(habitId, dateStr, completed)
+            
+            // Fetch updated state for accurate XP calculation
+            val updatedState = habitRepository.getDailyStateOnce(habitId, dateStr) ?: return@withTransaction
+            
             val xpValue = if (completed) {
-                val taskCount = habit.taskCount ?: 1
-                val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
-                    isTaskCompleted = true,
-                    isCompleted = true,
-                    completedCount = taskCount
-                )
-                habitRepository.upsertDailyState(updatedState)
                 ExperienceUtils.calculateHabitXP(habit, updatedState)
             } else {
-                val updatedState = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
-                    isTaskCompleted = false,
-                    isCompleted = false,
-                    completedCount = 0
-                )
-                val xpToSubtract = currentDaily?.let { ExperienceUtils.calculateHabitXP(habit, it) } ?: 0
-                habitRepository.upsertDailyState(updatedState)
-                -xpToSubtract
+                stateBefore?.let { -ExperienceUtils.calculateHabitXP(habit, it) } ?: 0
             }
-
             userRepository.addXP(xpValue)
         }
     }
@@ -133,23 +92,16 @@ class UpdateHabitProgressUseCase @Inject constructor(
         habitRepository.withTransaction {
             val dateStr = date.toString()
             val habit = habitRepository.getHabitOnce(habitId) ?: return@withTransaction
-            val currentDaily = habitRepository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
+            val stateBefore = habitRepository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId, dateStr)
 
             val taskCount = habit.taskCount ?: 1
-            if (currentDaily.completedCount >= taskCount) return@withTransaction
+            if (stateBefore.completedCount >= taskCount) return@withTransaction
 
-            val newCount = currentDaily.completedCount + 1
-            val isNewlyCompleted = newCount >= taskCount
-
-            val updatedState = currentDaily.copy(
-                completedCount = newCount,
-                isTaskCompleted = isNewlyCompleted,
-                isCompleted = isNewlyCompleted
-            )
-            habitRepository.upsertDailyState(updatedState)
-
-            if (isNewlyCompleted) {
-                userRepository.addXP(ExperienceUtils.calculateHabitXP(habit, updatedState))
+            habitRepository.incrementTaskCount(habitId, dateStr)
+            
+            val stateAfter = habitRepository.getDailyStateOnce(habitId, dateStr)
+            if (stateAfter?.isTaskCompleted == true && stateBefore.isTaskCompleted == false) {
+                userRepository.addXP(ExperienceUtils.calculateHabitXP(habit, stateAfter))
             }
         }
     }

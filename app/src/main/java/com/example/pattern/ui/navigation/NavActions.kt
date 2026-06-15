@@ -5,6 +5,9 @@ import androidx.navigation.NavHostController
 
 class NavActions(private val navController: NavHostController) {
     
+    private var lastPopTime = 0L
+    private val popDebounceMs = 500L
+
     fun navigateToBottomBarRoute(route: String) {
         if (route == Screens.Add.route) {
             navController.navigate(route)
@@ -55,6 +58,10 @@ class NavActions(private val navController: NavHostController) {
     }
 
     fun popBackStack() {
-        navController.popBackStack()
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastPopTime > popDebounceMs) {
+            navController.popBackStack()
+            lastPopTime = currentTime
+        }
     }
 }

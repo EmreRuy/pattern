@@ -31,6 +31,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.data.billing.BillingManager
 import com.example.pattern.data.repository.PremiumStatus
+import com.example.pattern.ui.components.DebouncedIconButton
 import com.example.pattern.ui.screens.premiumScreen.PremiumViewModel
 import kotlinx.coroutines.launch
 
@@ -117,7 +118,7 @@ fun PremiumPlanScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.End) {
-                IconButton(
+                DebouncedIconButton(
                     onClick = onBack,
                     modifier = Modifier.background(colorScheme.surfaceVariant.copy(alpha = 0.5f), CircleShape)
                 ) {

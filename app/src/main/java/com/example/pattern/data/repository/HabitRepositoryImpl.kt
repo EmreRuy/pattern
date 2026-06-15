@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.room.withTransaction
 import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.db.AppDataBase
+import com.example.pattern.data.local.entity.HabitDailyState as LocalDailyState
 import com.example.pattern.data.mapper.toDomain
 import com.example.pattern.data.mapper.toLocal
 import com.example.pattern.domain.model.Habit
@@ -138,6 +139,63 @@ class HabitRepositoryImpl @Inject constructor(
             habitDao.safeIncrementTaskCount(habitId, date)
         } catch (e: Exception) {
             Log.e("HabitRepository", "Error in incrementTaskCount for habit $habitId", e)
+        }
+    }
+
+    override suspend fun startTimer(habitId: Int, date: String, timestamp: Long) {
+        database.withTransaction {
+            val state = habitDao.getDailyStateOnce(habitId, date)
+            if (state?.isCompleted == true || state?.activeSessionStartMs != null) return@withTransaction
+            
+            val updated = (state ?: LocalDailyState(habitId = habitId, date = date)).copy(
+                activeSessionStartMs = timestamp,
+                isCompleted = false
+            )
+            habitDao.upsertDailyState(updated)
+        }
+    }
+
+    override suspend fun pauseTimer(habitId: Int, date: String, timestamp: Long) {
+        database.withTransaction {
+            val state = habitDao.getDailyStateOnce(habitId, date) ?: return@withTransaction
+            val startTime = state.activeSessionStartMs ?: return@withTransaction
+            if (state.isCompleted) return@withTransaction
+            
+            val duration = (timestamp - startTime).coerceAtLeast(0L)
+            habitDao.upsertDailyState(state.copy(
+                accumulatedTimeMs = state.accumulatedTimeMs + duration,
+                activeSessionStartMs = null
+            ))
+        }
+    }
+
+    override suspend fun resumeTimer(habitId: Int, date: String, timestamp: Long) {
+        database.withTransaction {
+            val state = habitDao.getDailyStateOnce(habitId, date) ?: return@withTransaction
+            if (state.isCompleted || state.activeSessionStartMs != null) return@withTransaction
+            
+            habitDao.upsertDailyState(state.copy(
+                activeSessionStartMs = timestamp
+            ))
+        }
+    }
+
+    override suspend fun finishTimer(habitId: Int, date: String, timestamp: Long): HabitDailyState? {
+        return database.withTransaction {
+            val state = habitDao.getDailyStateOnce(habitId, date) ?: LocalDailyState(habitId = habitId, date = date)
+            if (state.isCompleted) return@withTransaction null
+            
+            val startTime = state.activeSessionStartMs
+            val currentSession = if (startTime != null) (timestamp - startTime).coerceAtLeast(0L) else 0L
+            val finalAccumulated = state.accumulatedTimeMs + currentSession
+
+            val updated = state.copy(
+                isCompleted = true,
+                accumulatedTimeMs = finalAccumulated,
+                activeSessionStartMs = null
+            )
+            habitDao.upsertDailyState(updated)
+            updated.toDomain()
         }
     }
 
