@@ -17,6 +17,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pattern.ui.components.DebouncedIconButton
 
+import com.example.pattern.ui.components.DebouncedIconButton
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitListScreen(
@@ -52,7 +54,8 @@ fun HabitListScreen(
                 )
             )
         }
-    ) { padding ->
+    ) {
+padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

@@ -27,21 +27,18 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pattern.ui.navigation.LocalNavActions
 import com.example.pattern.ui.navigation.NavActions
 import com.example.pattern.ui.navigation.NavHost
-import com.example.pattern.ui.navigation.Screens
+import com.example.pattern.ui.navigation.Screen
 import com.example.pattern.domain.usecase.HabitLimitStatus
-import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    // Lead Expert Fix: Reactive Intent tracking to handle notifications flawlessly
     private val activityIntent = mutableStateOf<Intent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,18 +59,15 @@ class MainActivity : ComponentActivity() {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val currentIntent by activityIntent
 
-            // Staff-level fix: Reactive intent handling triggered on change
             LaunchedEffect(currentIntent) {
                 viewModel.handleIntent(currentIntent)
             }
 
-            // Keep the splash screen on-screen until state is fully resolved
             splashScreen.setKeepOnScreenCondition {
                 uiState is MainUiState.Loading
             }
 
             AppTheme {
-                // Lead Expert Fix: Solid Surface prevents white flashes during initialization/navigation
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -95,21 +89,19 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        // Staff-level fix: Trigger reactive update for the intent
         activityIntent.value = intent
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainContent(
-        startDestination: String,
+        startDestination: Screen,
         viewModel: MainViewModel
     ) {
         val context = LocalContext.current
         val navController = rememberNavController()
         val actions = remember(navController) { NavActions(navController) }
         
-        // Lead Expert Fix: Unified Navigation Event Observer
         LaunchedEffect(viewModel.navigationEvents) {
             viewModel.navigationEvents.collect { event ->
                 when (event) {

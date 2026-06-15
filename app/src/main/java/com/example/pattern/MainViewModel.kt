@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.local.preferences.UserPreferences
 import com.example.pattern.domain.usecase.CheckHabitLimitUseCase
 import com.example.pattern.domain.usecase.HabitLimitStatus
-import com.example.pattern.ui.navigation.Screens
+import com.example.pattern.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -16,7 +16,7 @@ import javax.inject.Inject
 sealed interface MainUiState {
     data object Loading : MainUiState
     data class Success(
-        val startDestination: String
+        val startDestination: Screen
     ) : MainUiState
 }
 
@@ -43,9 +43,9 @@ class MainViewModel @Inject constructor(
         userPreferences.isFirstRun
             .onEach { isFirstRun ->
                 val startDestination = if (isFirstRun) {
-                    Screens.Onboarding.route
+                    Screen.Onboarding
                 } else {
-                    Screens.Home.route
+                    Screen.Home
                 }
                 _uiState.value = MainUiState.Success(startDestination)
             }

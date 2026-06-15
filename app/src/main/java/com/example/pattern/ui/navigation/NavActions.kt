@@ -8,21 +8,8 @@ class NavActions(private val navController: NavHostController) {
     private var lastPopTime = 0L
     private val popDebounceMs = 500L
 
-    fun navigateToBottomBarRoute(route: String) {
-        if (route == Screens.Add.route) {
-            navController.navigate(route)
-            return
-        }
-
-        // If trying to navigate to Home or Profile from root (e.g. from Onboarding),
-        // target the MainShell instead.
-        val targetRoute = if (route == Screens.Home.route || route == Screens.Profile.route) {
-            Screens.MainShell.route
-        } else {
-            route
-        }
-
-        navController.navigate(targetRoute) {
+    fun navigateToBottomBarRoute(screen: Screen) {
+        navController.navigate(screen) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
             }
@@ -32,29 +19,29 @@ class NavActions(private val navController: NavHostController) {
     }
 
     fun finishOnboarding() {
-        navController.navigate(Screens.MainShell.route) {
-            popUpTo(Screens.Onboarding.route) { inclusive = true }
+        navController.navigate(Screen.Home) {
+            popUpTo(Screen.Onboarding) { inclusive = true }
         }
     }
 
     fun navigateToDetail(habitId: Int) {
-        navController.navigate(Screens.HabitDetail.createRoute(habitId))
+        navController.navigate(Screen.HabitDetail(habitId))
     }
 
     fun navigateToEdit(habitId: Int) {
-        navController.navigate(Screens.EditHabit.createRoute(habitId))
+        navController.navigate(Screen.EditHabit(habitId))
     }
 
     fun navigateToSettings() {
-        navController.navigate(Screens.Settings.route)
+        navController.navigate(Screen.Settings)
     }
 
     fun navigateToPremium() {
-        navController.navigate(Screens.Premium.route)
+        navController.navigate(Screen.Premium)
     }
     
     fun navigateToHabitList() {
-        navController.navigate(Screens.HabitList.route)
+        navController.navigate(Screen.HabitList)
     }
 
     fun popBackStack() {

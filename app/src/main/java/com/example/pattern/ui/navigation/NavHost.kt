@@ -2,127 +2,162 @@ package com.example.pattern.ui.navigation
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.toRoute
+import com.example.pattern.domain.usecase.HabitLimitStatus
 import com.example.pattern.ui.screens.addHabitScreen.AddHabitScreen
 import com.example.pattern.ui.screens.addHabitScreen.EditHabitScreen
+import com.example.pattern.ui.screens.homeScreen.HomeScreen
+import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.screens.homeScreen.components.HabitListScreen
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
+import com.example.pattern.ui.screens.profileScreen.ProfileScreen
 import com.example.pattern.ui.screens.settings.SettingsScreen
 import com.example.pattern.utils.PremiumPlanScreen
-
-import com.example.pattern.domain.usecase.HabitLimitStatus
 
 @Composable
 fun NavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    isPro: Boolean = false,
     habitLimitStatus: HabitLimitStatus = HabitLimitStatus.Unlimited,
-    startDestination: String = Screens.MainShell.route,
+    startDestination: Screen = Screen.Home,
     onOnboardingFinish: () -> Unit = {}
 ) {
     val actions = remember(navController) { NavActions(navController) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
 
-    NavHost(
-        navController = navController,
-        startDestination = if (startDestination == Screens.Home.route || startDestination == Screens.Profile.route) Screens.MainShell.route else startDestination,
-        modifier = modifier
-    ) {
-        composable(Screens.Onboarding.route) {
-            com.example.pattern.ui.screens.onboarding.OnboardingScreen(
-                onFinish = onOnboardingFinish
-            )
-        }
+    val showBottomBar = currentDestination?.hasRoute<Screen.Home>() == true ||
+                       currentDestination?.hasRoute<Screen.Profile>() == true ||
+                       currentDestination?.hasRoute<Screen.Add>() == true
 
-        composable(Screens.MainShell.route) {
-            MainAppShell(
-                rootActions = actions,
-                habitLimitStatus = habitLimitStatus
-            )
-        }
-
-        composable(
-            route = Screens.HabitList.route,
-            enterTransition = { scaleEnter() },
-            exitTransition = { scaleExit() },
-            popEnterTransition = { scaleEnter() },
-            popExitTransition = { scaleExit() }
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        bottomBar = {
+            if (showBottomBar) {
+                CustomBottomBar(
+                    currentDestination = currentDestination,
+                    onItemClick = { item ->
+                        if (item.screen == Screen.Add) {
+                            if (habitLimitStatus is HabitLimitStatus.Reached) {
+                                actions.navigateToPremium()
+                            } else {
+                                actions.navigateToBottomBarRoute(item.screen)
+                            }
+                        } else {
+                            actions.navigateToBottomBarRoute(item.screen)
+                        }
+                    }
+                )
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            HabitListScreen(
-                onHabitClick = { id -> actions.navigateToDetail(id) },
-                onBack = { actions.popBackStack() }
-            )
-        }
+            composable<Screen.Onboarding> {
+                com.example.pattern.ui.screens.onboarding.OnboardingScreen(
+                    onFinish = onOnboardingFinish
+                )
+            }
 
-        composable(
-            route = Screens.Add.route,
-            enterTransition = { scaleEnter() },
-            exitTransition = { scaleExit() },
-            popEnterTransition = { scaleEnter() },
-            popExitTransition = { scaleExit() }
-        ) {
-            AddHabitScreen(
-                onSaveSuccess = { actions.popBackStack() },
-                onBack = { actions.popBackStack() }
-            )
-        }
+            composable<Screen.Home> {
+                HomeScreen(
+                    onOpenMenuScreen = { actions.navigateToHabitList() },
+                    onSettingsClick = { actions.navigateToSettings() },
+                    onHabitClick = { id -> actions.navigateToDetail(id) },
+                    onPremiumClick = { actions.navigateToPremium() }
+                )
+            }
 
-        composable(
-            route = Screens.HabitDetail.route,
-            arguments = listOf(
-                navArgument("habitId") { type = NavType.IntType }
-            ),
-            enterTransition = { slideUpEnter() },
-            exitTransition = { slideDownExit() },
-            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-            popExitTransition = { slideDownExit() }
-        ) { backStackEntry ->
-            val habitId = backStackEntry.arguments?.getInt("habitId") ?: 0
-            HabitDetailsRoute(
-                onBack = { actions.popBackStack() },
-                onEdit = { actions.navigateToEdit(habitId) }
-            )
-        }
+            composable<Screen.Profile> {
+                ProfileScreen(
+                    onOpenMenuSheet = { actions.navigateToHabitList() },
+                    onOpenSettings = { actions.navigateToSettings() },
+                    onPremiumClick = { actions.navigateToPremium() }
+                )
+            }
 
-        composable(
-            route = Screens.EditHabit.route,
-            arguments = listOf(
-                navArgument("habitId") { type = NavType.IntType }
-            ),
-            enterTransition = { slideUpEnter() },
-            exitTransition = { slideDownExit() }
-        ) {
-            EditHabitScreen(
-                onSaveSuccess = { actions.popBackStack() },
-                onBack = { actions.popBackStack() }
-            )
-        }
+            composable<Screen.HabitList>(
+                enterTransition = { scaleEnter() },
+                exitTransition = { scaleExit() },
+                popEnterTransition = { scaleEnter() },
+                popExitTransition = { scaleExit() }
+            ) {
+                HabitListScreen(
+                    onHabitClick = { id -> actions.navigateToDetail(id) },
+                    onBack = { actions.popBackStack() }
+                )
+            }
 
-        composable(
-            route = Screens.Settings.route,
-            enterTransition = { scaleEnter() },
-            exitTransition = { scaleExit() },
-            popEnterTransition = { scaleEnter() },
-            popExitTransition = { scaleExit() }
-        ) {
-            SettingsScreen(onBack = { actions.popBackStack() })
-        }
+            composable<Screen.Add>(
+                enterTransition = { scaleEnter() },
+                exitTransition = { scaleExit() },
+                popEnterTransition = { scaleEnter() },
+                popExitTransition = { scaleExit() }
+            ) {
+                AddHabitScreen(
+                    onSaveSuccess = { actions.popBackStack() },
+                    onBack = { actions.popBackStack() }
+                )
+            }
 
-        composable(
-            route = Screens.Premium.route,
-            enterTransition = { fadeEnter() },
-            exitTransition = { fadeExit() }
-        ) {
-            PremiumPlanScreen(
-                onBack = { actions.popBackStack() }
-            )
+            composable<Screen.HabitDetail>(
+                enterTransition = { slideUpEnter() },
+                exitTransition = { slideDownExit() },
+                popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                popExitTransition = { slideDownExit() }
+            ) { backStackEntry ->
+                val habitDetail: Screen.HabitDetail = backStackEntry.toRoute()
+                HabitDetailsRoute(
+                    onBack = { actions.popBackStack() },
+                    onEdit = { actions.navigateToEdit(habitDetail.habitId) }
+                )
+            }
+
+            composable<Screen.EditHabit>(
+                enterTransition = { slideUpEnter() },
+                exitTransition = { slideDownExit() }
+            ) { backStackEntry ->
+                val editHabit: Screen.EditHabit = backStackEntry.toRoute()
+                EditHabitScreen(
+                    onSaveSuccess = { actions.popBackStack() },
+                    onBack = { actions.popBackStack() }
+                )
+            }
+
+            composable<Screen.Settings>(
+                enterTransition = { scaleEnter() },
+                exitTransition = { scaleExit() },
+                popEnterTransition = { scaleEnter() },
+                popExitTransition = { scaleExit() }
+            ) {
+                SettingsScreen(onBack = { actions.popBackStack() })
+            }
+
+            composable<Screen.Premium>(
+                enterTransition = { fadeEnter() },
+                exitTransition = { fadeExit() }
+            ) {
+                PremiumPlanScreen(
+                    onBack = { actions.popBackStack() }
+                )
+            }
         }
     }
 }

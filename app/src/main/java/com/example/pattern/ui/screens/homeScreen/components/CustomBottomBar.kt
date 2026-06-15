@@ -16,23 +16,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import com.example.pattern.ui.navigation.BottomNavigationItem
-import com.example.pattern.ui.navigation.Screens
+import com.example.pattern.ui.navigation.Screen
 
 @Composable
 fun CustomBottomBar(
-    currentRoute: String,
+    currentDestination: NavDestination?,
     onItemClick: (BottomNavigationItem) -> Unit
 ) {
     val items = remember { BottomNavigationItem.items() }
 
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp, // Minimalistic look: no elevation shadow
+        tonalElevation = 0.dp,
         windowInsets = androidx.compose.material3.NavigationBarDefaults.windowInsets
     ) {
         items.forEach { item ->
-            val isSelected = Screens.isRouteSelected(currentRoute, item.route)
+            val isSelected = currentDestination?.hasRoute(item.screen::class) == true
             
             StandardNavigationBarItem(
                 item = item,
@@ -79,7 +81,7 @@ private fun RowScope.StandardNavigationBarItem(
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             selectedTextColor = MaterialTheme.colorScheme.primary,
             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            indicatorColor = Color.Transparent // Minimalistic: no pill indicator
+            indicatorColor = Color.Transparent
         )
     )
 }
