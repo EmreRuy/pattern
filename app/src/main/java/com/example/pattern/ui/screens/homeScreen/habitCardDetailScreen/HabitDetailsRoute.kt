@@ -19,11 +19,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.collectLatest
+
 /**
- * Staff-level Route implementation.
- * Uses Crossfade to prevent "hard pops" between loading and content states.
- * For a premium experience, consider passing initial habit metadata (color, name)
- * to render a skeleton UI immediately.
+ * Principal-level Route implementation.
+ * Uses AnimatedContent for high-performance coordinated transitions.
+ * Fixed: State preservation is now handled in the ViewModel using the 'scan' pattern,
+ * ensuring the UI remains stable during the entire deletion/navigation phase.
  */
 @Composable
 fun HabitDetailsRoute(
@@ -32,17 +39,24 @@ fun HabitDetailsRoute(
     viewModel: HabitDetailsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var isDeleting by remember { mutableStateOf(false) }
 
-    if (isDeleting) return
+    // Handle navigation events from ViewModel (Principal: decoupled event handling)
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            if (event is DetailEvent.NavigateBack) onBack()
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Crossfade(
+        AnimatedContent(
             targetState = uiState,
-            animationSpec = tween(durationMillis = 300),
+            transitionSpec = {
+                fadeIn(animationSpec = tween(250, delayMillis = 50)) togetherWith 
+                fadeOut(animationSpec = tween(150))
+            },
             label = "screen_transition"
         ) { state ->
             when (state) {
@@ -55,14 +69,12 @@ fun HabitDetailsRoute(
                     }
                 }
                 is HabitDetailsUiState.Success -> {
+                    // Success state now includes an 'isDeleting' flag if needed, 
+                    // but we always render the content to prevent flashes.
                     HabitCardDetailsScreen(
                         habit = state.habit,
                         onBack = onBack,
-                        onDelete = {
-                            isDeleting = true
-                            viewModel.deleteHabit(state.habit.id)
-                            onBack()
-                        },
+                        onDelete = viewModel::deleteHabit,
                         onEdit = onEdit
                     )
                 }

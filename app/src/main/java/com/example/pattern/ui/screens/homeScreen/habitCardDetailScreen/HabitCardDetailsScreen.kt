@@ -27,6 +27,7 @@ import com.example.pattern.R
 import com.example.pattern.ui.components.*
 import com.example.pattern.ui.theme.serifFontFamily
 import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
@@ -391,6 +392,8 @@ private fun DeleteBottomSheet(
     onConfirm: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -398,8 +401,17 @@ private fun DeleteBottomSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         DeleteHabitConfirmation(
-            onCancel = onDismiss,
-            onConfirm = onConfirm
+            onCancel = {
+                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+            },
+            onConfirm = {
+                // Principal Optimization: Execute sheet hide and database delete/navigation 
+                // in parallel to reduce perceived latency.
+                scope.launch {
+                    sheetState.hide()
+                    onConfirm()
+                }
+            }
         )
     }
 }

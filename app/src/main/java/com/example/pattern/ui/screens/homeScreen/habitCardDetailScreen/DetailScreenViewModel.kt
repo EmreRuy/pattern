@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.repository.HabitRepository
@@ -28,23 +27,39 @@ import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.scan
 
 @Immutable
 sealed interface HabitDetailsUiState {
     data object Loading : HabitDetailsUiState
-    data class Success(val habit: HabitDetailsUi) : HabitDetailsUiState
+    data class Success(val habit: HabitDetailsUi, val isDeleting: Boolean = false) : HabitDetailsUiState
     data object Error : HabitDetailsUiState
+}
+
+sealed interface DetailEvent {
+    data object NavigateBack : DetailEvent
 }
 
 @HiltViewModel
 class HabitDetailsViewModel @Inject constructor(
     private val repository: HabitRepository,
     private val reminderManager: ReminderManager,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val habitId: Int = checkNotNull(savedStateHandle["habitId"])
+    
+    // CONFLATED channel to ensure we don't process stale or duplicate navigation events
+    private val _events = Channel<DetailEvent>(Channel.CONFLATED)
+    val events = _events.receiveAsFlow()
 
+    /**
+     * Staff/Principal Pattern: State Preservation.
+     * We use [scan] to ensure that once a habit is loaded, the UI never "flashes" 
+     * to a blank/error state during the deletion or navigation transition.
+     */
     val uiState: StateFlow<HabitDetailsUiState> = repository.getHabitWithHistoryStream(habitId)
         .distinctUntilChanged()
         .map { result ->
@@ -53,28 +68,34 @@ class HabitDetailsViewModel @Inject constructor(
                 is DataResult.Error -> HabitDetailsUiState.Error
                 is DataResult.Success -> {
                     val habitWithHistory = result.data
-                    if (habitWithHistory == null) {
-                        HabitDetailsUiState.Error
-                    } else {
-                        HabitDetailsUiState.Success(habitWithHistory.toUi())
-                    }
+                    if (habitWithHistory == null) HabitDetailsUiState.Error 
+                    else HabitDetailsUiState.Success(habitWithHistory.toUi())
                 }
             }
         }
+        .scan(HabitDetailsUiState.Loading as HabitDetailsUiState) { previous, current ->
+            // If the habit is deleted (current == Error) but we previously had Success,
+            // we "freeze" the state to allow for a smooth exit animation.
+            if ((current is HabitDetailsUiState.Error) && (previous is HabitDetailsUiState.Success)) {
+                previous.copy(isDeleting = true)
+            } else {
+                current
+            }
+        }
         .flowOn(Dispatchers.Default)
-        .distinctUntilChanged()
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             HabitDetailsUiState.Loading
         )
 
-    fun deleteHabit(habitId: Int) {
+    fun deleteHabit() {
         viewModelScope.launch {
             val habitToDelete = repository.getHabitOnce(habitId)
             if (habitToDelete != null) {
                 repository.deleteHabit(habitToDelete)
                 reminderManager.cancelReminder(habitId)
+                _events.send(DetailEvent.NavigateBack)
             }
         }
     }
@@ -99,7 +120,13 @@ class HabitDetailsViewModel @Inject constructor(
             totalXP = totalXP,
             reminderTime = habit.reminderTime,
             motivation = habit.motivation,
-            completedDates = CompletedDates(dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toImmutableSet())
+            completedDates = CompletedDates(
+                dailyStates.asSequence()
+                    .filter { it.isCompleted || it.isTaskCompleted }
+                    .map { it.date }
+                    .toSet()
+                    .toImmutableSet()
+            )
         )
     }
 }
