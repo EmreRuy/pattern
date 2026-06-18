@@ -11,7 +11,7 @@ fun DebouncedIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    debounceTime: Long = 1000L,
+    debounceTime: Long = 500L,
     content: @Composable () -> Unit
 ) {
     var isEnabled by remember { mutableStateOf(enabled) }
