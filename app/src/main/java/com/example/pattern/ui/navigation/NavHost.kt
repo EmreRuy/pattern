@@ -83,10 +83,10 @@ fun NavHost(
         }
 
         composable<Screen.HabitDetail>(
-            enterTransition = { perfectSectionEnter() },
-            exitTransition = { perfectSectionExit() },
-            popEnterTransition = { perfectSectionPopEnter() },
-            popExitTransition = { perfectSectionPopExit() }
+            enterTransition = { habitDetailEnter() },
+            exitTransition = { habitDetailExit() },
+            popEnterTransition = { habitDetailPopEnter() },
+            popExitTransition = { habitDetailPopExit() }
         ) { backStackEntry ->
             val habitDetail: Screen.HabitDetail = backStackEntry.toRoute()
             HabitDetailsRoute(

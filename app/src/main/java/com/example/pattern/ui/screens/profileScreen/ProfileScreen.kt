@@ -62,8 +62,7 @@ private fun ProfileScreenContent(
         state = listState,
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding(),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         // 1. Top Bar - Static at the top of the list
