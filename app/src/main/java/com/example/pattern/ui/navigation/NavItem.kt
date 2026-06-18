@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface Screen {
+    @Serializable data object Dashboard : Screen
     @Serializable data object Onboarding : Screen
     @Serializable data object Home : Screen
     @Serializable data object Add : Screen

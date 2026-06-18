@@ -196,7 +196,6 @@ private fun HomeContent(
             Column(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
-                    .statusBarsPadding()
                     .fillMaxWidth()
             ) {
                 HomeTopBar(
