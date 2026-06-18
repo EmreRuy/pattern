@@ -6,7 +6,7 @@ import androidx.compose.animation.core.tween
 
 /**
  * Snappy, high-performance motion constants.
- * Optimized for a "Premium Section" feel inspired by the Add Habit sub-sections.
+ * Optimized for a "Premium Section" feel inspired by the Add Habit subsections.
  */
 private const val DURATION_SNAPPY = 250
 private const val DURATION_ULTRA_FAST = 200
