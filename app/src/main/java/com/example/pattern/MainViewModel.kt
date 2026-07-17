@@ -37,25 +37,32 @@ class MainViewModel @Inject constructor(
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
     val habitLimitStatus: StateFlow<HabitLimitStatus?> = checkHabitLimitUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HabitLimitStatus.Loading
+        )
 
     init {
+        observeFirstRun()
+    }
+
+    private fun observeFirstRun() {
         userPreferences.isFirstRun
-            .onEach { isFirstRun ->
-                val startDestination = if (isFirstRun) {
-                    Screen.Onboarding
-                } else {
-                    Screen.Home
-                }
+            .map { isFirstRun ->
+                if (isFirstRun) Screen.Onboarding else Screen.Dashboard
+            }
+            .onEach { startDestination ->
                 _uiState.value = MainUiState.Success(startDestination)
             }
             .launchIn(viewModelScope)
     }
 
     fun handleIntent(intent: Intent?) {
-        val habitId = intent?.getIntExtra("HABIT_ID", -1) ?: -1
+        val habitId = intent?.getIntExtra(EXTRA_HABIT_ID, -1) ?: -1
         if (habitId != -1) {
-            intent?.removeExtra("HABIT_ID")
+            // Consume the intent extra to prevent multiple handling
+            intent?.removeExtra(EXTRA_HABIT_ID)
             viewModelScope.launch {
                 _navigationEvents.send(NavigationEvent.NavigateToDetail(habitId))
             }
@@ -66,5 +73,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setFirstRunCompleted()
         }
+    }
+
+    companion object {
+        private const val EXTRA_HABIT_ID = "HABIT_ID"
     }
 }

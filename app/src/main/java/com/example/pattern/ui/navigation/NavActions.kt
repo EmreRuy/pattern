@@ -19,7 +19,7 @@ class NavActions(private val navController: NavHostController) {
     }
 
     fun finishOnboarding() {
-        navController.navigate(Screen.Home) {
+        navController.navigate(Screen.Dashboard) {
             popUpTo(Screen.Onboarding) { inclusive = true }
         }
     }

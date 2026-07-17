@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -19,33 +20,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.example.pattern.domain.usecase.HabitLimitStatus
 import com.example.pattern.ui.navigation.LocalNavActions
 import com.example.pattern.ui.navigation.NavActions
 import com.example.pattern.ui.navigation.NavHost
 import com.example.pattern.ui.navigation.Screen
-import com.example.pattern.domain.usecase.HabitLimitStatus
 import com.example.pattern.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val activityIntent = mutableStateOf<Intent?>(null)
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         
-        activityIntent.value = intent
+        splashScreen.setKeepOnScreenCondition {
+            viewModel.uiState.value is MainUiState.Loading
+        }
+
+        handleIntent(intent)
         
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
@@ -55,25 +58,17 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            val viewModel: MainViewModel = hiltViewModel()
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val currentIntent by activityIntent
-
-            LaunchedEffect(currentIntent) {
-                viewModel.handleIntent(currentIntent)
-            }
-
-            splashScreen.setKeepOnScreenCondition {
-                uiState is MainUiState.Loading
-            }
-
             AppTheme {
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     when (val state = uiState) {
-                        is MainUiState.Loading -> { /* Splash screen is visible */ }
+                        is MainUiState.Loading -> {
+                            // Splash screen handles loading
+                        }
                         is MainUiState.Success -> {
                             MainContent(
                                 startDestination = state.startDestination,
@@ -89,7 +84,11 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        activityIntent.value = intent
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        viewModel.handleIntent(intent)
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -102,6 +101,7 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val actions = remember(navController) { NavActions(navController) }
         
+        // Navigation Event Handler
         LaunchedEffect(viewModel.navigationEvents) {
             viewModel.navigationEvents.collect { event ->
                 when (event) {
@@ -110,15 +110,18 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Permission Logic
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { /* Logic for permission result */ }
 
         LaunchedEffect(Unit) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED
-                ) {
+                val hasPermission = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+                
+                if (!hasPermission) {
                     permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
