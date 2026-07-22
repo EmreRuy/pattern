@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- General -->
+    <string name="app_name">Pattern</string>
+    <string name="back">Tilbake</string>
+    <string name="cancel">Avbryt</string>
+    <string name="confirm">Bekreft</string>
+    <string name="delete">Slett</string>
+    <string name="edit">Rediger</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">INNSTILLINGER</string>
+    <string name="settings_section_preferences">App-innstillinger</string>
+    <string name="settings_item_theme">Tema</string>
+    <string name="settings_item_language">Språk</string>
+    <string name="settings_section_notifications">Varsler</string>
+    <string name="settings_item_quiet_hours">Stille timer</string>
+    <string name="settings_item_starts_at">Starter kl.</string>
+    <string name="settings_item_ends_at">Slutter kl.</string>
+
+    <!-- Backup -->
+    <string name="settings_section_backup">Sikkerhetskopiering og gjenoppretting</string>
+    <string name="settings_item_export">Eksporter data</string>
+    <string name="settings_item_export_desc">Lagre vanene og historikken din i en JSON-fil</string>
+    <string name="settings_item_import">Importer data</string>
+    <string name="settings_item_import_desc">Gjenopprett data fra en tidligere lagret sikkerhetskopi</string>
+    <string name="settings_backup_success">Sikkerhetskopi eksportert</string>
+    <string name="settings_restore_success">Data gjenopprettet</string>
+    <string name="settings_import_confirm_title">Bekreft importering</string>
+    <string name="settings_import_confirm_msg">Dette vil PERMANENT ERSTATTE alle nåværende appdata. Er du sikker på at du vil fortsette?</string>
+    <string name="settings_import_action">Gjenopprett</string>
+
+    <!-- About -->
+    <string name="settings_section_about">Om</string>
+    <string name="settings_item_contact_support">Kontakt kundestøtte</string>
+    <string name="settings_rate_us">Vurder oss</string>
+</resources>

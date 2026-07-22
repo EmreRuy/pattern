@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Genel -->
+    <string name="app_name">Pattern</string>
+    <string name="back">Geri</string>
+    <string name="cancel">İptal</string>
+    <string name="confirm">Onayla</string>
+    <string name="delete">Sil</string>
+    <string name="edit">Düzenle</string>
+
+    <!-- Ayarlar Ekranı -->
+    <string name="settings_title">AYARLAR</string>
+    <string name="settings_section_preferences">Uygulama Tercihleri</string>
+    <string name="settings_item_theme">Tema</string>
+    <string name="settings_item_language">Dil</string>
+    <string name="settings_section_notifications">Bildirimler</string>
+    <string name="settings_item_quiet_hours">Sessiz saatler</string>
+    <string name="settings_item_starts_at">Başlangıç</string>
+    <string name="settings_item_ends_at">Bitiş</string>
+
+    <!-- Yedekleme -->
+    <string name="settings_section_backup">Yedekle ve Geri Yükle</string>
+    <string name="settings_item_export">Verileri Dışa Aktar</string>
+    <string name="settings_item_export_desc">Alışkanlıklarını ve geçmişini JSON dosyası olarak kaydet</string>
+    <string name="settings_item_import">Verileri İçe Aktar</string>
+    <string name="settings_item_import_desc">Daha önce kaydedilmiş bir yedekten verileri geri yükle</string>
+    <string name="settings_backup_success">Yedek başarıyla dışa aktarıldı</string>
+    <string name="settings_restore_success">Veriler başarıyla geri yüklendi</string>
+    <string name="settings_import_confirm_title">İçe Aktarmayı Onayla</string>
+    <string name="settings_import_confirm_msg">Bu işlem mevcut tüm verilerin üzerine YAZACAKTIR. Devam etmek istediğine emin misin?</string>
+    <string name="settings_import_action">Geri Yükle</string>
+
+    <!-- Hakkında -->
+    <string name="settings_section_about">Hakkında</string>
+    <string name="settings_item_contact_support">Destekle iletişime geç</string>
+    <string name="settings_rate_us">Bizi oyla</string>
+</resources>

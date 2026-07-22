@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -38,7 +38,7 @@ import com.example.pattern.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -55,10 +55,11 @@ class MainActivity : ComponentActivity() {
             val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
             val isSplashReady by viewModel.isSplashReady.collectAsStateWithLifecycle()
 
-            // Zero-Flicker Strategy:
-            // Keep the splash screen active until the target screen signals it's ready.
+            // Senior Expert Optimization: 
+            // Skip the splash screen during recreation (e.g., language change) 
+            // to prevent the "blink" effect and provide a smooth transition.
             splashScreen.setKeepOnScreenCondition {
-                !isSplashReady
+                savedInstanceState == null && !isSplashReady
             }
 
             AppTheme {

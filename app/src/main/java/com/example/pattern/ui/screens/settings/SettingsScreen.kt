@@ -57,6 +57,7 @@ import com.example.pattern.R
 import com.example.pattern.ui.components.DebouncedIconButton
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
+import com.example.pattern.ui.screens.settings.components.LanguageSelectorBottomSheet
 import com.example.pattern.ui.theme.MossGreen
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
@@ -120,6 +121,7 @@ fun SettingsContent(
 
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
+    var showLanguagePicker by remember { mutableStateOf(false) }
     var showImportConfirmation by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
@@ -166,8 +168,10 @@ fun SettingsContent(
                     stringResource(R.string.settings_item_theme)
                 )
                 SettingsNavigationItem(
-                    Icons.Default.Language,
-                    stringResource(R.string.settings_item_language)
+                    icon = Icons.Default.Language,
+                    title = stringResource(R.string.settings_item_language),
+                    subtitle = uiState.currentLanguage.nativeName,
+                    onClick = { showLanguagePicker = true }
                 )
             }
         }
@@ -323,6 +327,16 @@ fun SettingsContent(
                     Text(stringResource(R.string.cancel))
                 }
             }
+        )
+    }
+
+    if (showLanguagePicker) {
+        LanguageSelectorBottomSheet(
+            selectedLanguage = uiState.currentLanguage,
+            onLanguageSelected = { language ->
+                viewModel.changeLanguage(language.code)
+            },
+            onDismiss = { showLanguagePicker = false }
         )
     }
 }

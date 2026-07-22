@@ -1,42 +1,32 @@
-# Implementation Plan - Professional UI/UX Overhaul for Settings
+# Implementation Plan - Smooth Language Transition
 
-This plan transforms the `SettingsScreen` into a professional, clean, and stylish interface following modern Material 3 design trends. The focus is on typography, balanced spacing, and refined interactive elements.
+This plan addresses the "screen blink" when changing the app language. The blink is primarily caused by the Activity recreation required to apply new resources, which triggers the Splash Screen to appear again.
 
 ## Proposed Changes
 
-### UI Components Refinement
+### UI Layer
 
-#### [MODIFY] [SettingsScreen.kt](file:///Users/emreuyar/AndroidStudioProjects/pattern/app/src/main/java/com/example/pattern/ui/screens/settings/SettingsScreen.kt)
-- **Top Bar Enhancement**:
-    - Update `CenterAlignedTopAppBar` to use `titleMedium` or `titleLarge` with refined weight.
-    - Improve the back button icon and touch target.
-- **Section Styling**:
-    - Use `surfaceContainerLow` for section backgrounds for a softer, more professional depth.
-    - Increase rounded corners to `28.dp` for a modern "pill" or "soft-card" look.
-    - Add `Modifier.animateContentSize()` to sections for smooth transitions when quiet hours items are toggled.
-- **Navigation & Switch Items**:
-    - **Icons**: Use a more subtle background (e.g., `surfaceVariant` with `0.4f` alpha) for icon circles.
-    - **Typography**: Shift to `titleSmall` for item titles and `bodySmall` for subtitles to create better hierarchy.
-    - **Interaction**: Add a subtle trailing arrow (chevron) to `SettingsNavigationItem` to clearly indicate navigation.
-    - **Dividers**: Make dividers even more subtle by reducing alpha or using `outlineVariant`.
-- **Spacing**:
-    - Increase vertical spacing between sections to `24.dp`.
-    - Increase internal padding within items for a more "breathable" design.
+#### [MODIFY] [MainActivity.kt](file:///Users/emreuyar/AndroidStudioProjects/pattern/app/src/main/java/com/example/pattern/MainActivity.kt)
+- **Skip Splash on Recreation**: Modify the `setKeepOnScreenCondition` to return `false` if `savedInstanceState` is not null. This prevents the Splash Screen from showing up when the activity is recreated due to a language change or configuration change.
+- **Top-level Crossfade**: Wrap the `MainContent` in an `AnimatedContent` or `Crossfade` (optional, if the splash skip isn't enough).
 
-#### [MODIFY] [SectionHeader.kt](file:///Users/emreuyar/AndroidStudioProjects/pattern/app/src/main/java/com/example/pattern/ui/components/SectionHeader.kt)
-- Refine the `SectionHeader` to be slightly smaller and more elegant, perhaps using `labelMedium` with higher letter spacing.
+#### [MODIFY] [AndroidManifest.xml](file:///Users/emreuyar/AndroidStudioProjects/pattern/app/src/main/AndroidManifest.xml)
+- **Handle Config Changes**: Add `android:configChanges="locale|layoutDirection|localeConfig"` to `MainActivity`. On Android 13+, this may allow the system to apply locale changes without a full Activity recreation if handled correctly.
 
 ---
 
-### Layout & Animations
-- Ensure `LazyColumn` has balanced `contentPadding`.
-- Add subtle fade-in animations if possible (within the scope of "clean and nice").
+### Logic / Navigation
+
+#### [MODIFY] [MainViewModel.kt](file:///Users/emreuyar/AndroidStudioProjects/pattern/app/src/main/java/com/example/pattern/MainViewModel.kt)
+- Ensure that the UI state is restored as quickly as possible upon recreation.
+
+---
 
 ## Verification Plan
 
 ### Manual Verification
-1. **Visual Consistency**: Check if all sections follow the new "soft-card" design.
-2. **Typography Check**: Ensure titles are distinct from subtitles and headers.
-3. **Interactivity**: Verify that clicking items feels responsive and the chevron icons are correctly aligned.
-4. **Toggling**: Enable/Disable "Quiet Hours" and verify the smooth animation of the expanding/collapsing list.
-5. **Night Mode**: Test the UI in Dark Theme to ensure the `surfaceContainerLow` and icon backgrounds adapt perfectly.
+1. Open Settings -> Language.
+2. Select "Turkish".
+3. Verify that the screen transitions smoothly without a visible "blink" or the Splash Screen reappearing.
+4. Verify that the UI correctly updates to Turkish.
+5. Test on both a device with Android 13+ and an older device (e.g., API 30) to ensure consistency.
