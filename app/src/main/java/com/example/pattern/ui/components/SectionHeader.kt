@@ -13,10 +13,10 @@ import androidx.compose.ui.unit.sp
 fun SectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.Black,
-        color = MaterialTheme.colorScheme.outline,
-        letterSpacing = 1.5.sp,
-        modifier = modifier.padding(horizontal = 2.dp)
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+        letterSpacing = 1.2.sp,
+        modifier = modifier.padding(horizontal = 4.dp)
     )
 }

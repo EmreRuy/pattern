@@ -1,10 +1,10 @@
-# Tasks - Perfecting Settings UI & UX
+# Tasks - Professional UI/UX Overhaul for Settings
 
-- [x] Update Strings for consistency
-- [x] Refactor `BackupViewModel` state for Snackbar observation
-- [x] Refactor `SettingsScreen` UI
-    - [x] Add `SnackbarHost`
-    - [x] Integrate `Backup & Restore` section
-    - [x] Observe `BackupViewModel` state
-- [x] Cleanup `BackupCard.kt`
-- [x] Verification
+- [x] Refine `SectionHeader` styling
+- [x] Update `SettingsScreen` UI/UX
+    - [x] Update TopAppBar style
+    - [x] Enhance Section container style (corners, background)
+    - [x] Add animations for expanding content
+    - [x] Add chevrons and refine item typography
+    - [x] Improve spacing and padding
+- [x] Verification and walkthrough

@@ -1,5 +1,7 @@
 package com.example.pattern.ui.screens.settings
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FileDownload
@@ -74,9 +78,9 @@ fun SettingsScreen(onBack: () -> Unit) {
                 title = {
                     Text(
                         stringResource(R.string.settings_title),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 2.sp
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
                         )
                     )
                 },
@@ -152,8 +156,8 @@ fun SettingsContent(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 24.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
     ) {
         item {
             SettingsSection(title = stringResource(R.string.settings_section_preferences)) {
@@ -185,27 +189,31 @@ fun SettingsContent(
                 //alpha value to "gray out" the items when disabled
                 val contentAlpha = if (settings.quietHoursEnabled) 1f else 0.38f
 
-                Column(modifier = Modifier.alpha(contentAlpha)) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                Column(
+                    modifier = Modifier
+                        .alpha(contentAlpha)
+                        .animateContentSize(animationSpec = tween(durationMillis = 300))
+                ) {
+                    if (settings.quietHoursEnabled) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 24.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
 
-                    SettingsNavigationItem(
-                        icon = Icons.Default.WbTwilight,
-                        title = stringResource(R.string.settings_item_starts_at),
-                        subtitle = settings.startTime,
-                        // Only clickable if quietHoursEnabled is true
-                        onClick = { if (settings.quietHoursEnabled) showStartTimePicker = true }
-                    )
-                    SettingsNavigationItem(
-                        Icons.Default.WbSunny,
-                        title = stringResource(R.string.settings_item_ends_at),
-                        subtitle = settings.endTime,
-                        // Only clickable if quietHoursEnabled is true
-                        onClick = { if (settings.quietHoursEnabled) showEndTimePicker = true }
-                    )
+                        SettingsNavigationItem(
+                            icon = Icons.Default.WbTwilight,
+                            title = stringResource(R.string.settings_item_starts_at),
+                            subtitle = settings.startTime,
+                            onClick = { showStartTimePicker = true }
+                        )
+                        SettingsNavigationItem(
+                            icon = Icons.Default.WbSunny,
+                            title = stringResource(R.string.settings_item_ends_at),
+                            subtitle = settings.endTime,
+                            onClick = { showEndTimePicker = true }
+                        )
+                    }
                 }
 
                 /*   SettingsSwitchItem(
@@ -229,7 +237,7 @@ fun SettingsContent(
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 24.dp),
                     thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                 )
                 SettingsNavigationItem(
                     icon = Icons.Default.FileUpload,
@@ -324,12 +332,13 @@ fun SettingsSection(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-       SectionHeader(title, modifier =  Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+       SectionHeader(title, modifier =  Modifier.padding(start = 8.dp, bottom = 12.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .clip(RoundedCornerShape(28.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                .padding(vertical = 4.dp)
         ) {
             content()
         }
@@ -347,21 +356,21 @@ fun SettingsNavigationItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(42.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray.copy(alpha = 0.2f)),
+                .background(iconTint.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
 
@@ -370,17 +379,25 @@ fun SettingsNavigationItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                letterSpacing = 0.5.sp
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            subtitle?.let {
+            if (subtitle != null) {
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = it,
+                    text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -395,32 +412,29 @@ fun SettingsSwitchItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(42.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray.copy(alpha = 0.2f)),
+                .background(iconTint.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                letterSpacing = 0.5.sp
-            ),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
         Switch(
@@ -429,9 +443,8 @@ fun SettingsSwitchItem(
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = iconTint,
-                checkedBorderColor = iconTint,
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f),
+                uncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                 uncheckedBorderColor = Color.Transparent
             )
         )
