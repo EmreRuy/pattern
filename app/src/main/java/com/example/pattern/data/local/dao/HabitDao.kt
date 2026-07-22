@@ -45,6 +45,15 @@ interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY created_at DESC")
     fun getAllHabits(): Flow<List<Habit>>
 
+    @Query("SELECT * FROM habits")
+    suspend fun getAllHabitsOnce(): List<Habit>
+
+    @Query("DELETE FROM habits")
+    suspend fun deleteAllHabits()
+
+    @Query("DELETE FROM habit_daily_state")
+    suspend fun deleteAllDailyStates()
+
     // Daily State
 
     @Upsert

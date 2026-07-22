@@ -4,6 +4,7 @@ import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.model.Settings
+import com.example.pattern.data.model.BackupDto
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
@@ -32,6 +33,9 @@ interface HabitRepository {
     suspend fun getSettingsOnce(): Settings?
     suspend fun updateQuietHours(enabled: Boolean, start: String, end: String)
     suspend fun addXP(xpToAdd: Int)
+    
+    suspend fun getBackupData(): BackupDto
+    suspend fun restoreBackupData(backupDto: BackupDto)
     
     suspend fun <R> withTransaction(block: suspend () -> R): R
 }

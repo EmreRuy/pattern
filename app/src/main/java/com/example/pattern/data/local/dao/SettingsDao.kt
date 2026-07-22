@@ -16,4 +16,7 @@ interface SettingsDao {
 
     @Upsert // Modern Room alternative to @Insert(onConflict = REPLACE)
     suspend fun upsertSettings(settings: SettingsEntity)
+
+    @Query("DELETE FROM settings_table")
+    suspend fun deleteAllSettings()
 }

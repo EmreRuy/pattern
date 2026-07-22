@@ -71,6 +71,19 @@
     <string name="settings_select_time">Select Time</string>
     <string name="settings_rate_us">Support our journey (Rate Us)</string>
 
+    <!-- Backup & Restore -->
+    <string name="settings_section_backup">Backup &amp; Restore</string>
+    <string name="settings_item_export">Export Data</string>
+    <string name="settings_item_export_desc">Save your habits and history to a JSON file</string>
+    <string name="settings_item_import">Import Data</string>
+    <string name="settings_item_import_desc">Restore data from a previously saved backup</string>
+    <string name="settings_backup_success">Backup exported successfully</string>
+    <string name="settings_restore_success">Data restored successfully</string>
+    <string name="settings_backup_error">Operation failed: %s</string>
+    <string name="settings_import_confirm_title">Confirm Import</string>
+    <string name="settings_import_confirm_msg">This will PERMANENTLY REPLACE all current app data. Are you sure you want to continue?</string>
+    <string name="settings_import_action">Restore</string>
+
     <!-- Profile Screen -->
     <string name="profile_progress_score">Progress Score</string>
     <string name="profile_your_streak">Your Streak</string>

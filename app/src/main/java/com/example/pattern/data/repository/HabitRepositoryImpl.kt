@@ -7,6 +7,7 @@ import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.dao.SettingsDao
 import com.example.pattern.data.local.db.AppDataBase
 import com.example.pattern.data.local.entity.SettingsEntity
+import com.example.pattern.data.model.BackupDto
 import com.example.pattern.data.mapper.toDomain
 import com.example.pattern.data.mapper.toLocal
 import com.example.pattern.domain.model.Habit
@@ -182,6 +183,26 @@ class HabitRepositoryImpl @Inject constructor(
             settingsDao.upsertSettings(
                 current.copy(totalXP = current.totalXP + xpToAdd)
             )
+        }
+    }
+
+    override suspend fun getBackupData(): BackupDto {
+        return BackupDto(
+            habits = habitDao.getAllHabitsOnce(),
+            dailyStates = habitDao.getAllDailyStates().first(),
+            settings = settingsDao.getSettingsOnce()
+        )
+    }
+
+    override suspend fun restoreBackupData(backupDto: BackupDto) {
+        database.withTransaction {
+            habitDao.deleteAllDailyStates()
+            habitDao.deleteAllHabits()
+            settingsDao.deleteAllSettings()
+
+            backupDto.habits.forEach { habitDao.upsertHabit(it) }
+            backupDto.dailyStates.forEach { habitDao.upsertDailyState(it) }
+            backupDto.settings?.let { settingsDao.upsertSettings(it) }
         }
     }
 

@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
@@ -55,12 +57,18 @@ import com.example.pattern.ui.theme.MossGreen
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -88,22 +96,57 @@ fun SettingsScreen(onBack: () -> Unit) {
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            SettingsContent()
+            SettingsContent(snackbarHostState = snackbarHostState)
         }
     }
 }
 
 @Composable
 fun SettingsContent(
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
+    snackbarHostState: SnackbarHostState
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    
+    val backupViewModel: BackupViewModel = hiltViewModel()
+    val backupUiState by backupViewModel.uiState.collectAsStateWithLifecycle()
 
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
+    var showImportConfirmation by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { backupViewModel.exportBackup(it) }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            pendingImportUri = it
+            showImportConfirmation = true
+        }
+    }
+
+    LaunchedEffect(backupUiState) {
+        when (val state = backupUiState) {
+            is BackupUiState.Success -> {
+                snackbarHostState.showSnackbar(state.message)
+                backupViewModel.resetState()
+            }
+            is BackupUiState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                backupViewModel.resetState()
+            }
+            else -> {}
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -176,6 +219,37 @@ fun SettingsContent(
         }
 
         item {
+            SettingsSection(title = stringResource(R.string.settings_section_backup)) {
+                SettingsNavigationItem(
+                    icon = Icons.Default.FileDownload,
+                    title = stringResource(R.string.settings_item_export),
+                    subtitle = stringResource(R.string.settings_item_export_desc),
+                    onClick = { exportLauncher.launch("pattern_backup_${System.currentTimeMillis()}.json") }
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+                SettingsNavigationItem(
+                    icon = Icons.Default.FileUpload,
+                    title = stringResource(R.string.settings_item_import),
+                    subtitle = stringResource(R.string.settings_item_import_desc),
+                    onClick = { importLauncher.launch(arrayOf("application/json", "application/octet-stream")) }
+                )
+                
+                if (backupUiState is BackupUiState.Loading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                        color = MossGreen
+                    )
+                }
+            }
+        }
+
+        item {
             SettingsSection(title = stringResource(R.string.settings_section_about)) {
                 SettingsNavigationItem(
                     icon = Icons.Default.Share,
@@ -218,6 +292,29 @@ fun SettingsContent(
                 viewModel.updateQuietHours(true, settings.startTime, newTime)
             },
             onDismiss = dismissAllPickers
+        )
+    }
+
+    if (showImportConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showImportConfirmation = false },
+            title = { Text(stringResource(R.string.settings_import_confirm_title)) },
+            text = { Text(stringResource(R.string.settings_import_confirm_msg)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingImportUri?.let { backupViewModel.importBackup(it) }
+                        showImportConfirmation = false
+                    }
+                ) {
+                    Text(stringResource(R.string.settings_import_action), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
         )
     }
 }
