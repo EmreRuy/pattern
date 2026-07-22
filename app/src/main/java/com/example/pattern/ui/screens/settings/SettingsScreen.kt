@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -57,8 +58,8 @@ import com.example.pattern.R
 import com.example.pattern.ui.components.DebouncedIconButton
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
-import com.example.pattern.ui.screens.settings.components.LanguageSelectorBottomSheet
-import com.example.pattern.ui.theme.MossGreen
+import com.example.pattern.domain.model.ThemeConfig
+import com.example.pattern.ui.theme.AppTheme
 import com.example.pattern.utils.ReviewUtils
 import com.example.pattern.utils.ShareUtils
 import com.example.pattern.utils.SupportUtils
@@ -69,20 +70,29 @@ import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onThemeClick: () -> Unit,
+    onLanguageClick: () -> Unit
+) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val titleStyle = MaterialTheme.typography.titleMedium.copy(
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.sp
+    )
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val surfaceColor = MaterialTheme.colorScheme.surface
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        stringResource(R.string.settings_title),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
+                        text = stringResource(R.string.settings_title),
+                        style = titleStyle,
+                        color = onSurfaceColor
                     )
                 },
                 navigationIcon = {
@@ -90,18 +100,26 @@ fun SettingsScreen(onBack: () -> Unit) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
                             contentDescription = stringResource(R.string.back),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = onSurfaceColor
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = surfaceColor,
+                    titleContentColor = onSurfaceColor,
+                    navigationIconContentColor = onSurfaceColor,
+                    actionIconContentColor = onSurfaceColor
                 )
             )
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            SettingsContent(snackbarHostState = snackbarHostState)
+            SettingsContent(
+                snackbarHostState = snackbarHostState,
+                onThemeClick = onThemeClick,
+                onLanguageClick = onLanguageClick
+            )
         }
     }
 }
@@ -109,7 +127,9 @@ fun SettingsScreen(onBack: () -> Unit) {
 @Composable
 fun SettingsContent(
     viewModel: SettingsViewModel = hiltViewModel(),
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onThemeClick: () -> Unit,
+    onLanguageClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
@@ -121,7 +141,6 @@ fun SettingsContent(
 
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
-    var showLanguagePicker by remember { mutableStateOf(false) }
     var showImportConfirmation by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
@@ -164,14 +183,27 @@ fun SettingsContent(
         item {
             SettingsSection(title = stringResource(R.string.settings_section_preferences)) {
                 SettingsNavigationItem(
-                    Icons.Default.Palette,
-                    stringResource(R.string.settings_item_theme)
+                    icon = Icons.Default.Palette,
+                    title = stringResource(R.string.settings_item_theme),
+                    subtitle = when (uiState.themeConfig) {
+                        ThemeConfig.FOLLOW_SYSTEM -> stringResource(R.string.settings_theme_system)
+                        ThemeConfig.LIGHT -> stringResource(R.string.settings_theme_light)
+                        ThemeConfig.DARK -> stringResource(R.string.settings_theme_dark)
+                    },
+                    onClick = onThemeClick
                 )
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                )
+
                 SettingsNavigationItem(
                     icon = Icons.Default.Language,
                     title = stringResource(R.string.settings_item_language),
                     subtitle = uiState.currentLanguage.nativeName,
-                    onClick = { showLanguagePicker = true }
+                    onClick = onLanguageClick
                 )
             }
         }
@@ -181,7 +213,7 @@ fun SettingsContent(
                     icon = Icons.Default.Bedtime,
                     title = stringResource(R.string.settings_item_quiet_hours),
                     checked = settings.quietHoursEnabled,
-                    iconTint = MossGreen,
+                    iconTint = MaterialTheme.colorScheme.primary,
                     onCheckedChange = { isEnabled ->
                         viewModel.updateQuietHours(
                             isEnabled,
@@ -255,7 +287,7 @@ fun SettingsContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp, vertical = 8.dp),
-                        color = MossGreen
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -329,16 +361,6 @@ fun SettingsContent(
             }
         )
     }
-
-    if (showLanguagePicker) {
-        LanguageSelectorBottomSheet(
-            selectedLanguage = uiState.currentLanguage,
-            onLanguageSelected = { language ->
-                viewModel.changeLanguage(language.code)
-            },
-            onDismiss = { showLanguagePicker = false }
-        )
-    }
 }
 @Composable
 fun SettingsSection(
@@ -351,7 +373,7 @@ fun SettingsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(28.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                .background(AppTheme.extendedColors.habitCardBackground)
                 .padding(vertical = 4.dp)
         ) {
             content()
@@ -363,7 +385,7 @@ fun SettingsNavigationItem(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
-    iconTint: Color = MossGreen,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit = {}
 ) {
     Row(

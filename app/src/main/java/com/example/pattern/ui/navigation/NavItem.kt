@@ -30,13 +30,15 @@ sealed class Screens(val route: String, val showBottomBar: Boolean = false) {
     
     data object HabitList : Screens("habit_list_route")
     data object Settings : Screens("settings_route")
+    data object ThemeSelection : Screens("theme_selection_route")
+    data object LanguageSelection : Screens("language_selection_route")
     data object Premium : Screens("premium_route")
 
     companion object {
         private val allScreens by lazy {
             listOf(
                 Onboarding, Home, Add, Profile, HabitDetail, 
-                EditHabit, HabitList, Settings, Premium
+                EditHabit, HabitList, Settings, ThemeSelection, LanguageSelection, Premium
             )
         }
 

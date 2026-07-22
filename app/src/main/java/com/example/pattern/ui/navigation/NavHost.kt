@@ -16,7 +16,9 @@ import com.example.pattern.ui.screens.homeScreen.HomeScreen
 import com.example.pattern.ui.screens.homeScreen.components.HabitListScreen
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsRoute
 import com.example.pattern.ui.screens.profileScreen.ProfileScreen
+import com.example.pattern.ui.screens.settings.LanguageSelectionScreen
 import com.example.pattern.ui.screens.settings.SettingsScreen
+import com.example.pattern.ui.screens.settings.ThemeSelectionScreen
 import com.example.pattern.utils.PremiumPlanScreen
 
 @Composable
@@ -119,7 +121,31 @@ fun NavHost(
             popEnterTransition = { scaleEnter() },
             popExitTransition = { scaleExit() }
         ) {
-            SettingsScreen(onBack = { actions.popBackStack() })
+            SettingsScreen(
+                onBack = { actions.popBackStack() },
+                onThemeClick = { actions.navigateToThemeSelection() },
+                onLanguageClick = { actions.navigateToLanguageSelection() }
+            )
+        }
+
+        composable(
+            route = Screens.ThemeSelection.route,
+            enterTransition = { scaleEnter() },
+            exitTransition = { scaleExit() },
+            popEnterTransition = { scaleEnter() },
+            popExitTransition = { scaleExit() }
+        ) {
+            ThemeSelectionScreen(onBack = { actions.popBackStack() })
+        }
+
+        composable(
+            route = Screens.LanguageSelection.route,
+            enterTransition = { scaleEnter() },
+            exitTransition = { scaleExit() },
+            popEnterTransition = { scaleEnter() },
+            popExitTransition = { scaleExit() }
+        ) {
+            LanguageSelectionScreen(onBack = { actions.popBackStack() })
         }
 
         composable(

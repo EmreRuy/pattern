@@ -38,6 +38,14 @@ class NavActions(private val navController: NavHostController) {
         navController.navigate(Screens.Settings.route)
     }
 
+    fun navigateToThemeSelection() {
+        navController.navigate(Screens.ThemeSelection.route)
+    }
+
+    fun navigateToLanguageSelection() {
+        navController.navigate(Screens.LanguageSelection.route)
+    }
+
     fun navigateToPremium() {
         navController.navigate(Screens.Premium.route)
     }

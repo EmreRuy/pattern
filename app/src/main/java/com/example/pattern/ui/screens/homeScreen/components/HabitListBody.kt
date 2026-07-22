@@ -35,6 +35,7 @@ import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.ui.theme.AppTheme
 
 @Composable
 fun HabitListBody(
@@ -85,11 +86,7 @@ fun HabitListItem(
         }
     }
     
-    val containerColor = if (isSystemInDarkTheme()) {
-        MaterialTheme.colorScheme.surfaceContainerLow
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerLowest
-    }
+    val containerColor = AppTheme.extendedColors.habitCardBackground
 
     Row(
         modifier = Modifier

@@ -3,6 +3,7 @@ package com.example.pattern
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.local.preferences.UserPreferences
+import com.example.pattern.domain.model.ThemeConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,6 +16,9 @@ class MainViewModel @Inject constructor(
 
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
+
+    val themeConfig: StateFlow<ThemeConfig> = userPreferences.themeConfig
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeConfig.FOLLOW_SYSTEM)
 
     private val _isUiReady = MutableStateFlow(false)
     

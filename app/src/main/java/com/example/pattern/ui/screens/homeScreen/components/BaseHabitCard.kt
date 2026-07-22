@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toColorInt
 import com.example.pattern.ui.model.HabitCardModel
+import com.example.pattern.ui.theme.AppTheme
 
 @Composable
 fun BaseHabitCard(
@@ -72,10 +73,7 @@ fun BaseHabitCard(
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark)
-                MaterialTheme.colorScheme.surfaceContainerLow
-            else
-                Color.White
+            containerColor = AppTheme.extendedColors.habitCardBackground
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {

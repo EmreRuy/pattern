@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.pattern.R
 import com.example.pattern.ui.screens.homeScreen.habitCardDetailScreen.HabitDetailsUi
+import com.example.pattern.ui.theme.AppTheme
 import com.example.pattern.utils.ExperienceUtils
 
 @Composable
@@ -29,7 +30,7 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        color = AppTheme.extendedColors.habitCardBackground,
     ) {
         Column(
             modifier = Modifier.padding(top = 28.dp, bottom = 28.dp, start = 24.dp, end = 24.dp)

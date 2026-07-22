@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.pattern.R
-import com.example.pattern.ui.theme.MossGreen
+import com.example.pattern.ui.theme.AppTheme
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +59,7 @@ fun PatternTimePickerDialog(
                 .padding(24.dp)
                 .wrapContentSize()
                 .clip(RoundedCornerShape(32.dp)),
-            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+            color = AppTheme.extendedColors.habitCardBackground,
             tonalElevation = 6.dp
         ) {
             Column(
@@ -78,14 +78,14 @@ fun PatternTimePickerDialog(
                     state = timePickerState,
                     colors = TimePickerDefaults.colors(
                         clockDialColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        selectorColor = MossGreen,
+                        selectorColor = MaterialTheme.colorScheme.primary,
                         timeSelectorSelectedContainerColor = Color.Transparent,
                         timeSelectorUnselectedContainerColor = Color.Transparent,
-                        timeSelectorSelectedContentColor = MossGreen,
+                        timeSelectorSelectedContentColor = MaterialTheme.colorScheme.primary,
                         timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
                         periodSelectorSelectedContainerColor = Color.Transparent,
                         periodSelectorUnselectedContainerColor = Color.Transparent,
-                        periodSelectorSelectedContentColor = MossGreen,
+                        periodSelectorSelectedContentColor = MaterialTheme.colorScheme.primary,
                         periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
@@ -116,7 +116,7 @@ fun PatternTimePickerDialog(
                             )
                             onTimeSelected(formatted)
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = MossGreen),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Text(stringResource(R.string.confirm), color = Color.White)

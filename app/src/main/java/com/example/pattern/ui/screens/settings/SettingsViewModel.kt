@@ -5,11 +5,12 @@ import androidx.compose.runtime.Immutable
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pattern.data.local.preferences.UserPreferences
 import com.example.pattern.domain.model.Language
 import com.example.pattern.domain.model.Settings
+import com.example.pattern.domain.model.ThemeConfig
 import com.example.pattern.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -21,23 +22,25 @@ import javax.inject.Inject
 data class SettingsUiState(
     val settings: Settings = Settings(),
     val currentLanguage: Language = Language.fromCode("en"),
+    val themeConfig: ThemeConfig = ThemeConfig.FOLLOW_SYSTEM,
     val isLoading: Boolean = false
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: HabitRepository
+    private val repository: HabitRepository,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
-
-    private val _currentLanguage = MutableStateFlow(getCurrentLanguage())
 
     val uiState: StateFlow<SettingsUiState> = combine(
         repository.getSettingsStream(),
-        _currentLanguage
-    ) { settings, language ->
+        userPreferences.preferredLanguage,
+        userPreferences.themeConfig
+    ) { settings, languageCode, theme ->
         SettingsUiState(
             settings = settings ?: Settings(),
-            currentLanguage = language,
+            currentLanguage = Language.fromCode(languageCode),
+            themeConfig = theme,
             isLoading = false
         )
     }
@@ -54,13 +57,26 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun changeLanguage(languageCode: String) {
+        // 1. Instant optimistic update
+        userPreferences.updateLanguageOptimistically(languageCode)
+        
+        // 2. Apply to app system
         val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
         AppCompatDelegate.setApplicationLocales(appLocale)
-        _currentLanguage.value = Language.fromCode(languageCode)
+        
+        // 3. Background persistence
+        viewModelScope.launch {
+            userPreferences.persistLanguage(languageCode)
+        }
     }
 
-    private fun getCurrentLanguage(): Language {
-        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]?.language ?: "en"
-        return Language.fromCode(currentLocale)
+    fun setThemeConfig(themeConfig: ThemeConfig) {
+        // 1. Instant optimistic update on the Main thread
+        userPreferences.updateThemeConfigOptimistically(themeConfig)
+        
+        // 2. Background persistence
+        viewModelScope.launch {
+            userPreferences.persistThemeConfig(themeConfig)
+        }
     }
 }
