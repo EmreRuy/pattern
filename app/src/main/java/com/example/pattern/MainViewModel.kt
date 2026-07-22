@@ -13,13 +13,21 @@ class MainViewModel @Inject constructor(
     private val userPreferences: UserPreferences
 ) : ViewModel() {
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
 
+    private val _isUiReady = MutableStateFlow(false)
+    
+    val isSplashReady: StateFlow<Boolean> = combine(_startDestination, _isUiReady) { dest, uiReady ->
+        when (dest) {
+            com.example.pattern.ui.navigation.Screens.Onboarding.route -> true
+            com.example.pattern.ui.navigation.Screens.Home.route -> uiReady
+            else -> false
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     init {
+        // Destination Logic
         userPreferences.isFirstRun
             .onEach { isFirstRun ->
                 _startDestination.value = if (isFirstRun) {
@@ -27,9 +35,12 @@ class MainViewModel @Inject constructor(
                 } else {
                     com.example.pattern.ui.navigation.Screens.Home.route
                 }
-                _isLoading.value = false
             }
             .launchIn(viewModelScope)
+    }
+
+    fun onUiReady() {
+        _isUiReady.value = true
     }
 
     fun completeOnboarding() {

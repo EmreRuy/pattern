@@ -12,7 +12,6 @@ import java.time.LocalDate
 
 @Immutable
 sealed interface HomeUiState {
-    data object Loading : HomeUiState
     
     @Immutable
     data class Success(
@@ -21,7 +20,8 @@ sealed interface HomeUiState {
         val habits: ImmutableList<HabitCardModel> = persistentListOf(),
         val habitsByDate: ImmutableMap<LocalDate, ImmutableList<HabitCardModel>> = persistentMapOf(),
         val hasAnyHabits: Boolean = false,
-        val levelInfo: LevelInfo
+        val levelInfo: LevelInfo,
+        val isLoading: Boolean = false
     ) : HomeUiState
 
     @Immutable

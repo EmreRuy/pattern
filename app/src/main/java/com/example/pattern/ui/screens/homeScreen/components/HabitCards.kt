@@ -33,6 +33,7 @@ fun HabitCardsPager(
     pagerState: PagerState,
     habitsByDate: Map<LocalDate, List<HabitCardModel>>,
     hasAnyHabits: Boolean,
+    isLoading: Boolean,
     paddingValues: PaddingValues,
     onTaskCompleted: (Int, LocalDate, Boolean) -> Unit,
     onTaskIncrement: (Int, LocalDate) -> Unit,
@@ -68,6 +69,7 @@ fun HabitCardsPager(
         HabitListContent(
             habits = HabitCardList(habits),
             hasAnyHabits = hasAnyHabits,
+            isLoading = isLoading,
             date = date,
             paddingValues = paddingValues,
             isToday = isToday,
@@ -87,6 +89,7 @@ fun HabitCardsPager(
 private fun HabitListContent(
     habits: HabitCardList,
     hasAnyHabits: Boolean,
+    isLoading: Boolean,
     date: LocalDate,
     paddingValues: PaddingValues,
     isToday: Boolean,
@@ -100,11 +103,13 @@ private fun HabitListContent(
     onResumeTimer: (HabitCardModel, LocalDate) -> Unit,
 ) {
     if (habits.items.isEmpty()) {
-        val message = remember(hasAnyHabits) {
-            if (hasAnyHabits) "No habits scheduled for this day!"
-            else "Start by adding your first habit!"
+        if (!isLoading) {
+            val message = remember(hasAnyHabits) {
+                if (hasAnyHabits) "No habits scheduled for this day!"
+                else "Start by adding your first habit!"
+            }
+            EmptyStateMessage(paddingValues, message)
         }
-        EmptyStateMessage(paddingValues, message)
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

@@ -108,14 +108,18 @@ class HomeViewModel @Inject constructor(
             habits = (habitsByDate[date] ?: emptyList()).toImmutableList(),
             habitsByDate = habitsByDate.mapValues { it.value.toImmutableList() }.toImmutableMap(),
             hasAnyHabits = allHabits.isNotEmpty(),
-            levelInfo = level
+            levelInfo = level,
+            isLoading = false
         )
     }
     .flowOn(defaultDispatcher)
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HomeUiState.Loading
+        initialValue = HomeUiState.Success(
+            levelInfo = ExperienceUtils.getLevelInfo(0),
+            isLoading = true
+        )
     )
 
     fun onEvent(event: HomeUiEvent) {

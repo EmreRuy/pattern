@@ -49,11 +49,11 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `initial state is loading or success`() = runTest {
+    fun `initial state is success with loading flag`() = runTest {
         viewModel = HomeViewModel(repository, updateHabitProgressUseCase, testDispatcher)
         val state = viewModel.uiState.value
-        assertTrue(state is HomeUiState.Loading || state is HomeUiState.Success,
-            "Initial state should be Loading or Success, but was $state")
+        assertTrue(state is HomeUiState.Success && state.isLoading,
+            "Initial state should be Success with isLoading=true, but was $state")
     }
 
     @Test
@@ -82,15 +82,15 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(repository, updateHabitProgressUseCase, testDispatcher)
         
         viewModel.uiState.test {
-            // With UnconfinedTestDispatcher, the initial emission is already there.
-            var state = awaitItem()
+            // Wait for initial Success state with isLoading=true
+            val initialState = awaitItem()
+            assertTrue(initialState is HomeUiState.Success && (initialState as HomeUiState.Success).isLoading)
             
-            // Skip Loading states if any (though with Unconfined it might go straight to Success)
-            while (state is HomeUiState.Loading) {
-                state = awaitItem()
-            }
+            // Wait for data emission
+            val state = awaitItem()
             
-            assertTrue(state is HomeUiState.Success, "Expected Success state but got $state")
+            assertTrue(state is HomeUiState.Success && !(state as HomeUiState.Success).isLoading, 
+                "Expected Success state with isLoading=false but got $state")
             val successState = state as HomeUiState.Success
             assertEquals(1, successState.habits.size)
             assertEquals("Test Habit", successState.habits[0].name)
@@ -107,22 +107,22 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(repository, updateHabitProgressUseCase, testDispatcher)
         
         viewModel.uiState.test {
-            // Wait for initial Success state (today)
-            var state = awaitItem()
-            while (state is HomeUiState.Loading) {
-                state = awaitItem()
-            }
-            assertTrue(state is HomeUiState.Success, "Expected initial Success state but got $state")
+            // Skip initial state
+            awaitItem() 
+            // Wait for initial data Success state (today)
+            val stateAtStart = awaitItem()
+            assertTrue(stateAtStart is HomeUiState.Success && !(stateAtStart as HomeUiState.Success).isLoading, 
+                "Expected initial Success state with data but got $stateAtStart")
             
             // Trigger update
             viewModel.onEvent(HomeUiEvent.OnDateSelected(tomorrow))
             
             // In StateFlow + Unconfined, the emission should be immediate.
-            state = awaitItem()
+            val stateAfterUpdate = awaitItem()
             
-            assertTrue(state is HomeUiState.Success && state.selectedDate == tomorrow,
-                "Expected Success state with tomorrow's date but got $state")
-            val successState = state as HomeUiState.Success
+            assertTrue(stateAfterUpdate is HomeUiState.Success && stateAfterUpdate.selectedDate == tomorrow,
+                "Expected Success state with tomorrow's date but got $stateAfterUpdate")
+            val successState = stateAfterUpdate as HomeUiState.Success
             assertEquals(tomorrow, successState.selectedDate)
             assertFalse(successState.isSelectedDateToday)
         }

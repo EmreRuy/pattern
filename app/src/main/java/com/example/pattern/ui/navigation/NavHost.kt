@@ -25,6 +25,7 @@ fun NavHost(
     modifier: Modifier = Modifier,
     isPro: Boolean = false,
     startDestination: String = Screens.Home.route,
+    onUiReady: () -> Unit = {},
     onOnboardingFinish: () -> Unit = {}
 ) {
     val actions = remember(navController) { NavActions(navController) }
@@ -45,7 +46,8 @@ fun NavHost(
                 onOpenMenuScreen = { actions.navigateToHabitList() },
                 onSettingsClick = { actions.navigateToSettings() },
                 onHabitClick = { id -> actions.navigateToDetail(id) },
-                onPremiumClick = { actions.navigateToPremium() }
+                onPremiumClick = { actions.navigateToPremium() },
+                onHomeReady = onUiReady
             )
         }
 

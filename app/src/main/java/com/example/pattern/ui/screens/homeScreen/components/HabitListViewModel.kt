@@ -61,6 +61,9 @@ class HabitListViewModel @Inject constructor(
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HabitListUiState.Loading
+        initialValue = HabitListUiState.Success(
+            habits = HabitList(emptyList()),
+            todayStates = DailyStateMap(emptyMap())
+        )
     )
 }

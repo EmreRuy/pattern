@@ -50,10 +50,6 @@ class HabitE2ETest {
         // 4. Cross-Screen Verification: Check "All Habits" screen
         composeTestRule.onNodeWithContentDescription("Menu").performClick()
 
-        // 5. Idling Resource: Wait for isLoading in HabitListViewModel (using test tag)
-        // We wait until the loading indicator disappears
-        composeTestRule.waitUntilDoesNotExist(hasTestTag("HabitListLoading"), timeoutMillis = 5000)
-
         // Verify it exists in All Habits list
         composeTestRule.onNodeWithText("ALL HABITS").assertIsDisplayed()
         composeTestRule.onNodeWithText(habitName).assertIsDisplayed()

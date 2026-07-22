@@ -32,12 +32,19 @@ fun HomeScreen(
     onOpenMenuScreen: () -> Unit,
     onSettingsClick: () -> Unit,
     onHabitClick: (Int) -> Unit,
-    onPremiumClick: () -> Unit
+    onPremiumClick: () -> Unit,
+    onHomeReady: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState) {
+        val state = uiState
+        if (state is HomeUiState.Success && !state.isLoading) {
+            onHomeReady()
+        }
+    }
+
     when (val state = uiState) {
-        is HomeUiState.Loading -> LoadingScreen()
         is HomeUiState.Success -> HomeContent(
             state = state,
             onEvent = viewModel::onEvent,
@@ -47,6 +54,7 @@ fun HomeScreen(
             onPremiumClick = onPremiumClick
         )
         is HomeUiState.Error -> ErrorScreen(state.message)
+        else -> {} // Should not happen with exhaustive sealed interface
     }
 }
 
@@ -153,6 +161,7 @@ private fun HomeContent(
             pagerState = habitPagerState,
             habitsByDate = state.habitsByDate,
             hasAnyHabits = state.hasAnyHabits,
+            isLoading = state.isLoading,
             paddingValues = paddingValues,
             onTimerFinished = { habit, date -> onEvent(HomeUiEvent.OnTimerFinish(habit.id, date)) },
             onUnfinishTimer = { id, date -> onEvent(HomeUiEvent.OnTimerUnfinish(id, date)) },
@@ -163,13 +172,6 @@ private fun HomeContent(
             onTaskIncrement = { id, date -> onEvent(HomeUiEvent.OnTaskIncrement(id, date)) },
             onHabitCardClick = onHabitClick
         )
-    }
-}
-
-@Composable
-private fun LoadingScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
     }
 }
 

@@ -53,16 +53,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: MainViewModel = hiltViewModel()
             val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
-            val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+            val isSplashReady by viewModel.isSplashReady.collectAsStateWithLifecycle()
 
-            // Keep the splash screen on-screen until we know where to navigate
+            // Zero-Flicker Strategy:
+            // Keep the splash screen active until the target screen signals it's ready.
             splashScreen.setKeepOnScreenCondition {
-                isLoading || (startDestination == null)
+                !isSplashReady
             }
 
             AppTheme {
                 if (startDestination != null) {
-                    MainContent(startDestination!!)
+                    MainContent(
+                        startDestination = startDestination!!,
+                        onUiReady = viewModel::onUiReady
+                    )
                 }
             }
         }
@@ -76,7 +80,10 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun MainContent(startDestination: String) {
+    private fun MainContent(
+        startDestination: String,
+        onUiReady: () -> Unit
+    ) {
         val viewModel: MainViewModel = hiltViewModel()
         val context = LocalContext.current
         val navController = rememberNavController()
@@ -127,6 +134,7 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     modifier = Modifier.padding(paddingValues),
                     startDestination = startDestination,
+                    onUiReady = onUiReady,
                     onOnboardingFinish = {
                         viewModel.completeOnboarding()
                         actions.finishOnboarding()

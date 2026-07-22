@@ -60,13 +60,6 @@ fun HabitListScreen(
                 .padding(padding)
         ) {
             when (val state = uiState) {
-                HabitListUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .testTag("HabitListLoading")
-                    )
-                }
                 is HabitListUiState.Error -> {
                     Text(
                         text = state.message,
@@ -81,6 +74,7 @@ fun HabitListScreen(
                         onHabitClick = onHabitClick
                     )
                 }
+                else -> {}
             }
         }
     }
