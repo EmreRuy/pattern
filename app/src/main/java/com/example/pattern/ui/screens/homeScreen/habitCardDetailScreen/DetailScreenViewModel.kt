@@ -10,10 +10,11 @@ import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.repository.HabitRepository
+import com.example.pattern.domain.streak.StreakCalculator
 import com.example.pattern.utils.ExperienceUtils
-import com.example.pattern.utils.calculateStreak
 import com.example.pattern.utils.toUiDate
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.pattern.notifications.ReminderManager
@@ -39,6 +40,7 @@ sealed interface HabitDetailsUiState {
 class HabitDetailsViewModel @Inject constructor(
     private val repository: HabitRepository,
     private val reminderManager: ReminderManager,
+    private val streakCalculator: StreakCalculator,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -74,7 +76,7 @@ class HabitDetailsViewModel @Inject constructor(
     private fun HabitWithHistory.toUi(): HabitDetailsUi {
         val habit = this.habit
         val dailyStates = this.history
-        val streakInfo = calculateStreak(habit, dailyStates)
+        val streakInfo = streakCalculator.calculate(habit, dailyStates)
         val totalXP = dailyStates.sumOf { ExperienceUtils.calculateHabitXP(habit, it) }
         
         return HabitDetailsUi(
@@ -87,7 +89,7 @@ class HabitDetailsViewModel @Inject constructor(
             goal = goalLabel(habit.type, habit.durationInMinutes, habit.taskCount),
             frequency = frequencyLabel(habit.selectedDays),
             createdOn = habit.createdAt.toUiDate(),
-            createdAtLocalDate = Instant.ofEpochMilli(habit.createdAt).atZone(ZoneId.systemDefault()).toLocalDate(),
+            createdAtLocalDate = habit.createdAtLocalDate,
             totalXP = totalXP,
             reminderTime = habit.reminderTime,
             motivation = habit.motivation,

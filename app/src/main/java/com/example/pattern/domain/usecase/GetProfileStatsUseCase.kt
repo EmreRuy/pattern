@@ -3,7 +3,7 @@ package com.example.pattern.domain.usecase
 import com.example.pattern.domain.model.*
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
-import com.example.pattern.utils.calculateStreakFromDates
+import com.example.pattern.domain.streak.StreakCalculator
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -21,14 +21,20 @@ import javax.inject.Inject
  * 4. Offloads all computations to Dispatchers.Default.
  */
 class GetProfileStatsUseCase @Inject constructor(
-    private val repository: HabitRepository
+    private val repository: HabitRepository,
+    private val streakCalculator: StreakCalculator
 ) {
     operator fun invoke(): Flow<ProfileStats> {
         return combine(
             repository.getAllHabitsStream(),
-            repository.getCompletedDatesStream()
-        ) { habits, completedDatesMap ->
+            repository.getAllDailyStatesStream()
+        ) { habits, allHistory ->
             val today = LocalDate.now()
+            val historyByHabit = allHistory.groupBy { it.habitId }
+            val completedDatesMap = allHistory
+                .filter { it.isCompleted || it.isTaskCompleted }
+                .groupBy { it.habitId }
+                .mapValues { (_, states) -> states.map { LocalDate.parse(it.date) }.toSet() }
 
             // 1. XP Gains tracking - Map<LocalDate, Int>
             val dailyXpGains = mutableMapOf<LocalDate, Int>()
@@ -65,16 +71,13 @@ class GetProfileStatsUseCase @Inject constructor(
                 val completionsUntilYesterday = completionDates.count { it.isBefore(today) }
                 val habitMissed = (totalScheduledUntilToday - completionsUntilYesterday).coerceAtLeast(0)
 
-                val streakInfo = calculateStreakFromDates(
-                    habit = habit,
-                    completedEpochs = completionDates.map { it.toEpochDay() }.toSet(),
-                    today = today
-                )
+                val history = historyByHabit[habit.id] ?: emptyList()
+                val streakInfo = streakCalculator.calculate(habit, history, today)
                 
-                Triple(habit, habitDone, habitMissed) to streakInfo
+                HabitStatInternal(habit, habitDone, habitMissed, streakInfo)
             }
 
-            val totalMissed = habitStatsList.sumOf { it.first.third }
+            val totalMissed = habitStatsList.sumOf { it.missed }
             val totalAttempts = totalDone + totalMissed
             val successRate = if (totalAttempts > 0) totalDone.toFloat() / totalAttempts else 0f
 
@@ -87,22 +90,22 @@ class GetProfileStatsUseCase @Inject constructor(
 
             // 4. Rankings
             val topDone = habitStatsList
-                .filter { it.first.second > 0 }
-                .sortedByDescending { it.first.second }
+                .filter { it.done > 0 }
+                .sortedByDescending { it.done }
                 .take(3)
-                .map { HabitStat(it.first.first.name, it.first.second, it.first.first.iconCode, it.first.first.accentColorHex) }
+                .map { HabitStat(it.habit.name, it.done, it.habit.iconCode, it.habit.accentColorHex) }
 
             val topMissed = habitStatsList
-                .filter { it.first.third > 0 }
-                .sortedByDescending { it.first.third }
+                .filter { it.missed > 0 }
+                .sortedByDescending { it.missed }
                 .take(3)
-                .map { HabitStat(it.first.first.name, it.first.third, it.first.first.iconCode, it.first.first.accentColorHex) }
+                .map { HabitStat(it.habit.name, it.missed, it.habit.iconCode, it.habit.accentColorHex) }
 
             val bestStreaks = habitStatsList
-                .filter { it.second.longestStreak > 0 }
-                .sortedByDescending { it.second.longestStreak }
+                .filter { it.streakInfo.longestStreak > 0 }
+                .sortedByDescending { it.streakInfo.longestStreak }
                 .take(3)
-                .map { StreakStat(it.first.first.name, it.second.longestStreak, it.first.first.iconCode, it.first.first.accentColorHex) }
+                .map { StreakStat(it.habit.name, it.streakInfo.longestStreak, it.habit.iconCode, it.habit.accentColorHex) }
 
             val activeDaysAnalysis = calculateActiveDaysAnalysis(habits, completedDatesMap, today)
 
@@ -212,6 +215,13 @@ class GetProfileStatsUseCase @Inject constructor(
         }
         return count
     }
+
+    private data class HabitStatInternal(
+        val habit: Habit,
+        val done: Int,
+        val missed: Int,
+        val streakInfo: StreakInfo
+    )
 
     private fun calculateCumulativeHistory(
         dailyXpGains: Map<LocalDate, Int>,

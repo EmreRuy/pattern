@@ -6,15 +6,14 @@ import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.di.DefaultDispatcher
+import com.example.pattern.domain.streak.StreakCalculator
 import com.example.pattern.ui.mapper.toCardModel
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.ExperienceUtils
-import com.example.pattern.utils.calculateCurrentStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,6 +33,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val habitRepository: HabitRepository,
     private val updateHabitProgressUseCase: UpdateHabitProgressUseCase,
+    private val streakCalculator: StreakCalculator,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -52,10 +52,9 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
         habitRepository.getAllHabitsStream(),
-        habitRepository.getCompletedDatesStream(),
         structuralDailyStateFlow,
         levelInfoFlow
-    ) { date, allHabits, completedDatesByHabit, allDailyStates, level ->
+    ) { date, allHabits, allDailyStates, level ->
         
         val today = LocalDate.now()
         
@@ -68,6 +67,7 @@ class HomeViewModel @Inject constructor(
         for (i in -7..7) dateWindow.add(date.plusDays(i.toLong()))
 
         val dailyStateMap = allDailyStates.groupBy { it.date }
+        val historyByHabit = allDailyStates.groupBy { it.habitId }
         val currentWindowKeys = mutableSetOf<String>()
 
         val habitsByDate = dateWindow.associateWith { d ->
@@ -80,13 +80,10 @@ class HomeViewModel @Inject constructor(
                 if (d.isBefore(habit.createdAtLocalDate)) return@mapNotNull null
                 
                 val dailyState = statesForDay[habit.id]
-                val completedDates = completedDatesByHabit[habit.id] ?: emptySet()
+                val history = historyByHabit[habit.id] ?: emptyList()
                 
-                val streak = calculateCurrentStreak(
-                    habit, 
-                    completedDates.map { it.toEpochDay() }.toSet(), 
-                    today
-                )
+                val streakInfo = streakCalculator.calculate(habit, history, today)
+                val streak = streakInfo.currentStreak
                 
                 val habitHash = habit.hashCode()
                 val stateHash = dailyState?.hashCode() ?: 0
