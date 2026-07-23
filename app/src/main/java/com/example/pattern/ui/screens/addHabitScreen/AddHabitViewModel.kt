@@ -31,7 +31,7 @@ class AddHabitViewModel @Inject constructor(
         val filtered = allEmojis.filter { emoji ->
             val matchesCategory = (state.selectedEmojiCategory == "All") || (emoji.category == state.selectedEmojiCategory)
             val matchesSearch = state.emojiSearchQuery.isBlank() || 
-                    emoji.value.contains(state.emojiSearchQuery) || 
+                    emoji.value.contains(state.emojiSearchQuery, ignoreCase = true) || 
                     emoji.keywords.any { it.contains(state.emojiSearchQuery, ignoreCase = true) }
             matchesCategory && matchesSearch
         }.toImmutableList()
@@ -135,6 +135,12 @@ class AddHabitViewModel @Inject constructor(
     fun onShowPermissionDialogChange(show: Boolean) {
         _uiState.update { 
             if (it.showPermissionDialog == show) it else it.copy(showPermissionDialog = show)
+        }
+    }
+
+    fun onShowCustomEmojiDialogChange(show: Boolean) {
+        _uiState.update { 
+            if (it.showCustomEmojiDialog == show) it else it.copy(showCustomEmojiDialog = show)
         }
     }
 

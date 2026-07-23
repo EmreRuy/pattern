@@ -10,8 +10,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -33,7 +36,8 @@ fun EmojiPickerView(
     selectedCategory: String,
     onCategorySelected: (String) -> Unit,
     categories: List<String>,
-    emojis: List<HabitEmoji>
+    emojis: List<HabitEmoji>,
+    onCustomEmojiClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -78,7 +82,7 @@ fun EmojiPickerView(
         }
 
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 60.dp),
+            columns = GridCells.Adaptive(minSize = 52.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
@@ -86,6 +90,26 @@ fun EmojiPickerView(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (searchQuery.isBlank()) {
+                item(key = "custom_icon_tile") {
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                            .clickable { onCustomEmojiClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            contentDescription = "Custom Icon",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
+
             items(emojis, key = { "${it.category}_${it.value}" }) { emoji ->
                 val isSelected = emoji.value == selectedEmoji
                 Box(
@@ -107,6 +131,21 @@ fun EmojiPickerView(
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
+            }
+        }
+
+        if (emojis.isEmpty() && searchQuery.isNotBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No icons found for \"$searchQuery\"",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

@@ -30,6 +30,7 @@ import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.repository.EmojiRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
+import com.example.pattern.ui.components.PatternEmojiInputDialog
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
@@ -65,6 +66,9 @@ class EditHabitViewModel @Inject constructor(
     private val _selectedEmojiCategory = MutableStateFlow("All")
     val selectedEmojiCategory = _selectedEmojiCategory.asStateFlow()
 
+    private val _showCustomEmojiDialog = MutableStateFlow(false)
+    val showCustomEmojiDialog = _showCustomEmojiDialog.asStateFlow()
+
     val availableEmojiCategories: StateFlow<ImmutableList<String>> = emojiRepository.getCategories()
         .map { it.toImmutableList() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<String>().toImmutableList())
@@ -77,7 +81,7 @@ class EditHabitViewModel @Inject constructor(
         allEmojis.filter { emoji ->
             val matchesCategory = (category == "All") || (emoji.category == category)
             val matchesSearch = query.isBlank() || 
-                    emoji.value.contains(query) || 
+                    emoji.value.contains(query, ignoreCase = true) || 
                     emoji.keywords.any { it.contains(query, ignoreCase = true) }
             matchesCategory && matchesSearch
         }.toImmutableList()
@@ -95,6 +99,10 @@ class EditHabitViewModel @Inject constructor(
 
     fun onEmojiCategoryChange(category: String) {
         _selectedEmojiCategory.value = category
+    }
+
+    fun onShowCustomEmojiDialogChange(show: Boolean) {
+        _showCustomEmojiDialog.value = show
     }
 
     fun updateHabit(
@@ -160,6 +168,7 @@ fun EditHabitScreen(
     val emojiSearchQuery by viewModel.emojiSearchQuery.collectAsState()
     val selectedEmojiCategory by viewModel.selectedEmojiCategory.collectAsState()
     val availableEmojiCategories by viewModel.availableEmojiCategories.collectAsState()
+    val showCustomEmojiDialog by viewModel.showCustomEmojiDialog.collectAsState()
 
     val initialHabit = habit!!
     
@@ -392,7 +401,8 @@ fun EditHabitScreen(
                         selectedCategory = selectedEmojiCategory,
                         onCategorySelected = viewModel::onEmojiCategoryChange,
                         categories = availableEmojiCategories,
-                        emojis = filteredEmojis
+                        emojis = filteredEmojis,
+                        onCustomEmojiClick = { viewModel.onShowCustomEmojiDialogChange(true) }
                     )
                 }
                 
@@ -436,4 +446,14 @@ fun EditHabitScreen(
             onDismiss = { showTimePicker = false }
         )
     }
+
+    PatternEmojiInputDialog(
+        isVisible = showCustomEmojiDialog,
+        onDismiss = { viewModel.onShowCustomEmojiDialogChange(false) },
+        onEmojiSubmitted = { 
+            emoji = it
+            viewModel.onShowCustomEmojiDialogChange(false)
+            currentStep = AddHabitStep.Main
+        }
+    )
 }

@@ -27,7 +27,8 @@ data class AddHabitUiState(
     val reminderEnabled: Boolean = false,
     val reminderTime: String = "09:00",
     val showTimePicker: Boolean = false,
-    val showPermissionDialog: Boolean = false
+    val showPermissionDialog: Boolean = false,
+    val showCustomEmojiDialog: Boolean = false
 ) {
     val isNameValid: Boolean get() = habitName.isNotBlank()
     val isColorValid: Boolean get() = selectedColor.isNotBlank()

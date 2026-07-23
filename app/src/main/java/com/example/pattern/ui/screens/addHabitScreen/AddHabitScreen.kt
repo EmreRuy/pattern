@@ -30,6 +30,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.pattern.ui.components.PatternEmojiInputDialog
 import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
@@ -90,6 +91,7 @@ fun AddHabitScreen(
         availableEmojiCategories = uiState.availableEmojiCategories,
         filteredEmojis = uiState.filteredEmojis,
         showPermissionDialog = uiState.showPermissionDialog,
+        showCustomEmojiDialog = uiState.showCustomEmojiDialog,
         showTimePicker = uiState.showTimePicker,
         screenTitle = screenTitle,
         isSaveEnabled = isSaveEnabled,
@@ -116,6 +118,7 @@ fun AddHabitScreen(
             }
         },
         onReminderTimeChange = viewModel::onReminderTimeChange,
+        onShowCustomEmojiDialogChange = viewModel::onShowCustomEmojiDialogChange,
         onStepChange = viewModel::onStepChange,
         onShowTimePickerChange = viewModel::onShowTimePickerChange,
         onShowPermissionDialogChange = viewModel::onShowPermissionDialogChange,
@@ -167,6 +170,7 @@ fun AddHabitScreenContent(
     availableEmojiCategories: kotlinx.collections.immutable.ImmutableList<String>,
     filteredEmojis: kotlinx.collections.immutable.ImmutableList<com.example.pattern.domain.model.HabitEmoji>,
     showPermissionDialog: Boolean,
+    showCustomEmojiDialog: Boolean,
     showTimePicker: Boolean,
     screenTitle: String,
     isSaveEnabled: Boolean,
@@ -183,6 +187,7 @@ fun AddHabitScreenContent(
     onEmojiCategoryChange: (String) -> Unit,
     onReminderEnabledChange: (Boolean) -> Unit,
     onReminderTimeChange: (String) -> Unit,
+    onShowCustomEmojiDialogChange: (Boolean) -> Unit,
     onStepChange: (AddHabitStep) -> Unit,
     onShowTimePickerChange: (Boolean) -> Unit,
     onShowPermissionDialogChange: (Boolean) -> Unit,
@@ -271,7 +276,8 @@ fun AddHabitScreenContent(
                             selectedCategory = selectedEmojiCategory,
                             onCategorySelected = onEmojiCategoryChange,
                             categories = availableEmojiCategories,
-                            emojis = filteredEmojis
+                            emojis = filteredEmojis,
+                            onCustomEmojiClick = { onShowCustomEmojiDialogChange(true) }
                         )
                     }
                     
@@ -309,6 +315,16 @@ fun AddHabitScreenContent(
             onDismiss = { onShowTimePickerChange(false) }
         )
     }
+
+    PatternEmojiInputDialog(
+        isVisible = showCustomEmojiDialog,
+        onDismiss = { onShowCustomEmojiDialogChange(false) },
+        onEmojiSubmitted = { 
+            onEmojiChange(it)
+            onShowCustomEmojiDialogChange(false)
+            onStepChange(AddHabitStep.Main)
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
