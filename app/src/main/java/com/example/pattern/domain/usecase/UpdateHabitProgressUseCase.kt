@@ -19,7 +19,9 @@ class UpdateHabitProgressUseCase @Inject constructor(
         val dateStr = date.toString()
         repository.getHabitOnce(habitId) ?: return
         val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
-        if (currentDaily?.isCompleted == true) return
+        
+        // Safety: Don't start if already completed or already running
+        if (currentDaily?.isCompleted == true || currentDaily?.activeSessionStartMs != null) return
         
         val updated = (currentDaily ?: HabitDailyState(habitId = habitId, date = dateStr)).copy(
             activeSessionStartMs = System.currentTimeMillis(),

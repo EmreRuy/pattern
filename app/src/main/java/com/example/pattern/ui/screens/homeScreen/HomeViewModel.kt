@@ -21,9 +21,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 /**
- * Staff Engineer Final Performance Pass (Zero-Chatter Edition).
- * 
- * Final Optimization:
+Optimization:
  * 1. Total Decoupling: The ViewModel now ONLY reacts to structural changes. 
  *    Ticking timer updates in the DB are completely ignored by the UI state pipeline.
  * 2. Reduced Mapping: Eliminated the redundant raw stream from the combine block.
@@ -31,10 +29,10 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val habitRepository: HabitRepository,
+    habitRepository: HabitRepository,
     private val updateHabitProgressUseCase: UpdateHabitProgressUseCase,
     private val streakCalculator: StreakCalculator,
-    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -57,8 +55,6 @@ class HomeViewModel @Inject constructor(
     ) { date, allHabits, allDailyStates, level ->
         
         val today = LocalDate.now()
-        
-        // High-Performance Staff Strategy:
         // We pre-calculate a massive 60-day window around today, PLUS a 14-day window 
         // around the selectedDate. This ensures that whether the user swipes days 
         // or weeks (7 days at a time), the data is ALWAYS there instantly.

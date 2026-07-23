@@ -44,36 +44,28 @@ fun HabitBuildCard(
     }
 
     // Derived states for UI
-    val remainingMillis = remember(habit.accumulatedTimeMs, habit.activeSessionStartMs, habit.isCompleted, totalMillis) {
-        derivedStateOf {
-            val elapsed = habit.calculateTotalTimeMs(currentTimeState.value)
-            (totalMillis - elapsed).coerceAtLeast(0L)
-        }
+    val remainingMillis = remember(habit, totalMillis, currentTimeState.value) {
+        val elapsed = habit.calculateTotalTimeMs(currentTimeState.value)
+        (totalMillis - elapsed).coerceAtLeast(0L)
     }
 
-    val progress = remember(remainingMillis) {
-        derivedStateOf {
-            if (totalMillis == 0L) 0f
-            else 1f - (remainingMillis.value.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
-        }
+    val progress = remember(remainingMillis, totalMillis) {
+        if (totalMillis == 0L) 0f
+        else 1f - (remainingMillis.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
     }
 
     val formattedTime = remember(remainingMillis) {
-        derivedStateOf {
-            formatDurationFast(remainingMillis.value)
-        }
+        formatDurationFast(remainingMillis)
     }
 
     val showSuccess = remember { mutableStateOf(false) }
 
-    val isTimerFinished = remember(habit.isCompleted, habit.activeSessionStartMs) {
-        derivedStateOf {
-            !habit.isCompleted && remainingMillis.value <= 0 && habit.activeSessionStartMs != null
-        }
+    val isTimerFinished = remember(habit.isCompleted, habit.activeSessionStartMs, remainingMillis) {
+        !habit.isCompleted && remainingMillis <= 0 && habit.activeSessionStartMs != null
     }
 
-    LaunchedEffect(isTimerFinished.value) {
-        if (isTimerFinished.value) {
+    LaunchedEffect(isTimerFinished) {
+        if (isTimerFinished) {
             showSuccess.value = true
             onTimerFinished(habit)
             delay(1200)
@@ -89,7 +81,7 @@ fun HabitBuildCard(
                 val text = if (habit.isCompleted) {
                     stringResource(R.string.habit_goal_reached)
                 } else {
-                    formattedTime.value
+                    formattedTime
                 }
                 
                 Text(
@@ -106,7 +98,7 @@ fun HabitBuildCard(
         },
         action = {
             TimerRing(
-                progress = progress.value,
+                progress = progress,
                 isCompleted = habit.isCompleted,
                 isRunning = habit.isTimerRunning,
                 isPaused = !habit.isTimerRunning && habit.accumulatedTimeMs > 0 && !habit.isCompleted,

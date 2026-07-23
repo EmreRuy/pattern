@@ -29,7 +29,7 @@ data class HabitCardModel(
     val isTimerRunning: Boolean get() = activeSessionStartMs != null
     
     fun calculateTotalTimeMs(now: Long = System.currentTimeMillis()): Long {
-        val currentSession = if (activeSessionStartMs != null) (now - activeSessionStartMs) else 0L
+        val currentSession = if (activeSessionStartMs != null) (now - activeSessionStartMs).coerceAtLeast(0L) else 0L
         return (accumulatedTimeMs + currentSession).coerceAtLeast(0L)
     }
 }
