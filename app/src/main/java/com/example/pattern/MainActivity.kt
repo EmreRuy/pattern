@@ -29,13 +29,14 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pattern.domain.model.ThemeConfig
+import com.example.pattern.ui.navigation.Destination
 import com.example.pattern.ui.navigation.LocalNavActions
 import com.example.pattern.ui.navigation.NavActions
 import com.example.pattern.ui.navigation.NavHost
-import com.example.pattern.ui.navigation.Screens
 import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -107,7 +108,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     private fun MainContent(
         viewModel: MainViewModel,
-        startDestination: String,
+        startDestination: Any,
         onUiReady: () -> Unit
     ) {
         val context = LocalContext.current
@@ -137,15 +138,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route ?: Screens.Home.route
+        val currentDestination = navBackStackEntry?.destination
 
         CompositionLocalProvider(LocalNavActions provides actions) {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
                 bottomBar = {
-                    if (Screens.shouldShowBottomBar(currentRoute)) {
+                    val shouldShowBottomBar = currentDestination?.let { dest ->
+                        dest.hasRoute<Destination.Home>() || dest.hasRoute<Destination.Profile>()
+                    } ?: false
+                    
+                    if (shouldShowBottomBar) {
                         CustomBottomBar(
-                            currentRoute = currentRoute,
+                            navController = navController,
                             onItemClick = { item -> 
                                 actions.navigateToBottomBarRoute(item.route) 
                             }

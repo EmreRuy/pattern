@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.data.local.preferences.UserPreferences
 import com.example.pattern.domain.model.ThemeConfig
+import com.example.pattern.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,8 +15,8 @@ class MainViewModel @Inject constructor(
     private val userPreferences: UserPreferences
 ) : ViewModel() {
 
-    private val _startDestination = MutableStateFlow<String?>(null)
-    val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
+    private val _startDestination = MutableStateFlow<Any?>(null)
+    val startDestination: StateFlow<Any?> = _startDestination.asStateFlow()
 
     val themeConfig: StateFlow<ThemeConfig> = userPreferences.themeConfig
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeConfig.FOLLOW_SYSTEM)
@@ -24,8 +25,8 @@ class MainViewModel @Inject constructor(
     
     val isSplashReady: StateFlow<Boolean> = combine(_startDestination, _isUiReady) { dest, uiReady ->
         when (dest) {
-            com.example.pattern.ui.navigation.Screens.Onboarding.route -> true
-            com.example.pattern.ui.navigation.Screens.Home.route -> uiReady
+            is Destination.Onboarding -> true
+            is Destination.Home -> uiReady
             else -> false
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -35,9 +36,9 @@ class MainViewModel @Inject constructor(
         userPreferences.isFirstRun
             .onEach { isFirstRun ->
                 _startDestination.value = if (isFirstRun) {
-                    com.example.pattern.ui.navigation.Screens.Onboarding.route
+                    Destination.Onboarding
                 } else {
-                    com.example.pattern.ui.navigation.Screens.Home.route
+                    Destination.Home
                 }
             }
             .launchIn(viewModelScope)

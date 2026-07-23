@@ -1,15 +1,12 @@
 package com.example.pattern.ui.navigation
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.example.pattern.ui.screens.addHabitScreen.AddHabitScreen
 import com.example.pattern.ui.screens.addHabitScreen.EditHabitScreen
 import com.example.pattern.ui.screens.homeScreen.HomeScreen
@@ -26,7 +23,7 @@ fun NavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     isPro: Boolean = false,
-    startDestination: String = Screens.Home.route,
+    startDestination: Any = Destination.Home,
     onUiReady: () -> Unit = {},
     onOnboardingFinish: () -> Unit = {}
 ) {
@@ -37,13 +34,13 @@ fun NavHost(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        composable(Screens.Onboarding.route) {
+        composable<Destination.Onboarding> {
             com.example.pattern.ui.screens.onboarding.OnboardingScreen(
                 onFinish = onOnboardingFinish
             )
         }
 
-        composable(Screens.Home.route) {
+        composable<Destination.Home> {
             HomeScreen(
                 onOpenMenuScreen = { actions.navigateToHabitList() },
                 onSettingsClick = { actions.navigateToSettings() },
@@ -53,8 +50,7 @@ fun NavHost(
             )
         }
 
-        composable(
-            route = Screens.HabitList.route,
+        composable<Destination.HabitList>(
             enterTransition = { scaleEnter() },
             exitTransition = { scaleExit() },
             popEnterTransition = { scaleEnter() },
@@ -66,8 +62,7 @@ fun NavHost(
             )
         }
 
-        composable(
-            route = Screens.Add.route,
+        composable<Destination.Add>(
             enterTransition = { scaleEnter() },
             exitTransition = { scaleExit() },
             popEnterTransition = { scaleEnter() },
@@ -79,7 +74,7 @@ fun NavHost(
             )
         }
 
-        composable(Screens.Profile.route) {
+        composable<Destination.Profile> {
             ProfileScreen(
                 onOpenMenuSheet = { actions.navigateToHabitList() },
                 onOpenSettings = { actions.navigateToSettings() },
@@ -87,24 +82,15 @@ fun NavHost(
             )
         }
 
-        composable(
-            route = Screens.HabitDetail.route,
-            arguments = listOf(
-                navArgument("habitId") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val habitId = backStackEntry.arguments?.getInt("habitId") ?: 0
+        composable<Destination.HabitDetail> { backStackEntry ->
+            val detail = backStackEntry.toRoute<Destination.HabitDetail>()
             HabitDetailsRoute(
                 onBack = { actions.popBackStack() },
-                onEdit = { actions.navigateToEdit(habitId) }
+                onEdit = { actions.navigateToEdit(detail.habitId) }
             )
         }
 
-        composable(
-            route = Screens.EditHabit.route,
-            arguments = listOf(
-                navArgument("habitId") { type = NavType.IntType }
-            ),
+        composable<Destination.EditHabit>(
             enterTransition = { slideUpEnter() },
             exitTransition = { slideDownExit() }
         ) {
@@ -114,8 +100,7 @@ fun NavHost(
             )
         }
 
-        composable(
-            route = Screens.Settings.route,
+        composable<Destination.Settings>(
             enterTransition = { scaleEnter() },
             exitTransition = { scaleExit() },
             popEnterTransition = { scaleEnter() },
@@ -128,8 +113,7 @@ fun NavHost(
             )
         }
 
-        composable(
-            route = Screens.ThemeSelection.route,
+        composable<Destination.ThemeSelection>(
             enterTransition = { scaleEnter() },
             exitTransition = { scaleExit() },
             popEnterTransition = { scaleEnter() },
@@ -138,8 +122,7 @@ fun NavHost(
             ThemeSelectionScreen(onBack = { actions.popBackStack() })
         }
 
-        composable(
-            route = Screens.LanguageSelection.route,
+        composable<Destination.LanguageSelection>(
             enterTransition = { scaleEnter() },
             exitTransition = { scaleExit() },
             popEnterTransition = { scaleEnter() },
@@ -148,8 +131,7 @@ fun NavHost(
             LanguageSelectionScreen(onBack = { actions.popBackStack() })
         }
 
-        composable(
-            route = Screens.Premium.route,
+        composable<Destination.Premium>(
             enterTransition = { fadeEnter() },
             exitTransition = { fadeExit() }
         ) {

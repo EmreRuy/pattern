@@ -16,15 +16,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.pattern.ui.navigation.BottomNavigationItem
-import com.example.pattern.ui.navigation.Screens
 
 @Composable
 fun CustomBottomBar(
-    currentRoute: String,
+    navController: NavHostController,
     onItemClick: (BottomNavigationItem) -> Unit
 ) {
     val items = remember { BottomNavigationItem.items() }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
@@ -32,7 +36,7 @@ fun CustomBottomBar(
         windowInsets = androidx.compose.material3.NavigationBarDefaults.windowInsets
     ) {
         items.forEach { item ->
-            val isSelected = Screens.isRouteSelected(currentRoute, item.route)
+            val isSelected = currentDestination?.hasRoute(item.route::class) ?: false
             
             StandardNavigationBarItem(
                 item = item,

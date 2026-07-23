@@ -15,9 +15,6 @@ import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 /**
- * Staff-engineered UseCase optimized for performance and scalability.
- * 
- * Key optimizations:
  * 1. Zero-Allocation Dates: Uses Set<LocalDate> directly from the repository.
  * 2. Reference Performance: Uses pre-calculated habit.createdAtLocalDate.
  * 3. Single-pass XP distribution and ranking generation.

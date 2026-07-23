@@ -5,8 +5,8 @@ import androidx.navigation.NavHostController
 
 class NavActions(private val navController: NavHostController) {
     
-    fun navigateToBottomBarRoute(route: String) {
-        if (route == Screens.Add.route) {
+    fun navigateToBottomBarRoute(route: Any) {
+        if (route is Destination.Add) {
             navController.navigate(route)
             return
         }
@@ -21,37 +21,37 @@ class NavActions(private val navController: NavHostController) {
     }
 
     fun finishOnboarding() {
-        navController.navigate(Screens.Home.route) {
-            popUpTo(Screens.Onboarding.route) { inclusive = true }
+        navController.navigate(Destination.Home) {
+            popUpTo<Destination.Onboarding> { inclusive = true }
         }
     }
 
     fun navigateToDetail(habitId: Int) {
-        navController.navigate(Screens.HabitDetail.createRoute(habitId))
+        navController.navigate(Destination.HabitDetail(habitId))
     }
 
     fun navigateToEdit(habitId: Int) {
-        navController.navigate(Screens.EditHabit.createRoute(habitId))
+        navController.navigate(Destination.EditHabit(habitId))
     }
 
     fun navigateToSettings() {
-        navController.navigate(Screens.Settings.route)
+        navController.navigate(Destination.Settings)
     }
 
     fun navigateToThemeSelection() {
-        navController.navigate(Screens.ThemeSelection.route)
+        navController.navigate(Destination.ThemeSelection)
     }
 
     fun navigateToLanguageSelection() {
-        navController.navigate(Screens.LanguageSelection.route)
+        navController.navigate(Destination.LanguageSelection)
     }
 
     fun navigateToPremium() {
-        navController.navigate(Screens.Premium.route)
+        navController.navigate(Destination.Premium)
     }
     
     fun navigateToHabitList() {
-        navController.navigate(Screens.HabitList.route)
+        navController.navigate(Destination.HabitList)
     }
 
     fun popBackStack() {
