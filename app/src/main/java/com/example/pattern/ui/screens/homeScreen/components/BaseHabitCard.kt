@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toColorInt
+import com.example.pattern.ui.components.PatternIcon
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.ui.theme.AppTheme
 
@@ -96,9 +97,10 @@ fun BaseHabitCard(
                             shape = CircleShape
                         )
                 ) {
-                    Text(
-                        text = habit.iconEmoji.orEmpty(),
-                        fontSize = 24.sp,
+                    PatternIcon(
+                        iconCode = habit.iconEmoji.orEmpty(),
+                        size = 24.sp,
+                        color = accentColor
                     )
                 }
 

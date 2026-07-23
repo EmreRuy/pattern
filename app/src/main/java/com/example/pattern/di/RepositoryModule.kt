@@ -1,6 +1,8 @@
 package com.example.pattern.di
 
+import com.example.pattern.data.repository.EmojiRepositoryImpl
 import com.example.pattern.data.repository.HabitRepositoryImpl
+import com.example.pattern.domain.repository.EmojiRepository
 import com.example.pattern.domain.repository.HabitRepository
 import dagger.Binds
 import dagger.Module
@@ -17,4 +19,10 @@ abstract class RepositoryModule {
     abstract fun bindHabitRepository(
         habitRepositoryImpl: HabitRepositoryImpl
     ): HabitRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindEmojiRepository(
+        emojiRepositoryImpl: EmojiRepositoryImpl
+    ): EmojiRepository
 }

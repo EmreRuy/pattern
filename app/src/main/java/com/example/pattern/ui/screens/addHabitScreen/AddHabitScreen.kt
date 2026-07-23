@@ -85,6 +85,10 @@ fun AddHabitScreen(
         durationHours = uiState.durationHours,
         durationMinutes = uiState.durationMinutes,
         taskCount = uiState.taskCount,
+        emojiSearchQuery = uiState.emojiSearchQuery,
+        selectedEmojiCategory = uiState.selectedEmojiCategory,
+        availableEmojiCategories = uiState.availableEmojiCategories,
+        filteredEmojis = uiState.filteredEmojis,
         showPermissionDialog = uiState.showPermissionDialog,
         showTimePicker = uiState.showTimePicker,
         screenTitle = screenTitle,
@@ -98,6 +102,8 @@ fun AddHabitScreen(
         onDurationChange = viewModel::onDurationChange,
         onTaskCountChange = viewModel::onTaskCountChange,
         onColorChange = viewModel::onColorChange,
+        onEmojiSearchQueryChange = viewModel::onEmojiSearchQueryChange,
+        onEmojiCategoryChange = viewModel::onEmojiCategoryChange,
         onReminderEnabledChange = { enabled ->
             if (enabled) {
                 if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
@@ -156,6 +162,10 @@ fun AddHabitScreenContent(
     durationHours: Int,
     durationMinutes: Int,
     taskCount: Int,
+    emojiSearchQuery: String,
+    selectedEmojiCategory: String,
+    availableEmojiCategories: kotlinx.collections.immutable.ImmutableList<String>,
+    filteredEmojis: kotlinx.collections.immutable.ImmutableList<com.example.pattern.domain.model.HabitEmoji>,
     showPermissionDialog: Boolean,
     showTimePicker: Boolean,
     screenTitle: String,
@@ -169,6 +179,8 @@ fun AddHabitScreenContent(
     onDurationChange: (Int, Int) -> Unit,
     onTaskCountChange: (Int) -> Unit,
     onColorChange: (String) -> Unit,
+    onEmojiSearchQueryChange: (String) -> Unit,
+    onEmojiCategoryChange: (String) -> Unit,
     onReminderEnabledChange: (Boolean) -> Unit,
     onReminderTimeChange: (String) -> Unit,
     onStepChange: (AddHabitStep) -> Unit,
@@ -253,7 +265,13 @@ fun AddHabitScreenContent(
                             onEmojiSelected = { 
                                 onEmojiChange(it)
                                 onStepChange(AddHabitStep.Main)
-                            }
+                            },
+                            searchQuery = emojiSearchQuery,
+                            onSearchQueryChange = onEmojiSearchQueryChange,
+                            selectedCategory = selectedEmojiCategory,
+                            onCategorySelected = onEmojiCategoryChange,
+                            categories = availableEmojiCategories,
+                            emojis = filteredEmojis
                         )
                     }
                     

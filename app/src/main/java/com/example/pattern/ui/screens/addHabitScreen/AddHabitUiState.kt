@@ -1,6 +1,7 @@
 package com.example.pattern.ui.screens.addHabitScreen
 
 import androidx.compose.runtime.Immutable
+import com.example.pattern.domain.model.HabitEmoji
 import com.example.pattern.domain.model.HabitType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -13,6 +14,10 @@ data class AddHabitUiState(
     val habitName: String = "",
     val habitType: String = "Grow",
     val emoji: String = "🔥",
+    val emojiSearchQuery: String = "",
+    val selectedEmojiCategory: String = "All",
+    val availableEmojiCategories: ImmutableList<String> = persistentListOf("All"),
+    val filteredEmojis: ImmutableList<HabitEmoji> = persistentListOf(),
     val motivation: String = "",
     val buildHabitDays: ImmutableList<DayOfWeek> = DayOfWeek.entries.toImmutableList(),
     val durationHours: Int = 0,

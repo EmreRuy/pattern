@@ -1,0 +1,215 @@
+package com.example.pattern.data.repository
+
+import com.example.pattern.domain.model.HabitEmoji
+import com.example.pattern.domain.repository.EmojiRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class EmojiRepositoryImpl @Inject constructor() : EmojiRepository {
+
+    private val emojis = listOf(
+        // Recommended
+        HabitEmoji("🔥", "Recommended", listOf("fire", "hot", "streak", "goal")),
+        HabitEmoji("⭐", "Recommended", listOf("star", "favorite", "important")),
+        HabitEmoji("🎯", "Recommended", listOf("target", "goal", "focus")),
+        HabitEmoji("📅", "Recommended", listOf("calendar", "daily", "schedule")),
+        HabitEmoji("✅", "Recommended", listOf("check", "done", "complete")),
+        HabitEmoji("✨", "Recommended", listOf("sparkle", "magic", "clean", "fresh")),
+        HabitEmoji("💡", "Recommended", listOf("idea", "light", "think", "creativity")),
+        HabitEmoji("☀️", "Recommended", listOf("sun", "morning", "bright", "happy")),
+
+        // Nutrition
+        HabitEmoji("💧", "Nutrition", listOf("water", "drink", "hydrate")),
+        HabitEmoji("🍎", "Nutrition", listOf("apple", "eat", "food", "healthy", "fruit")),
+        HabitEmoji("🥗", "Nutrition", listOf("salad", "eat", "food", "healthy", "diet")),
+        HabitEmoji("🥑", "Nutrition", listOf("avocado", "healthy", "fat")),
+        HabitEmoji("🥦", "Nutrition", listOf("broccoli", "vegetable", "healthy")),
+        HabitEmoji("🥩", "Nutrition", listOf("steak", "meat", "protein")),
+        HabitEmoji("🥜", "Nutrition", listOf("nut", "peanut", "protein")),
+        HabitEmoji("🍋", "Nutrition", listOf("lemon", "fruit", "vitamin")),
+        HabitEmoji("🍌", "Nutrition", listOf("banana", "fruit", "snack")),
+        HabitEmoji("🥛", "Nutrition", listOf("milk", "drink", "calcium")),
+        HabitEmoji("🍵", "Nutrition", listOf("tea", "drink", "relax", "green tea")),
+        HabitEmoji("☕", "Nutrition", listOf("coffee", "drink", "cafe")),
+        HabitEmoji("🍳", "Nutrition", listOf("cook", "egg", "breakfast")),
+        HabitEmoji("🥣", "Nutrition", listOf("bowl", "cereal", "oats")),
+        HabitEmoji("🥪", "Nutrition", listOf("sandwich", "lunch", "food")),
+        HabitEmoji("🍱", "Nutrition", listOf("bento", "box", "lunch")),
+        HabitEmoji("system:local_drink", "Nutrition", listOf("water", "drink", "bottle")),
+        HabitEmoji("system:fastfood", "Nutrition", listOf("fast food", "snack")),
+        HabitEmoji("system:nutrition", "Nutrition", listOf("menu", "diet", "plan")),
+
+        // Fitness
+        HabitEmoji("🏃", "Fitness", listOf("run", "cardio", "jog", "sprint")),
+        HabitEmoji("🚶", "Fitness", listOf("walk", "steps", "movement")),
+        HabitEmoji("💪", "Fitness", listOf("muscle", "strong", "gym", "workout")),
+        HabitEmoji("🏋️‍♂️", "Fitness", listOf("weight", "lift", "gym", "workout", "strength")),
+        HabitEmoji("🚴", "Fitness", listOf("bike", "cycle", "cardio")),
+        HabitEmoji("🏊", "Fitness", listOf("swim", "pool", "water", "cardio")),
+        HabitEmoji("🤸", "Fitness", listOf("gymnastics", "stretch", "flexible")),
+        HabitEmoji("🥊", "Fitness", listOf("box", "punch", "fight", "workout")),
+        HabitEmoji("⚽", "Fitness", listOf("soccer", "football", "ball", "sport")),
+        HabitEmoji("🏀", "Fitness", listOf("basketball", "ball", "sport")),
+        HabitEmoji("🎾", "Fitness", listOf("tennis", "ball", "sport")),
+        HabitEmoji("🏐", "Fitness", listOf("volleyball", "ball", "sport")),
+        HabitEmoji("🛹", "Fitness", listOf("skate", "board", "sport")),
+        HabitEmoji("🧗", "Fitness", listOf("climb", "mountain", "sport")),
+        HabitEmoji("🚣", "Fitness", listOf("row", "boat", "sport")),
+        HabitEmoji("🥋", "Fitness", listOf("martial arts", "karate", "fight")),
+        HabitEmoji("system:fitness", "Fitness", listOf("gym", "workout", "fitness")),
+        HabitEmoji("system:run", "Fitness", listOf("run", "jog", "cardio")),
+        HabitEmoji("system:pool", "Fitness", listOf("swim", "pool")),
+        HabitEmoji("system:sports_soccer", "Fitness", listOf("soccer", "football")),
+        HabitEmoji("system:sports_basketball", "Fitness", listOf("basketball", "hoops")),
+        HabitEmoji("system:sports_tennis", "Fitness", listOf("tennis", "racket")),
+
+        // Mindset
+        HabitEmoji("📚", "Mindset", listOf("book", "read", "learn", "study")),
+        HabitEmoji("📖", "Mindset", listOf("book", "read", "learn")),
+        HabitEmoji("📝", "Mindset", listOf("write", "note", "journal", "diary")),
+        HabitEmoji("🧠", "Mindset", listOf("brain", "think", "mind", "learn")),
+        HabitEmoji("🙏", "Mindset", listOf("pray", "thanks", "gratitude", "hope")),
+        HabitEmoji("🌱", "Mindset", listOf("grow", "plant", "nature", "progress")),
+        HabitEmoji("🧘", "Mindset", listOf("meditate", "calm", "zen", "peace")),
+        HabitEmoji("💭", "Mindset", listOf("thought", "think", "bubble")),
+        HabitEmoji("🕊️", "Mindset", listOf("peace", "bird", "calm")),
+        HabitEmoji("🌈", "Mindset", listOf("rainbow", "happy", "hope")),
+        HabitEmoji("📓", "Mindset", listOf("notebook", "journal", "write")),
+        HabitEmoji("🎭", "Mindset", listOf("drama", "theater", "creative")),
+        HabitEmoji("🧩", "Mindset", listOf("puzzle", "game", "brain")),
+        HabitEmoji("🕯️", "Mindset", listOf("candle", "peace", "calm")),
+        HabitEmoji("system:meditation", "Mindset", listOf("meditate", "zen", "calm")),
+        HabitEmoji("system:psychology", "Mindset", listOf("mind", "brain", "think")),
+        HabitEmoji("system:book", "Mindset", listOf("read", "book", "learn")),
+
+        // Productivity
+        HabitEmoji("💻", "Productivity", listOf("code", "work", "computer", "laptop")),
+        HabitEmoji("🖥️", "Productivity", listOf("work", "computer", "office")),
+        HabitEmoji("📧", "Productivity", listOf("email", "work", "inbox")),
+        HabitEmoji("📞", "Productivity", listOf("call", "phone", "talk", "work")),
+        HabitEmoji("🔨", "Productivity", listOf("tool", "fix", "build")),
+        HabitEmoji("📦", "Productivity", listOf("box", "package", "order")),
+        HabitEmoji("⏰", "Productivity", listOf("time", "alarm", "early")),
+        HabitEmoji("✒️", "Productivity", listOf("pen", "write", "work")),
+        HabitEmoji("🖋️", "Productivity", listOf("pen", "write", "office")),
+        HabitEmoji("📐", "Productivity", listOf("ruler", "measure", "work")),
+        HabitEmoji("📎", "Productivity", listOf("clip", "office", "paper")),
+        HabitEmoji("💼", "Productivity", listOf("briefcase", "work", "job")),
+        HabitEmoji("📁", "Productivity", listOf("folder", "work", "organize")),
+        HabitEmoji("system:work", "Productivity", listOf("work", "office", "job")),
+        HabitEmoji("system:code", "Productivity", listOf("code", "develop", "programming")),
+        HabitEmoji("system:computer", "Productivity", listOf("computer", "it", "work")),
+        HabitEmoji("system:email", "Productivity", listOf("email", "message")),
+        HabitEmoji("system:calendar", "Productivity", listOf("calendar", "schedule")),
+
+        // Finance
+        HabitEmoji("💰", "Finance", listOf("money", "save", "earn", "budget")),
+        HabitEmoji("💳", "Finance", listOf("card", "money", "spend", "budget")),
+        HabitEmoji("🏦", "Finance", listOf("bank", "finance", "money")),
+        HabitEmoji("📈", "Finance", listOf("chart", "growth", "finance")),
+        HabitEmoji("📉", "Finance", listOf("chart", "loss", "finance")),
+        HabitEmoji("🪙", "Finance", listOf("coin", "money", "save")),
+        HabitEmoji("💎", "Finance", listOf("gem", "diamond", "wealth")),
+        HabitEmoji("💸", "Finance", listOf("money", "spend", "fly")),
+        HabitEmoji("💹", "Finance", listOf("market", "stock", "money")),
+        HabitEmoji("🧾", "Finance", listOf("receipt", "bill", "finance")),
+        HabitEmoji("system:money", "Finance", listOf("money", "cash", "payments")),
+        HabitEmoji("system:savings", "Finance", listOf("save", "piggy bank")),
+        HabitEmoji("system:account_balance", "Finance", listOf("bank", "balance")),
+        HabitEmoji("system:wallet", "Finance", listOf("wallet", "money")),
+        HabitEmoji("system:trending_up", "Finance", listOf("grow", "stocks")),
+
+        // Home
+        HabitEmoji("🏠", "Home", listOf("home", "house", "stay")),
+        HabitEmoji("🧹", "Home", listOf("clean", "sweep", "chore")),
+        HabitEmoji("🧺", "Home", listOf("laundry", "clean", "chore")),
+        HabitEmoji("🛌", "Home", listOf("bed", "sleep", "rest")),
+        HabitEmoji("🚿", "Home", listOf("shower", "clean", "bath")),
+        HabitEmoji("🪴", "Home", listOf("plant", "house", "garden")),
+        HabitEmoji("🐶", "Home", listOf("dog", "pet", "animal")),
+        HabitEmoji("🐱", "Home", listOf("cat", "pet", "animal")),
+        HabitEmoji("🧶", "Home", listOf("knit", "sew", "craft")),
+        HabitEmoji("🛋️", "Home", listOf("couch", "rest", "home")),
+        HabitEmoji("🔑", "Home", listOf("key", "home", "security")),
+        HabitEmoji("🚗", "Home", listOf("car", "drive", "commute")),
+        HabitEmoji("system:house", "Home", listOf("home", "house")),
+        HabitEmoji("system:pets", "Home", listOf("pet", "dog", "cat")),
+        HabitEmoji("system:cleaning", "Home", listOf("clean", "chore")),
+        HabitEmoji("system:soap", "Home", listOf("soap", "clean", "wash")),
+        HabitEmoji("system:local_laundry", "Home", listOf("laundry", "wash")),
+        HabitEmoji("system:bed", "Home", listOf("bed", "sleep")),
+
+        // Self Care
+        HabitEmoji("🧖", "Self Care", listOf("sauna", "spa", "relax")),
+        HabitEmoji("🛁", "Self Care", listOf("bath", "clean", "relax")),
+        HabitEmoji("💆", "Self Care", listOf("massage", "relax", "care")),
+        HabitEmoji("💅", "Self Care", listOf("nail", "beauty", "care")),
+        HabitEmoji("💇", "Self Care", listOf("hair", "cut", "beauty")),
+        HabitEmoji("👕", "Self Care", listOf("shirt", "clothes", "style")),
+        HabitEmoji("👟", "Self Care", listOf("shoe", "run", "style")),
+        HabitEmoji("💄", "Self Care", listOf("makeup", "beauty", "style")),
+        HabitEmoji("💍", "Self Care", listOf("ring", "jewelry", "style")),
+        HabitEmoji("🧴", "Self Care", listOf("lotion", "skin", "care")),
+        HabitEmoji("system:spa", "Self Care", listOf("spa", "relax")),
+        HabitEmoji("system:bathtub", "Self Care", listOf("bath", "relax")),
+
+        // Hobby
+        HabitEmoji("🎨", "Hobby", listOf("art", "paint", "draw", "create")),
+        HabitEmoji("🖌️", "Hobby", listOf("paint", "brush", "art")),
+        HabitEmoji("🎧", "Hobby", listOf("music", "listen", "audio", "podcast")),
+        HabitEmoji("🎸", "Hobby", listOf("guitar", "music", "instrument", "play")),
+        HabitEmoji("🎹", "Hobby", listOf("piano", "music", "instrument", "play")),
+        HabitEmoji("🎤", "Hobby", listOf("sing", "music", "voice", "podcast")),
+        HabitEmoji("📸", "Hobby", listOf("photo", "camera", "shoot")),
+        HabitEmoji("🎮", "Hobby", listOf("game", "play", "video game")),
+        HabitEmoji("🧩", "Hobby", listOf("puzzle", "game", "brain")),
+        HabitEmoji("🍳", "Hobby", listOf("cook", "food", "chef", "kitchen")),
+        HabitEmoji("🌿", "Hobby", listOf("plant", "nature", "garden", "green")),
+        HabitEmoji("🧵", "Hobby", listOf("sew", "needle", "thread")),
+        HabitEmoji("🎷", "Hobby", listOf("sax", "music", "instrument")),
+        HabitEmoji("🎲", "Hobby", listOf("dice", "game", "board game")),
+        HabitEmoji("system:art", "Hobby", listOf("art", "palette", "paint")),
+        HabitEmoji("system:brush", "Hobby", listOf("brush", "art")),
+        HabitEmoji("system:music", "Hobby", listOf("music", "listen")),
+        HabitEmoji("system:game", "Hobby", listOf("game", "play")),
+        HabitEmoji("system:photo", "Hobby", listOf("photo", "camera")),
+
+        // Quit
+        HabitEmoji("🚬", "Quit", listOf("smoke", "cigarette", "quit")),
+        HabitEmoji("🍷", "Quit", listOf("wine", "drink", "alcohol", "quit")),
+        HabitEmoji("🍺", "Quit", listOf("beer", "drink", "alcohol", "quit")),
+        HabitEmoji("🥃", "Quit", listOf("liquor", "drink", "alcohol", "quit")),
+        HabitEmoji("🍔", "Quit", listOf("burger", "junk food", "eat", "quit")),
+        HabitEmoji("🍕", "Quit", listOf("pizza", "junk food", "eat", "quit")),
+        HabitEmoji("🍦", "Quit", listOf("ice cream", "sugar", "eat", "quit")),
+        HabitEmoji("🍫", "Quit", listOf("chocolate", "sugar", "eat", "quit")),
+        HabitEmoji("📱", "Quit", listOf("phone", "screen time", "quit")),
+        HabitEmoji("🎮", "Quit", listOf("game", "video game", "quit")),
+        HabitEmoji("system:smoking", "Quit", listOf("smoke", "bad habit")),
+        HabitEmoji("system:no_smoking", "Quit", listOf("no smoking", "quit")),
+
+        // Social
+        HabitEmoji("🤝", "Social", listOf("meet", "handshake", "deal", "friend")),
+        HabitEmoji("🗣️", "Social", listOf("talk", "speak", "voice", "meeting")),
+        HabitEmoji("👥", "Social", listOf("people", "group", "friends", "team")),
+        HabitEmoji("💖", "Social", listOf("love", "heart", "care", "family")),
+        HabitEmoji("💌", "Social", listOf("letter", "love", "message")),
+        HabitEmoji("🎁", "Social", listOf("gift", "present", "birthday", "give")),
+        HabitEmoji("🥳", "Social", listOf("party", "celebrate", "happy")),
+        HabitEmoji("💬", "Social", listOf("chat", "talk", "message")),
+        HabitEmoji("🫂", "Social", listOf("hug", "care", "friends")),
+        HabitEmoji("system:group", "Social", listOf("group", "people")),
+        HabitEmoji("system:celebration", "Social", listOf("party", "celebrate")),
+        HabitEmoji("system:chat", "Social", listOf("chat", "message")),
+        HabitEmoji("system:phone", "Social", listOf("call", "talk")),
+    )
+
+    override fun getAllEmojis(): Flow<List<HabitEmoji>> = flowOf(emojis)
+
+    override fun getCategories(): Flow<List<String>> = flowOf(
+        listOf("All", "Recommended", "Nutrition", "Fitness", "Mindset", "Productivity", "Finance", "Home", "Self Care", "Hobby", "Quit", "Social")
+    )
+}

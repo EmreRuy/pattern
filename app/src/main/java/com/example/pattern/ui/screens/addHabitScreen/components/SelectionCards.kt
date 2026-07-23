@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import com.example.pattern.ui.components.PatternIcon
 
 @Composable
 fun HabitSelectionCard(
@@ -121,7 +122,10 @@ fun EmojiSelector(
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = selectedEmoji, fontSize = 20.sp)
+            PatternIcon(
+                iconCode = selectedEmoji,
+                size = 20.sp
+            )
         }
     }
 }

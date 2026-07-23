@@ -2,12 +2,15 @@ package com.example.pattern.ui.screens.addHabitScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pattern.domain.repository.EmojiRepository
 import com.example.pattern.domain.usecase.CreateHabitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -15,16 +18,37 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddHabitViewModel @Inject constructor(
-    private val createHabitUseCase: CreateHabitUseCase
+    private val createHabitUseCase: CreateHabitUseCase,
+    emojiRepository: EmojiRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddHabitUiState())
-    val uiState: StateFlow<AddHabitUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<AddHabitUiState> = combine(
+        _uiState,
+        emojiRepository.getAllEmojis(),
+        emojiRepository.getCategories()
+    ) { state, allEmojis, categories ->
+        val filtered = allEmojis.filter { emoji ->
+            val matchesCategory = (state.selectedEmojiCategory == "All") || (emoji.category == state.selectedEmojiCategory)
+            val matchesSearch = state.emojiSearchQuery.isBlank() || 
+                    emoji.value.contains(state.emojiSearchQuery) || 
+                    emoji.keywords.any { it.contains(state.emojiSearchQuery, ignoreCase = true) }
+            matchesCategory && matchesSearch
+        }.toImmutableList()
+
+        state.copy(
+            filteredEmojis = filtered,
+            availableEmojiCategories = categories.toImmutableList()
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AddHabitUiState()
+    )
 
     fun onNameChange(name: String) {
-        val truncatedName = name.take(20)
         _uiState.update { 
-            if (it.habitName == truncatedName) it else it.copy(habitName = truncatedName)
+            if (it.habitName == name.take(20)) it else it.copy(habitName = name.take(20))
         }
     }
 
@@ -37,6 +61,18 @@ class AddHabitViewModel @Inject constructor(
     fun onEmojiChange(emoji: String) {
         _uiState.update { 
             if (it.emoji == emoji) it else it.copy(emoji = emoji)
+        }
+    }
+
+    fun onEmojiSearchQueryChange(query: String) {
+        _uiState.update { 
+            if (it.emojiSearchQuery == query) it else it.copy(emojiSearchQuery = query)
+        }
+    }
+
+    fun onEmojiCategoryChange(category: String) {
+        _uiState.update { 
+            if (it.selectedEmojiCategory == category) it else it.copy(selectedEmojiCategory = category)
         }
     }
 

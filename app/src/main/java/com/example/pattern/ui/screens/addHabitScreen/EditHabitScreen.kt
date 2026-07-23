@@ -25,7 +25,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.Habit
+import com.example.pattern.domain.model.HabitEmoji
 import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.repository.EmojiRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
 import com.example.pattern.ui.components.PatternTimePickerDialog
@@ -35,8 +37,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import javax.inject.Inject
@@ -44,6 +50,7 @@ import javax.inject.Inject
 @HiltViewModel
 class EditHabitViewModel @Inject constructor(
     private val repository: HabitRepository,
+    emojiRepository: EmojiRepository,
     private val reminderManager: ReminderManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -52,10 +59,42 @@ class EditHabitViewModel @Inject constructor(
     private val _habit = MutableStateFlow<Habit?>(null)
     val habit: StateFlow<Habit?> = _habit.asStateFlow()
 
+    private val _emojiSearchQuery = MutableStateFlow("")
+    val emojiSearchQuery = _emojiSearchQuery.asStateFlow()
+
+    private val _selectedEmojiCategory = MutableStateFlow("All")
+    val selectedEmojiCategory = _selectedEmojiCategory.asStateFlow()
+
+    val availableEmojiCategories: StateFlow<ImmutableList<String>> = emojiRepository.getCategories()
+        .map { it.toImmutableList() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<String>().toImmutableList())
+
+    val filteredEmojis: StateFlow<ImmutableList<HabitEmoji>> = combine(
+        emojiRepository.getAllEmojis(),
+        _emojiSearchQuery,
+        _selectedEmojiCategory
+    ) { allEmojis, query, category ->
+        allEmojis.filter { emoji ->
+            val matchesCategory = (category == "All") || (emoji.category == category)
+            val matchesSearch = query.isBlank() || 
+                    emoji.value.contains(query) || 
+                    emoji.keywords.any { it.contains(query, ignoreCase = true) }
+            matchesCategory && matchesSearch
+        }.toImmutableList()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<HabitEmoji>().toImmutableList())
+
     init {
         viewModelScope.launch {
             _habit.value = repository.getHabitOnce(habitId)
         }
+    }
+
+    fun onEmojiSearchQueryChange(query: String) {
+        _emojiSearchQuery.value = query
+    }
+
+    fun onEmojiCategoryChange(category: String) {
+        _selectedEmojiCategory.value = category
     }
 
     fun updateHabit(
@@ -116,6 +155,11 @@ fun EditHabitScreen(
         }
         return
     }
+
+    val filteredEmojis by viewModel.filteredEmojis.collectAsState()
+    val emojiSearchQuery by viewModel.emojiSearchQuery.collectAsState()
+    val selectedEmojiCategory by viewModel.selectedEmojiCategory.collectAsState()
+    val availableEmojiCategories by viewModel.availableEmojiCategories.collectAsState()
 
     val initialHabit = habit!!
     
@@ -342,7 +386,13 @@ fun EditHabitScreen(
                         onEmojiSelected = { 
                             emoji = it
                             currentStep = AddHabitStep.Main
-                        }
+                        },
+                        searchQuery = emojiSearchQuery,
+                        onSearchQueryChange = viewModel::onEmojiSearchQueryChange,
+                        selectedCategory = selectedEmojiCategory,
+                        onCategorySelected = viewModel::onEmojiCategoryChange,
+                        categories = availableEmojiCategories,
+                        emojis = filteredEmojis
                     )
                 }
                 
