@@ -12,7 +12,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -137,31 +136,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentDestination = navBackStackEntry?.destination
-
         CompositionLocalProvider(LocalNavActions provides actions) {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
-                bottomBar = {
-                    val shouldShowBottomBar = currentDestination?.let { dest ->
-                        dest.hasRoute<Destination.Home>() || dest.hasRoute<Destination.Profile>()
-                    } ?: false
-                    
-                    if (shouldShowBottomBar) {
-                        CustomBottomBar(
-                            navController = navController,
-                            onItemClick = { item -> 
-                                actions.navigateToBottomBarRoute(item.route) 
-                            }
-                        )
-                    }
-                },
-                contentWindowInsets = WindowInsets.navigationBars
+                contentWindowInsets = WindowInsets(0, 0, 0, 0)
             ) { paddingValues ->
                 NavHost(
                     navController = navController,
-                    modifier = Modifier.padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     startDestination = startDestination,
                     onUiReady = onUiReady,
                     onOnboardingFinish = {

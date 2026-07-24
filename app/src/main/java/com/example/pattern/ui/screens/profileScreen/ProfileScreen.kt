@@ -5,13 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.example.pattern.ui.navigation.LocalNavActions
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
+import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.ui.screens.profileScreen.components.*
 import com.example.pattern.ui.screens.profileScreen.components.dashboard.ProfileExtraCard
 
@@ -31,6 +35,7 @@ import com.example.pattern.ui.screens.profileScreen.components.dashboard.Profile
  */
 @Composable
 fun ProfileScreen(
+    navController: NavHostController,
     viewModel: ProfileViewModel = hiltViewModel(),
     onOpenMenuSheet: () -> Unit,
     onPremiumClick: () -> Unit,
@@ -38,23 +43,34 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    val actions = LocalNavActions.current
 
-    LazyColumn(
-        state = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding(),
-        contentPadding = PaddingValues(bottom = 32.dp)
-    ) {
-        // 1. Top Bar - Static at the top of the list
-        item(key = "top_bar") {
-            HomeTopBar(
-                onMenuClick = onOpenMenuSheet,
-                onSettingsClick = onOpenSettings,
-                onPremiumClick = onPremiumClick
+    Scaffold(
+        bottomBar = {
+            CustomBottomBar(
+                navController = navController,
+                onItemClick = { item -> actions.navigateToBottomBarRoute(item.route) }
             )
         }
+    ) { paddingValues ->
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding(),
+            contentPadding = PaddingValues(bottom = 32.dp)
+        ) {
+            // 1. Top Bar - Static at the top of the list
+            item(key = "top_bar") {
+                HomeTopBar(
+                    onMenuClick = onOpenMenuSheet,
+                    onSettingsClick = onOpenSettings,
+                    onPremiumClick = onPremiumClick
+                )
+            }
+            // ... rest of the items ...
 
         item(key = "spacer_top") {
             Spacer(modifier = Modifier.height(8.dp))
@@ -81,13 +97,14 @@ fun ProfileScreen(
         }
 
         // 3. Historical Data Visualization (Heavy - Deferred via LazyColumn)
-        item(key = "xp_chart_card") {
-            XPProgressChartCard(
-                title = "TOTAL XP GAINED",
-                weeklyDataPoints = uiState.weeklyXpHistory,
-                monthlyDataPoints = uiState.xpHistory,
-                yearlyDataPoints = uiState.yearlyXpHistory
-            )
+            item(key = "xp_chart_card") {
+                XPProgressChartCard(
+                    title = "TOTAL XP GAINED",
+                    weeklyDataPoints = uiState.weeklyXpHistory,
+                    monthlyDataPoints = uiState.xpHistory,
+                    yearlyDataPoints = uiState.yearlyXpHistory
+                )
+            }
         }
     }
 }

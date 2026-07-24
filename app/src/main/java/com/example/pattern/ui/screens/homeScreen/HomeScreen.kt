@@ -21,14 +21,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.example.pattern.ui.navigation.LocalNavActions
 import com.example.pattern.ui.screens.homeScreen.components.HabitCardsPager
 import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
+import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.utils.CalendarMathProvider
 import java.time.LocalDate
 
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
     viewModel: HomeViewModel = hiltViewModel(),
     onOpenMenuScreen: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -47,6 +51,7 @@ fun HomeScreen(
 
     when (val state = uiState) {
         is HomeUiState.Success -> HomeContent(
+            navController = navController,
             state = state,
             onEvent = viewModel::onEvent,
             onOpenMenuScreen = onOpenMenuScreen,
@@ -61,6 +66,7 @@ fun HomeScreen(
 
 @Composable
 private fun HomeContent(
+    navController: NavHostController,
     state: HomeUiState.Success,
     onEvent: (HomeUiEvent) -> Unit,
     onOpenMenuScreen: () -> Unit,
@@ -68,6 +74,7 @@ private fun HomeContent(
     onHabitClick: (Int) -> Unit,
     onPremiumClick: () -> Unit
 ) {
+    val actions = LocalNavActions.current
     val calendarPagerState = rememberPagerState(
         initialPage = CalendarMathProvider.getWeekPageIndex(state.selectedDate),
         pageCount = { 50000 }
@@ -101,7 +108,6 @@ private fun HomeContent(
             Pair(habitPagerState.currentPage, habitPagerState.isScrollInProgress) 
         }.collect { (currentPage, isScrolling) ->
             // ONLY update the ViewModel when the pager has settled.
-            // This prevents accidental date changes during back gestures.
             if (!isScrolling) {
                 val dateAtPage = CalendarMathProvider.getDateFromDayIndex(currentPage)
                 if (dateAtPage != state.selectedDate) {
@@ -111,22 +117,8 @@ private fun HomeContent(
 
             // Immediate Visual Sync (Week Pager follows Habit Pager)
             val targetWeekPage = currentPage / 7
-            if (calendarPagerState.currentPage != targetWeekPage && isScrolling) {
+            if (calendarPagerState.currentPage != targetWeekPage) {
                 calendarPagerState.scrollToPage(targetWeekPage)
-            }
-        }
-    }
-
-    // 3. Sync Calendar Pager -> Habit Pager
-    LaunchedEffect(calendarPagerState) {
-        snapshotFlow { 
-            Pair(calendarPagerState.currentPage, calendarPagerState.isScrollInProgress) 
-        }.collect { (currentWeekPage, isScrolling) ->
-            val habitWeekPage = habitPagerState.currentPage / 7
-            if (currentWeekPage != habitWeekPage && isScrolling) {
-                val dayOfWeekOffset = habitPagerState.currentPage % 7
-                val targetHabitPage = currentWeekPage * 7 + dayOfWeekOffset
-                habitPagerState.scrollToPage(targetHabitPage)
             }
         }
     }
@@ -150,6 +142,12 @@ private fun HomeContent(
                 )
             }
         },
+        bottomBar = {
+            CustomBottomBar(
+                navController = navController,
+                onItemClick = { item -> actions.navigateToBottomBarRoute(item.route) }
+            )
+        }
     ) { paddingValues ->
         HabitCardsPager(
             pagerState = habitPagerState,

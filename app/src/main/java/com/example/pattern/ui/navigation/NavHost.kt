@@ -42,6 +42,7 @@ fun NavHost(
 
         composable<Destination.Home> {
             HomeScreen(
+                navController = navController,
                 onOpenMenuScreen = { actions.navigateToHabitList() },
                 onSettingsClick = { actions.navigateToSettings() },
                 onHabitClick = { id -> actions.navigateToDetail(id) },
@@ -76,6 +77,7 @@ fun NavHost(
 
         composable<Destination.Profile> {
             ProfileScreen(
+                navController = navController,
                 onOpenMenuSheet = { actions.navigateToHabitList() },
                 onOpenSettings = { actions.navigateToSettings() },
                 onPremiumClick = { actions.navigateToPremium() }

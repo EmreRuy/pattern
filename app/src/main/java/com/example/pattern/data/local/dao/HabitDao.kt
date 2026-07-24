@@ -42,7 +42,7 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :id")
     suspend fun getHabitOnce(id: Int): Habit?
 
-    @Query("SELECT * FROM habits ORDER BY created_at DESC")
+    @Query("SELECT * FROM habits ORDER BY created_at ASC, id ASC")
     fun getAllHabits(): Flow<List<Habit>>
 
     @Query("SELECT * FROM habits")

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,9 +30,19 @@ fun HabitDetailsRoute(
     viewModel: HabitDetailsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var isDeleting by remember { mutableStateOf(false) }
-
-    if (isDeleting) return
+    
+    // Senior Developer Optimization: Sticky UI Pattern
+    // We keep a reference to the last successful habit data.
+    // When the habit is deleted, the ViewModel emits 'Error', but we 
+    // keep showing the last known data while the screen is animating away.
+    var lastSuccessHabit by remember { mutableStateOf<HabitDetailsUi?>(null) }
+    
+    LaunchedEffect(uiState) {
+        val state = uiState
+        if (state is HabitDetailsUiState.Success) {
+            lastSuccessHabit = state.habit
+        }
+    }
 
     Crossfade(
         targetState = uiState,
@@ -43,8 +54,18 @@ fun HabitDetailsRoute(
                 Box(Modifier.fillMaxSize())
             }
             HabitDetailsUiState.Error -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error loading habit")
+                // If we have sticky data, keep showing it to prevent the "white flash"
+                if (lastSuccessHabit != null) {
+                    HabitCardDetailsScreen(
+                        habit = lastSuccessHabit!!,
+                        onBack = onBack,
+                        onDelete = {}, // Already deleting
+                        onEdit = onEdit
+                    )
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Error loading habit")
+                    }
                 }
             }
             is HabitDetailsUiState.Success -> {
@@ -52,7 +73,6 @@ fun HabitDetailsRoute(
                     habit = state.habit,
                     onBack = onBack,
                     onDelete = {
-                        isDeleting = true
                         viewModel.deleteHabit(state.habit.id)
                         onBack()
                     },
