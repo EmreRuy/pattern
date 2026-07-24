@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.HabitWithStatus
@@ -32,10 +33,11 @@ class HomeViewModel @Inject constructor(
     habitRepository: HabitRepository,
     private val updateHabitProgressUseCase: UpdateHabitProgressUseCase,
     private val streakCalculator: StreakCalculator,
+    private val savedStateHandle: SavedStateHandle,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
-    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    private val _selectedDate = savedStateHandle.getStateFlow("selected_date", LocalDate.now())
     private val modelCache = mutableMapOf<String, HabitCardModel>()
 
     private val levelInfoFlow = habitRepository.getSettingsStream()
@@ -117,7 +119,7 @@ class HomeViewModel @Inject constructor(
 
     fun onEvent(event: HomeUiEvent) {
         when (event) {
-            is HomeUiEvent.OnDateSelected -> _selectedDate.value = event.date
+            is HomeUiEvent.OnDateSelected -> savedStateHandle["selected_date"] = event.date
             is HomeUiEvent.OnTimerStart -> viewModelScope.launch { updateHabitProgressUseCase.startTimer(event.habitId, event.date) }
             is HomeUiEvent.OnTimerPause -> viewModelScope.launch { updateHabitProgressUseCase.pauseTimer(event.habitId, event.date) }
             is HomeUiEvent.OnTimerResume -> viewModelScope.launch { updateHabitProgressUseCase.resumeTimer(event.habitId, event.date) }

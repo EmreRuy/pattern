@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -67,69 +68,65 @@ private fun HomeContent(
     onHabitClick: (Int) -> Unit,
     onPremiumClick: () -> Unit
 ) {
-    val today = remember { LocalDate.now() }
-    
     val calendarPagerState = rememberPagerState(
-        initialPage = CalendarMathProvider.getWeekPageIndex(today, state.selectedDate),
+        initialPage = CalendarMathProvider.getWeekPageIndex(state.selectedDate),
         pageCount = { 50000 }
     )
 
     val habitPagerState = rememberPagerState(
-        initialPage = CalendarMathProvider.getDayPageIndex(today, state.selectedDate),
+        initialPage = CalendarMathProvider.getDayPageIndex(state.selectedDate),
         pageCount = { 50000 * 7 }
     )
 
     // Visual Source of Truth: The date currently centered in the pager.
-    // Driving the UI selection from this instead of the ViewModel state
-    // provides instant visual feedback while swiping.
     val visuallySelectedDate by remember {
         derivedStateOf {
-            CalendarMathProvider.getDateFromDayIndex(today, habitPagerState.currentPage)
+            CalendarMathProvider.getDateFromDayIndex(habitPagerState.currentPage)
         }
     }
 
-    // 1. Sync Pager to ViewModel (External changes only)
+    // 1. Sync ViewModel changes TO UI (e.g. initial load or external reset)
     LaunchedEffect(state.selectedDate) {
-        val targetDayPage = CalendarMathProvider.getDayPageIndex(today, state.selectedDate)
-        // Only animate if the difference is caused by something other than the user swiping
+        val targetDayPage = CalendarMathProvider.getDayPageIndex(state.selectedDate)
         if (habitPagerState.currentPage != targetDayPage && !habitPagerState.isScrollInProgress) {
-            habitPagerState.animateScrollToPage(targetDayPage)
+            // Use scrollToPage (instant) when returning from navigation 
+            // to prevent the "ghost swipe" effect.
+            habitPagerState.scrollToPage(targetDayPage)
         }
     }
 
-    // 2. Immediate Habit Pager -> Calendar Pager sync
-    val habitWeekPage by remember { derivedStateOf { habitPagerState.currentPage / 7 } }
-    LaunchedEffect(habitWeekPage) {
-        if (calendarPagerState.currentPage != habitWeekPage) {
-            calendarPagerState.scrollToPage(habitWeekPage)
+    // 2. Sync Habit Pager -> Calendar Pager & ViewModel
+    LaunchedEffect(habitPagerState) {
+        snapshotFlow { 
+            Pair(habitPagerState.currentPage, habitPagerState.isScrollInProgress) 
+        }.collect { (currentPage, isScrolling) ->
+            // ONLY update the ViewModel when the pager has settled.
+            // This prevents accidental date changes during back gestures.
+            if (!isScrolling) {
+                val dateAtPage = CalendarMathProvider.getDateFromDayIndex(currentPage)
+                if (dateAtPage != state.selectedDate) {
+                    onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
+                }
+            }
+
+            // Immediate Visual Sync (Week Pager follows Habit Pager)
+            val targetWeekPage = currentPage / 7
+            if (calendarPagerState.currentPage != targetWeekPage && isScrolling) {
+                calendarPagerState.scrollToPage(targetWeekPage)
+            }
         }
     }
 
-    // 3. Proactive ViewModel Update
-    // As the page changes, we update the ViewModel's selectedDate.
-    // Because we have a wide data window in the ViewModel, this won't cause lag.
-    LaunchedEffect(habitPagerState.currentPage) {
-        val dateAtPage = CalendarMathProvider.getDateFromDayIndex(today, habitPagerState.currentPage)
-        if (dateAtPage != state.selectedDate) {
-            onEvent(HomeUiEvent.OnDateSelected(dateAtPage))
-        }
-    }
-
-    // 4. Calendar Pager -> Habit Pager Sync (User Swiping Weeks)
-    // Synchronize the habit list IMMEDIATELY as the user swipes through weeks.
-    val calendarCurrentPage by remember { derivedStateOf { calendarPagerState.currentPage } }
-    LaunchedEffect(calendarCurrentPage) {
-        val currentHabitWeekPage = habitPagerState.currentPage / 7
-        if (calendarCurrentPage != currentHabitWeekPage) {
-            val dayOfWeekOffset = habitPagerState.currentPage % 7
-            val targetHabitPage = calendarCurrentPage * 7 + dayOfWeekOffset
-            
-            // If the user is swiping the calendar, we move the habit pager instantly 
-            // so the data is already there when they look down.
-            if (calendarPagerState.isScrollInProgress) {
+    // 3. Sync Calendar Pager -> Habit Pager
+    LaunchedEffect(calendarPagerState) {
+        snapshotFlow { 
+            Pair(calendarPagerState.currentPage, calendarPagerState.isScrollInProgress) 
+        }.collect { (currentWeekPage, isScrolling) ->
+            val habitWeekPage = habitPagerState.currentPage / 7
+            if (currentWeekPage != habitWeekPage && isScrolling) {
+                val dayOfWeekOffset = habitPagerState.currentPage % 7
+                val targetHabitPage = currentWeekPage * 7 + dayOfWeekOffset
                 habitPagerState.scrollToPage(targetHabitPage)
-            } else {
-                habitPagerState.animateScrollToPage(targetHabitPage)
             }
         }
     }
@@ -149,10 +146,7 @@ private fun HomeContent(
                 )
                 HomeCalendarSelector(
                     pagerState = calendarPagerState,
-                    selectedDate = visuallySelectedDate,
-                    onDateSelected = { date ->
-                        onEvent(HomeUiEvent.OnDateSelected(date))
-                    }
+                    selectedDate = visuallySelectedDate
                 )
             }
         },

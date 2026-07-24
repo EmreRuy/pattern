@@ -60,8 +60,8 @@ fun HabitCardsPager(
         key = { it },
         beyondViewportPageCount = 1
     ) { pageIndex ->
-        val date = remember(pageIndex, today) {
-            CalendarMathProvider.getDateFromDayIndex(today, pageIndex)
+        val date = remember(pageIndex) {
+            CalendarMathProvider.getDateFromDayIndex(pageIndex)
         }
         val habits = habitsByDate[date] ?: emptyList()
         val isToday = date == today

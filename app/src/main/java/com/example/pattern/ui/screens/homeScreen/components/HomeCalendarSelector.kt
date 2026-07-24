@@ -6,8 +6,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -19,8 +17,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,21 +36,14 @@ import java.util.Locale
 fun HomeCalendarSelector(
     pagerState: PagerState,
     selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic = LocalHapticFeedback.current
     val today = remember { LocalDate.now() }
-    val pivotDate = remember(today) { 
-        today.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    }
-
     val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
 
     val currentMonthTitle by remember {
         derivedStateOf {
-            val weekOffset = pagerState.currentPage - CalendarMathProvider.WEEK_PAGER_PIVOT
-            val dateInWeek = pivotDate.plusWeeks(weekOffset.toLong())
+            val dateInWeek = CalendarMathProvider.getMondayOfWeek(pagerState.currentPage)
             dateInWeek.format(monthFormatter)
         }
     }
@@ -70,8 +59,9 @@ fun HomeCalendarSelector(
             beyondViewportPageCount = 1,
             key = { it }
         ) { weekIndex ->
-            val weekOffset = weekIndex - CalendarMathProvider.WEEK_PAGER_PIVOT
-            val weekStartDate = remember(weekOffset) { pivotDate.plusWeeks(weekOffset.toLong()) }
+            val weekStartDate = remember(weekIndex) { 
+                CalendarMathProvider.getMondayOfWeek(weekIndex) 
+            }
             
             Row(
                 modifier = Modifier
@@ -89,11 +79,7 @@ fun HomeCalendarSelector(
                     CalendarItem(
                         isSelected = isSelected,
                         isToday = isToday,
-                        day = dayModel,
-                        onClick = { 
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onDateSelected(date) 
-                        }
+                        day = dayModel
                     )
                 }
             }
@@ -129,7 +115,6 @@ private fun CalendarItem(
     isSelected: Boolean,
     isToday: Boolean,
     day: CalendarDayModel,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isWeekend = remember(day.date) {
@@ -148,11 +133,6 @@ private fun CalendarItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null, // Minimalist: no ripple to avoid visual noise
-                onClick = onClick
-            )
             .graphicsLayer {
                 translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgressState.value
             }
