@@ -8,6 +8,9 @@ import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.domain.streak.StreakCalculator
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -123,7 +126,6 @@ class HomeViewModelTest {
             }
             
             viewModel.onEvent(HomeUiEvent.OnDateSelected(tomorrow))
-            
             selectedDateFlow.value = tomorrow
             
             while (state.selectedDate != tomorrow) {
@@ -131,7 +133,68 @@ class HomeViewModelTest {
             }
             
             assertEquals(tomorrow, state.selectedDate)
+        }
+    }
+
+    @Test
+    fun `onResume triggers date refresh and shifts to new today if old today was selected`() = runTest {
+        val baseDate = LocalDate.of(2024, 1, 1)
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now() } returns baseDate
+        
+        selectedDateFlow.value = baseDate
+        
+        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
+        
+        viewModel.uiState.test {
+            var state = awaitItem() as HomeUiState.Success
+            while (state.isLoading) state = awaitItem() as HomeUiState.Success
+            
+            assertEquals(baseDate, state.selectedDate)
+            
+            // Advance time to next day
+            val nextDay = baseDate.plusDays(1)
+            every { LocalDate.now() } returns nextDay
+            
+            viewModel.onEvent(HomeUiEvent.OnResume)
+            selectedDateFlow.value = nextDay // ViewModel updates SavedStateHandle which updates flow
+            
+            while (state.selectedDate != nextDay) {
+                state = awaitItem() as HomeUiState.Success
+            }
+            
+            assertEquals(nextDay, state.selectedDate)
+            assertTrue(state.isSelectedDateToday)
+        }
+        unmockkStatic(LocalDate::class)
+    }
+
+    @Test
+    fun `onResume does not shift date if a specific past date was selected`() = runTest {
+        val pastDate = LocalDate.of(2023, 12, 25)
+        val baseDate = LocalDate.of(2024, 1, 1)
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now() } returns baseDate
+        
+        selectedDateFlow.value = pastDate
+        
+        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
+        
+        viewModel.uiState.test {
+            var state = awaitItem() as HomeUiState.Success
+            while (state.isLoading) state = awaitItem() as HomeUiState.Success
+            
+            assertEquals(pastDate, state.selectedDate)
+            
+            // Advance time
+            every { LocalDate.now() } returns baseDate.plusDays(1)
+            
+            viewModel.onEvent(HomeUiEvent.OnResume)
+            
+            // Should still show pastDate
+            assertEquals(pastDate, state.selectedDate)
             assertFalse(state.isSelectedDateToday)
         }
+        unmockkStatic(LocalDate::class)
     }
 }

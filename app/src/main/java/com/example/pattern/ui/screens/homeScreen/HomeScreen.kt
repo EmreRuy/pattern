@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -21,6 +22,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.pattern.ui.navigation.LocalNavActions
@@ -43,6 +47,16 @@ fun HomeScreen(
     onHomeReady: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.onEvent(HomeUiEvent.OnResume)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+    }
 
     LaunchedEffect(uiState) {
         val state = uiState
@@ -78,6 +92,7 @@ private fun HomeContent(
 ) {
     val actions = LocalNavActions.current
     val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
     
     val calendarPagerState = rememberPagerState(
         initialPage = CalendarMathProvider.getWeekPageIndex(state.selectedDate),
@@ -97,12 +112,28 @@ private fun HomeContent(
     }
 
     // 1. Sync ViewModel changes TO UI (e.g. initial load or external reset)
-    LaunchedEffect(state.selectedDate) {
+    DisposableEffect(state.selectedDate, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    val targetDayPage = CalendarMathProvider.getDayPageIndex(state.selectedDate)
+                    if (habitPagerState.currentPage != targetDayPage) {
+                        habitPagerState.scrollToPage(targetDayPage)
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
         val targetDayPage = CalendarMathProvider.getDayPageIndex(state.selectedDate)
         if (habitPagerState.currentPage != targetDayPage && !habitPagerState.isScrollInProgress) {
-            // Use scrollToPage (instant) when returning from navigation 
-            // to prevent the "ghost swipe" effect.
-            habitPagerState.scrollToPage(targetDayPage)
+            scope.launch {
+                habitPagerState.scrollToPage(targetDayPage)
+            }
+        }
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

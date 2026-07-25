@@ -41,6 +41,7 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _selectedDate = savedStateHandle.getStateFlow("selected_date", LocalDate.now())
+    private val _todayFlow = MutableStateFlow(LocalDate.now())
     private val modelCache = mutableMapOf<String, HabitCardModel>()
 
     private val levelInfoFlow = habitRepository.getSettingsStream()
@@ -60,14 +61,13 @@ class HomeViewModel @Inject constructor(
     private val structuralDailyStateFlow = habitRepository.getAllDailyStatesStream()
 
     val uiState: StateFlow<HomeUiState> = combine(
-        _selectedDate,
+        combine(_selectedDate, _todayFlow) { date, today -> date to today },
         habitRepository.getAllHabitsStream(),
         structuralDailyStateFlow,
         levelInfoFlow,
         timePeriodFlow
-    ) { date, allHabits, allDailyStates, level, timePeriod ->
+    ) { (date, today), allHabits, allDailyStates, level, timePeriod ->
         
-        val today = LocalDate.now()
         // We pre-calculate a massive 60-day window around today, PLUS a 14-day window 
         // around the selectedDate. This ensures that whether the user swipes days 
         // or weeks (7 days at a time), the data is ALWAYS there instantly.
@@ -132,6 +132,7 @@ class HomeViewModel @Inject constructor(
 
     fun onEvent(event: HomeUiEvent) {
         when (event) {
+            is HomeUiEvent.OnResume -> refreshDateIfStale()
             is HomeUiEvent.OnDateSelected -> savedStateHandle["selected_date"] = event.date
             is HomeUiEvent.OnTimerStart -> viewModelScope.launch { updateHabitProgressUseCase.startTimer(event.habitId, event.date) }
             is HomeUiEvent.OnTimerPause -> viewModelScope.launch { updateHabitProgressUseCase.pauseTimer(event.habitId, event.date) }
@@ -140,6 +141,18 @@ class HomeViewModel @Inject constructor(
             is HomeUiEvent.OnTimerUnfinish -> viewModelScope.launch { updateHabitProgressUseCase.unfinishTimer(event.habitId, event.date) }
             is HomeUiEvent.OnTaskToggle -> viewModelScope.launch { updateHabitProgressUseCase.toggleTask(event.habitId, event.date, event.completed) }
             is HomeUiEvent.OnTaskIncrement -> viewModelScope.launch { updateHabitProgressUseCase.incrementTask(event.habitId, event.date) }
+        }
+    }
+
+    private fun refreshDateIfStale() {
+        val currentToday = LocalDate.now()
+        if (_todayFlow.value != currentToday) {
+            _todayFlow.value = currentToday
+            // If the user was viewing "Today" on the old date, automatically 
+            // shift them to the new "Today".
+            if (_selectedDate.value == _todayFlow.value.minusDays(1)) {
+                savedStateHandle["selected_date"] = currentToday
+            }
         }
     }
 }

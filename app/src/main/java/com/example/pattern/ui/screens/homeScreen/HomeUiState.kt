@@ -32,6 +32,7 @@ sealed interface HomeUiState {
 }
 
 sealed interface HomeUiEvent {
+    data object OnResume : HomeUiEvent
     data class OnDateSelected(val date: LocalDate) : HomeUiEvent
     data class OnTimerStart(val habitId: Int, val date: LocalDate) : HomeUiEvent
     data class OnTimerPause(val habitId: Int, val date: LocalDate) : HomeUiEvent
