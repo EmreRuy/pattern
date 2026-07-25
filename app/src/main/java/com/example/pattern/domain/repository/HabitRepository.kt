@@ -1,11 +1,9 @@
 package com.example.pattern.domain.repository
 
 import com.example.pattern.domain.model.Habit
-import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.model.Settings
 import com.example.pattern.data.model.BackupDto
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
 interface HabitRepository {
@@ -17,22 +15,9 @@ interface HabitRepository {
     suspend fun updateHabit(habit: Habit)
     suspend fun deleteHabit(habit: Habit)
     
-    fun getDailyStatesForDate(date: String): Flow<List<HabitDailyState>>
-    fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>>
-    fun getAllDailyStatesStream(): Flow<List<HabitDailyState>>
-    fun getDailyStatesFromDateStream(startDate: String): Flow<List<HabitDailyState>>
-    fun getCompletedDatesStream(): Flow<Map<Int, Set<LocalDate>>>
-    suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState>
-    suspend fun upsertDailyState(state: HabitDailyState)
-    suspend fun getDailyStateOnce(habitId: Int, date: String): HabitDailyState?
-    suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean)
-    suspend fun incrementTaskCount(habitId: Int, date: String)
-    
-    fun getTotalXPStream(): Flow<Int>
     fun getSettingsStream(): Flow<Settings?>
     suspend fun getSettingsOnce(): Settings?
     suspend fun updateQuietHours(enabled: Boolean, start: String, end: String)
-    suspend fun addXP(xpToAdd: Int)
     
     suspend fun getBackupData(): BackupDto
     suspend fun restoreBackupData(backupDto: BackupDto)

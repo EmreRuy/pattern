@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,17 +41,23 @@ fun HomeTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 0.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        DebouncedIconButton(onClick = onMenuClick) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Menu",
-                modifier = Modifier.size(30.dp),
-                tint = MaterialTheme.colorScheme.onBackground
-            )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            DebouncedIconButton(onClick = onMenuClick) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu",
+                    modifier = Modifier.size(30.dp),
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
 
         Text(
@@ -63,13 +70,21 @@ fun HomeTopBar(
             ) { onPremiumClick() },
             color = MaterialTheme.colorScheme.onBackground
         )
-        DebouncedIconButton(onClick = onSettingsClick) {
-            Icon(
-                imageVector = Icons.Rounded.SettingsSuggest,
-                contentDescription = "Settings",
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.onBackground
-            )
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            DebouncedIconButton(onClick = onSettingsClick) {
+                Icon(
+                    imageVector = Icons.Rounded.SettingsSuggest,
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
     }
 }

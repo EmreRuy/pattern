@@ -32,14 +32,14 @@ fun HabitQuitCard(
             )
         },
         action = {
-            TaskRing(
-                checked = habit.isTaskChecked,
-                onToggle = {
-                    if (isToday) {
+            if (isToday) {
+                TaskRing(
+                    checked = habit.isTaskChecked,
+                    onToggle = {
                         onTaskCompleted(habit.id, !habit.isTaskChecked)
                     }
-                }
-            )
+                )
+            }
         }
     )
 }

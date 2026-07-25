@@ -2,6 +2,7 @@ package com.example.pattern.domain.usecase
 
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.repository.DailyLogRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
 import java.time.LocalDate
@@ -13,12 +14,13 @@ import javax.inject.Inject
  * This reduces arithmetic complexity and improves database consistency.
  */
 class UpdateHabitProgressUseCase @Inject constructor(
-    private val repository: HabitRepository
+    private val habitRepository: HabitRepository,
+    private val dailyLogRepository: DailyLogRepository
 ) {
     suspend fun startTimer(habitId: Int, date: LocalDate) {
         val dateStr = date.toString()
-        repository.getHabitOnce(habitId) ?: return
-        val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
+        habitRepository.getHabitOnce(habitId) ?: return
+        val currentDaily = dailyLogRepository.getDailyStateOnce(habitId, dateStr)
         
         // Safety: Don't start if already completed or already running
         if (currentDaily?.isCompleted == true || currentDaily?.activeSessionStartMs != null) return
@@ -27,12 +29,12 @@ class UpdateHabitProgressUseCase @Inject constructor(
             activeSessionStartMs = System.currentTimeMillis(),
             isCompleted = false
         )
-        repository.upsertDailyState(updated)
+        dailyLogRepository.upsertDailyState(updated)
     }
 
     suspend fun pauseTimer(habitId: Int, date: LocalDate) {
         val dateStr = date.toString()
-        val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return
+        val currentDaily = dailyLogRepository.getDailyStateOnce(habitId, dateStr) ?: return
         
         // Safety check: can't pause if already completed or not running
         if (currentDaily.isCompleted || currentDaily.activeSessionStartMs == null) return
@@ -40,7 +42,7 @@ class UpdateHabitProgressUseCase @Inject constructor(
         val now = System.currentTimeMillis()
         val sessionDuration = (now - currentDaily.activeSessionStartMs).coerceAtLeast(0L)
         
-        repository.upsertDailyState(currentDaily.copy(
+        dailyLogRepository.upsertDailyState(currentDaily.copy(
             accumulatedTimeMs = currentDaily.accumulatedTimeMs + sessionDuration,
             activeSessionStartMs = null
         ))
@@ -48,21 +50,21 @@ class UpdateHabitProgressUseCase @Inject constructor(
 
     suspend fun resumeTimer(habitId: Int, date: LocalDate) {
         val dateStr = date.toString()
-        val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return
+        val currentDaily = dailyLogRepository.getDailyStateOnce(habitId, dateStr) ?: return
         
         // Safety check: can't resume if already completed or already running
         if (currentDaily.isCompleted || currentDaily.activeSessionStartMs != null) return
         
-        repository.upsertDailyState(currentDaily.copy(
+        dailyLogRepository.upsertDailyState(currentDaily.copy(
             activeSessionStartMs = System.currentTimeMillis()
         ))
     }
 
     suspend fun finishTimer(habitId: Int, date: LocalDate) {
-        repository.withTransaction {
+        habitRepository.withTransaction {
             val dateStr = date.toString()
-            val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
-            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
+            val habit = habitRepository.getHabitOnce(habitId) ?: return@withTransaction
+            val currentDaily = dailyLogRepository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
             
             if (currentDaily.isCompleted) return@withTransaction
             
@@ -74,28 +76,28 @@ class UpdateHabitProgressUseCase @Inject constructor(
                 accumulatedTimeMs = finalAccumulated,
                 activeSessionStartMs = null
             )
-            repository.upsertDailyState(updated)
-            repository.addXP(ExperienceUtils.calculateHabitXP(habit, updated))
+            dailyLogRepository.upsertDailyState(updated)
+            dailyLogRepository.addXP(ExperienceUtils.calculateHabitXP(habit, updated))
         }
     }
 
     suspend fun unfinishTimer(habitId: Int, date: LocalDate) {
-        repository.withTransaction {
+        habitRepository.withTransaction {
             val dateStr = date.toString()
-            val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
-            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: return@withTransaction
+            val habit = habitRepository.getHabitOnce(habitId) ?: return@withTransaction
+            val currentDaily = dailyLogRepository.getDailyStateOnce(habitId, dateStr) ?: return@withTransaction
             if (!currentDaily.isCompleted) return@withTransaction
             
-            repository.upsertDailyState(currentDaily.copy(isCompleted = false))
-            repository.addXP(-ExperienceUtils.calculateHabitXP(habit, currentDaily))
+            dailyLogRepository.upsertDailyState(currentDaily.copy(isCompleted = false))
+            dailyLogRepository.addXP(-ExperienceUtils.calculateHabitXP(habit, currentDaily))
         }
     }
 
     suspend fun toggleTask(habitId: Int, date: LocalDate, completed: Boolean) {
-        repository.withTransaction {
+        habitRepository.withTransaction {
             val dateStr = date.toString()
-            val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
-            val currentDaily = repository.getDailyStateOnce(habitId, dateStr)
+            val habit = habitRepository.getHabitOnce(habitId) ?: return@withTransaction
+            val currentDaily = dailyLogRepository.getDailyStateOnce(habitId, dateStr)
             
             val wasCompleted = when(habit.type) {
                 HabitType.TASK, HabitType.QUIT -> currentDaily?.isTaskCompleted == true
@@ -110,18 +112,18 @@ class UpdateHabitProgressUseCase @Inject constructor(
                 isCompleted = completed,
                 completedCount = if (completed) taskCount else 0
             )
-            repository.upsertDailyState(updatedState)
+            dailyLogRepository.upsertDailyState(updatedState)
 
             val xpChange = ExperienceUtils.calculateHabitXP(habit, updatedState)
-            repository.addXP(if (completed) xpChange else -xpChange)
+            dailyLogRepository.addXP(if (completed) xpChange else -xpChange)
         }
     }
 
     suspend fun incrementTask(habitId: Int, date: LocalDate) {
-        repository.withTransaction {
+        habitRepository.withTransaction {
             val dateStr = date.toString()
-            val habit = repository.getHabitOnce(habitId) ?: return@withTransaction
-            val currentDaily = repository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
+            val habit = habitRepository.getHabitOnce(habitId) ?: return@withTransaction
+            val currentDaily = dailyLogRepository.getDailyStateOnce(habitId, dateStr) ?: HabitDailyState(habitId = habitId, date = dateStr)
 
             val taskCount = habit.taskCount ?: 1
             if (currentDaily.completedCount >= taskCount) return@withTransaction
@@ -134,10 +136,10 @@ class UpdateHabitProgressUseCase @Inject constructor(
                 isTaskCompleted = isNewlyCompleted,
                 isCompleted = isNewlyCompleted
             )
-            repository.upsertDailyState(updatedState)
+            dailyLogRepository.upsertDailyState(updatedState)
 
             if (isNewlyCompleted) {
-                repository.addXP(ExperienceUtils.calculateHabitXP(habit, updatedState))
+                dailyLogRepository.addXP(ExperienceUtils.calculateHabitXP(habit, updatedState))
             }
         }
     }

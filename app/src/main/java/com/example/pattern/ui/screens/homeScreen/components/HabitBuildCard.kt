@@ -97,26 +97,27 @@ fun HabitBuildCard(
             }
         },
         action = {
-            TimerRing(
-                progress = progress,
-                isCompleted = habit.isCompleted,
-                isRunning = habit.isTimerRunning,
-                isPaused = !habit.isTimerRunning && habit.accumulatedTimeMs > 0 && !habit.isCompleted,
-                showSuccess = showSuccess.value,
-                onClick = {
-                    if (!isToday) return@TimerRing
-                    if (habit.isCompleted) {
-                        onUnfinishTimer(habit.id)
-                        return@TimerRing
+            if (isToday) {
+                TimerRing(
+                    progress = progress,
+                    isCompleted = habit.isCompleted,
+                    isRunning = habit.isTimerRunning,
+                    isPaused = !habit.isTimerRunning && habit.accumulatedTimeMs > 0 && !habit.isCompleted,
+                    showSuccess = showSuccess.value,
+                    onClick = {
+                        if (habit.isCompleted) {
+                            onUnfinishTimer(habit.id)
+                            return@TimerRing
+                        }
+
+                        when {
+                            habit.isTimerRunning -> onPauseTimer(habit)
+                            habit.accumulatedTimeMs > 0 -> onResumeTimer(habit)
+                            else -> onStartTimer(habit)
+                        }
                     }
-                    
-                    when {
-                        habit.isTimerRunning -> onPauseTimer(habit)
-                        habit.accumulatedTimeMs > 0 -> onResumeTimer(habit)
-                        else -> onStartTimer(habit)
-                    }
-                }
-            )
+                )
+            }
         }
     )
 }

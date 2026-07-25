@@ -1,7 +1,5 @@
 package com.example.pattern.data.repository
 
-import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
 import androidx.room.withTransaction
 import com.example.pattern.data.local.dao.HabitDao
 import com.example.pattern.data.local.dao.SettingsDao
@@ -11,12 +9,9 @@ import com.example.pattern.data.model.BackupDto
 import com.example.pattern.data.mapper.toDomain
 import com.example.pattern.data.mapper.toLocal
 import com.example.pattern.domain.model.Habit
-import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.Settings
 import com.example.pattern.domain.repository.HabitRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
-import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,13 +27,11 @@ class HabitRepositoryImpl @Inject constructor(
             .distinctUntilChanged { old, new ->
                 if (old.size != new.size) return@distinctUntilChanged false
                 old.zip(new).all { (o, n) ->
-                    // Structural Equality on Local Entity: Ignore timer ticking fields
+                    // Structural equality: ONLY items that change the UI definition
                     o.id == n.id &&
                     o.name == n.name &&
                     o.type == n.type &&
-                    o.taskCount == n.taskCount &&
                     o.durationInMinutes == n.durationInMinutes &&
-                    o.isCompleted == n.isCompleted &&
                     o.selectedDays == n.selectedDays &&
                     o.iconCode == n.iconCode &&
                     o.accentColorHex == n.accentColorHex &&
@@ -72,95 +65,6 @@ class HabitRepositoryImpl @Inject constructor(
         habitDao.deleteHabit(habit.toLocal())
     }
 
-    override fun getDailyStatesForDate(date: String): Flow<List<HabitDailyState>> =
-        habitDao.getDailyStatesForDate(date).map { list -> list.map { it.toDomain() } }
-
-    override fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>> =
-        habitDao.getDailyStatesForHabit(habitId).map { list -> list.map { it.toDomain() } }
-
-    override fun getAllDailyStatesStream(): Flow<List<HabitDailyState>> =
-        habitDao.getAllDailyStates()
-            .distinctUntilChanged { old, new ->
-                if (old.size != new.size) return@distinctUntilChanged false
-                old.zip(new).all { (o, n) ->
-                    o.habitId == n.habitId && 
-                    o.date == n.date && 
-                    o.isCompleted == n.isCompleted && 
-                    o.isTaskCompleted == n.isTaskCompleted &&
-                    o.completedCount == n.completedCount &&
-                    o.accumulatedTimeMs == n.accumulatedTimeMs &&
-                    o.activeSessionStartMs == n.activeSessionStartMs
-                }
-            }
-            .map { list -> list.map { it.toDomain() } }
-
-    override fun getDailyStatesFromDateStream(startDate: String): Flow<List<HabitDailyState>> =
-        habitDao.getDailyStatesFromDate(startDate).map { list -> list.map { it.toDomain() } }
-
-    override fun getCompletedDatesStream(): Flow<Map<Int, Set<LocalDate>>> {
-        return habitDao.getAllCompletedDates()
-            .distinctUntilChanged()
-            .map { list ->
-                list.groupBy({ it.habitId }, { LocalDate.parse(it.date) })
-                    .mapValues { it.value.toSet() }
-            }
-            .flowOn(Dispatchers.Default)
-    }
-
-    override suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState> =
-        habitDao.getDailyStatesForHabitOnce(habitId).map { it.toDomain() }
-
-    override suspend fun upsertDailyState(state: HabitDailyState) {
-        try {
-            habitDao.upsertDailyState(state.toLocal())
-        } catch (e: Exception) {
-            if (e is SQLiteConstraintException || e.message?.contains("FOREIGN KEY") == true) {
-                Log.w("HabitRepository", "Foreign key violation for habit ${state.habitId}: likely deleted. Ignoring upsert.")
-            } else {
-                Log.e("HabitRepository", "Error upserting daily state for habit ${state.habitId}", e)
-            }
-        }
-    }
-
-    override suspend fun getDailyStateOnce(habitId: Int, date: String): HabitDailyState? =
-        habitDao.getDailyStateOnce(habitId, date)?.toDomain()
-
-    override suspend fun setTaskCompleted(habitId: Int, date: String, completed: Boolean) {
-        try {
-            database.withTransaction {
-                // Ensure daily state exists before updating
-                val existing = habitDao.getDailyStateOnce(habitId, date)
-                if (existing == null) {
-                    habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
-                }
-                habitDao.setTaskCompleted(habitId, date, completed)
-            }
-        } catch (e: Exception) {
-            if (e is SQLiteConstraintException || e.message?.contains("FOREIGN KEY") == true) {
-                Log.w("HabitRepository", "Foreign key violation in setTaskCompleted for habit $habitId: likely deleted.")
-            } else {
-                Log.e("HabitRepository", "Error in setTaskCompleted for habit $habitId", e)
-            }
-        }
-    }
-
-    override suspend fun incrementTaskCount(habitId: Int, date: String) {
-        try {
-            database.withTransaction {
-                val existing = habitDao.getDailyStateOnce(habitId, date)
-                if (existing == null) {
-                    habitDao.upsertDailyState(com.example.pattern.data.local.entity.HabitDailyState(habitId, date))
-                }
-                habitDao.incrementTaskCount(habitId, date)
-            }
-        } catch (e: Exception) {
-            Log.e("HabitRepository", "Error in incrementTaskCount for habit $habitId", e)
-        }
-    }
-
-    override fun getTotalXPStream(): Flow<Int> = 
-        habitDao.getTotalXP().map { it ?: 0 }.flowOn(Dispatchers.Default)
-
     override fun getSettingsStream(): Flow<Settings?> = settingsDao.getSettingsFlow().map { it?.toDomain() }
 
     override suspend fun getSettingsOnce(): Settings? = settingsDao.getSettingsOnce()?.toDomain()
@@ -174,15 +78,6 @@ class HabitRepositoryImpl @Inject constructor(
                     startTime = start,
                     endTime = end
                 )
-            )
-        }
-    }
-
-    override suspend fun addXP(xpToAdd: Int) {
-        database.withTransaction {
-            val current = settingsDao.getSettingsOnce() ?: SettingsEntity()
-            settingsDao.upsertSettings(
-                current.copy(totalXP = current.totalXP + xpToAdd)
             )
         }
     }

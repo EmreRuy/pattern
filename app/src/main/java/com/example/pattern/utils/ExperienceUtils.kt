@@ -50,6 +50,20 @@ object ExperienceUtils {
     }
 
     /**
+     * Calculates the maximum possible XP for a habit in a single day.
+     */
+    fun calculateMaxXP(habit: Habit): Int {
+        return when (habit.type) {
+            HabitType.TASK -> XP_TASK_COMPLETION
+            HabitType.QUIT -> XP_QUIT_COMPLETION
+            HabitType.BUILD -> {
+                val durationBonus = ((habit.durationInMinutes ?: 0) / 15) * XP_BUILD_PER_15_MINS
+                XP_BUILD_BASE + durationBonus
+            }
+        }
+    }
+
+    /**
      * Determines Level and Title based on total accumulated XP.
      */
     fun getLevelInfo(totalXP: Int): LevelInfo {

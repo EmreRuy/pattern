@@ -11,15 +11,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -35,11 +32,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
-/**
- * Premium, minimalist Calendar Selector for the Home Screen.
- * Engineered for maximum performance and a refined user experience.
- */
 @Composable
 fun HomeCalendarSelector(
     pagerState: PagerState,
@@ -74,7 +66,7 @@ fun HomeCalendarSelector(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth(),
-            userScrollEnabled = false, // Calendar follows the list, but isn't directly swipable
+            userScrollEnabled = false,
             verticalAlignment = Alignment.CenterVertically,
             pageSpacing = 0.dp,
             beyondViewportPageCount = 1,
@@ -119,49 +111,58 @@ private fun CalendarHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Month / Year Capsule
+        // Month / Year Capsule (Left)
         Box(
             modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    shape = CircleShape
-                )
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-                .widthIn(min = 100.dp)
-                .animateContentSize(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ),
-            contentAlignment = Alignment.Center
+                .weight(1f)
+                .padding(end = 8.dp), // Add space between pills
+            contentAlignment = Alignment.CenterStart
         ) {
-            AnimatedContent(
-                targetState = title(),
-                transitionSpec = {
-                    (fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) +
-                            slideInVertically { it / 2 })
-                        .togetherWith(fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow)))
-                },
-                label = "month_header_transition"
-            ) { targetTitle ->
-                Text(
-                    text = targetTitle,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        shape = CircleShape
+                    )
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .widthIn(min = 100.dp) // Consistent min width
+                    .animateContentSize(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
                     ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                )
+                contentAlignment = Alignment.Center
+            ) {
+                AnimatedContent(
+                    targetState = title(),
+                    transitionSpec = {
+                        (fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) +
+                                slideInVertically { it / 2 })
+                            .togetherWith(fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow)))
+                    },
+                    label = "month_header_transition"
+                ) { targetTitle ->
+                    Text(
+                        text = targetTitle,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                    )
+                }
             }
         }
 
+        // DateAnchor (Center) - Weighted Box ensures perfect screen centering
         Box(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp), // Add space between pills
             contentAlignment = Alignment.Center
         ) {
             DateAnchor(
@@ -171,7 +172,15 @@ private fun CalendarHeader(
             )
         }
 
-        TimePeriodBadge(timePeriod = timePeriod)
+        // TimePeriodBadge (Right)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp), // Add space between pills
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            TimePeriodBadge(timePeriod = timePeriod)
+        }
     }
 }
 
@@ -202,8 +211,8 @@ private fun DateAnchor(
                     }
                 } else Modifier
             )
-            .padding(horizontal = 14.dp, vertical = 4.dp)
-            .widthIn(min = 90.dp) // Unified minWidth
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .widthIn(min = 100.dp) // Consistent min width
             .animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
@@ -245,8 +254,8 @@ private fun TimePeriodBadge(timePeriod: TimePeriod) {
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 shape = CircleShape
             )
-            .padding(horizontal = 14.dp, vertical = 4.dp)
-            .widthIn(min = 90.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .widthIn(min = 100.dp) // Consistent min width
             .animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
@@ -360,12 +369,11 @@ private fun DayNumberCircle(
     isToday: Boolean,
     selectionProgress: () -> Float
 ) {
-    val selectionColor = MaterialTheme.colorScheme.primary
+    val selectionColor = Color.Black
     val todayColor = MaterialTheme.colorScheme.secondary
-    val surfaceContainerLowest = MaterialTheme.colorScheme.surfaceContainerLowest
 
     val contentColor = when {
-        isSelected -> selectionColor
+        isSelected -> Color.White
         isToday -> todayColor
         else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     }
@@ -382,18 +390,10 @@ private fun DayNumberCircle(
             }
             .drawBehind {
                 val progress = selectionProgress()
-                // background color updated to surfaceContainerLowest with smooth alpha transition
+                // Selection circle background implemented as solid black per design
                 drawCircle(
-                    color = surfaceContainerLowest.copy(alpha = progress),
+                    color = selectionColor.copy(alpha = progress),
                 )
-                
-                // Subtle thin border for a refined, minimalistic selection
-                if (progress > 0f) {
-                    drawCircle(
-                        color = Color.Black.copy(alpha = progress * 0.08f),
-                        style = Stroke(width = CalendarSelectorDefaults.SelectionBorderWidth.toPx())
-                    )
-                }
             },
         contentAlignment = Alignment.Center
     ) {
@@ -409,19 +409,6 @@ private fun DayNumberCircle(
                 ),
                 color = contentColor
             )
-            
-            if (isToday) {
-                Box(
-                    modifier = Modifier
-                        .padding(top = 1.dp)
-                        .size(3.dp)
-                        .graphicsLayer {
-                            // Fade out dot as selection fills up for a cleaner transition
-                            alpha = 1f - (selectionProgress() * 0.5f)
-                        }
-                        .background(todayColor, CircleShape)
-                )
-            }
         }
     }
 }
@@ -430,5 +417,4 @@ private object CalendarSelectorDefaults {
     val NumberCircleSize = 40.dp
     val HeaderSpacing = 8.dp
     val VerticalPadding = 12.dp
-    val SelectionBorderWidth = 0.5.dp
 }

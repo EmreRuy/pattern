@@ -24,6 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -34,16 +38,17 @@ import androidx.core.graphics.toColorInt
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.utils.ExperienceUtils
-import com.example.pattern.domain.model.HabitDailyState
+import com.example.pattern.domain.usecase.HabitStatusModel
 import com.example.pattern.ui.theme.AppTheme
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun HabitListBody(
-    habits: HabitList,
-    dailyStates: DailyStateMap,
+    habits: ImmutableList<HabitStatusModel>,
+    isLoading: Boolean,
     onHabitClick: (Int) -> Unit
 ) {
-    if (habits.items.isEmpty()) {
+    if (habits.isEmpty() && !isLoading) {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             EmptyHabitMessage()
         }
@@ -54,14 +59,14 @@ fun HabitListBody(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(
-                items = habits.items,
-                key = { it.id }
-            ) { habit ->
-                val dailyState = dailyStates.states[habit.id]
+                items = habits,
+                key = { it.habit.id },
+                contentType = { "habit_item" }
+            ) { model ->
                 HabitListItem(
-                    habit = habit,
-                    dailyState = dailyState,
-                    onHabitClick = onHabitClick
+                    model = model,
+                    onHabitClick = onHabitClick,
+                    modifier = Modifier.animateItem()
                 )
             }
         }
@@ -70,10 +75,11 @@ fun HabitListBody(
 
 @Composable
 fun HabitListItem(
-    habit: Habit,
-    dailyState: HabitDailyState?,
-    onHabitClick: (Int) -> Unit
+    model: HabitStatusModel,
+    onHabitClick: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val habit = model.habit
     val accentColor = remember(habit.accentColorHex) {
         if (habit.accentColorHex.isBlank()) {
             Color(0xFF6366F1)
@@ -87,31 +93,31 @@ fun HabitListItem(
     }
     
     val containerColor = AppTheme.extendedColors.habitCardBackground
+    
+    val verticalIndicatorBrush = remember(accentColor) {
+        Brush.verticalGradient(
+            colors = listOf(accentColor, accentColor.copy(alpha = 0.5f))
+        )
+    }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(containerColor)
             .clickable { onHabitClick(habit.id) }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .drawBehind {
+                // High-performance vertical indicator using Canvas directly with cached brush
+                drawRoundRect(
+                    brush = verticalIndicatorBrush,
+                    topLeft = Offset(16.dp.toPx(), center.y - 18.dp.toPx()),
+                    size = Size(4.dp.toPx(), 36.dp.toPx()),
+                    cornerRadius = CornerRadius(2.dp.toPx())
+                )
+            }
+            .padding(start = 36.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Vertical Accent Indicator
-        val gradientBrush = remember(accentColor) {
-            Brush.verticalGradient(
-                colors = listOf(accentColor, accentColor.copy(alpha = 0.5f))
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(width = 4.dp, height = 36.dp)
-                .clip(CircleShape)
-                .background(brush = gradientBrush)
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = habit.name.trim(),
@@ -134,24 +140,12 @@ fun HabitListItem(
             )
         }
 
-        val xpScore = remember(habit, dailyState) {
-            ExperienceUtils.calculateHabitXP(habit, dailyState ?: HabitDailyState(habitId = habit.id, date = ""))
-        }
-        
-        val maxXP = remember(habit) {
-             val dummyState = when (habit.type) {
-                HabitType.BUILD -> HabitDailyState(habitId = habit.id, date = "", isCompleted = true)
-                HabitType.TASK, HabitType.QUIT -> HabitDailyState(habitId = habit.id, date = "", isTaskCompleted = true)
-            }
-            ExperienceUtils.calculateHabitXP(habit, dummyState)
-        }
-
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = if (xpScore > 0) "+$xpScore" else "$maxXP",
+                text = if (model.isCompleted) "+${model.currentXP}" else "${model.maxXP}",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black,
-                    color = if (xpScore > 0) accentColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    color = if (model.isCompleted) accentColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 )
             )
             Text(

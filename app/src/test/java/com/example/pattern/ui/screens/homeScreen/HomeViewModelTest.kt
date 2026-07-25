@@ -3,6 +3,7 @@ package com.example.pattern.ui.screens.homeScreen
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.example.pattern.domain.model.*
+import com.example.pattern.domain.repository.DailyLogRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.domain.streak.StreakCalculator
@@ -30,7 +31,8 @@ import kotlinx.collections.immutable.persistentListOf
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
-    private val repository = mockk<HabitRepository>(relaxed = true)
+    private val habitRepository = mockk<HabitRepository>(relaxed = true)
+    private val dailyLogRepository = mockk<DailyLogRepository>(relaxed = true)
     private val streakCalculator = mockk<StreakCalculator>(relaxed = true)
     private val savedStateHandle = mockk<SavedStateHandle>(relaxed = true)
     private lateinit var updateHabitProgressUseCase: UpdateHabitProgressUseCase
@@ -49,9 +51,9 @@ class HomeViewModelTest {
         updateHabitProgressUseCase = mockk<UpdateHabitProgressUseCase>(relaxed = true)
         
         every { savedStateHandle.getStateFlow("selected_date", any<LocalDate>()) } returns selectedDateFlow
-        every { repository.getSettingsStream() } returns settingsFlow
-        every { repository.getAllHabitsStream() } returns habitsFlow
-        every { repository.getAllDailyStatesStream() } returns dailyStatesFlow
+        every { habitRepository.getSettingsStream() } returns settingsFlow
+        every { habitRepository.getAllHabitsStream() } returns habitsFlow
+        every { dailyLogRepository.getAllDailyStatesStream() } returns dailyStatesFlow
         
         settingsFlow.tryEmit(Settings(totalXP = 100))
         habitsFlow.tryEmit(emptyList())
@@ -67,7 +69,7 @@ class HomeViewModelTest {
 
     @Test
     fun `initial state is success with loading flag`() = runTest {
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
+        viewModel = HomeViewModel(habitRepository, dailyLogRepository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
         val state = viewModel.uiState.value
         assertTrue(state is HomeUiState.Success && state.isLoading,
             "Initial state should be Success with isLoading=true, but was $state")
@@ -92,7 +94,7 @@ class HomeViewModelTest {
             )
         )
         
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
+        viewModel = HomeViewModel(habitRepository, dailyLogRepository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
         
         viewModel.uiState.test {
             var state = awaitItem() as HomeUiState.Success
@@ -117,7 +119,7 @@ class HomeViewModelTest {
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
         
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
+        viewModel = HomeViewModel(habitRepository, dailyLogRepository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
         
         viewModel.uiState.test {
             var state = awaitItem() as HomeUiState.Success
@@ -144,7 +146,7 @@ class HomeViewModelTest {
         
         selectedDateFlow.value = baseDate
         
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
+        viewModel = HomeViewModel(habitRepository, dailyLogRepository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
         
         viewModel.uiState.test {
             var state = awaitItem() as HomeUiState.Success
@@ -178,7 +180,7 @@ class HomeViewModelTest {
         
         selectedDateFlow.value = pastDate
         
-        viewModel = HomeViewModel(repository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
+        viewModel = HomeViewModel(habitRepository, dailyLogRepository, updateHabitProgressUseCase, streakCalculator, savedStateHandle, testDispatcher)
         
         viewModel.uiState.test {
             var state = awaitItem() as HomeUiState.Success

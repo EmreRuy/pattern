@@ -1,6 +1,7 @@
 package com.example.pattern.domain.usecase
 
 import com.example.pattern.domain.model.*
+import com.example.pattern.domain.repository.DailyLogRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.domain.streak.StreakCalculator
@@ -21,13 +22,14 @@ import javax.inject.Inject
  * 4. Offloads all computations to Dispatchers.Default.
  */
 class GetProfileStatsUseCase @Inject constructor(
-    private val repository: HabitRepository,
+    private val habitRepository: HabitRepository,
+    private val dailyLogRepository: DailyLogRepository,
     private val streakCalculator: StreakCalculator
 ) {
     operator fun invoke(): Flow<ProfileStats> {
         return combine(
-            repository.getAllHabitsStream(),
-            repository.getAllDailyStatesStream()
+            habitRepository.getAllHabitsStream(),
+            dailyLogRepository.getAllDailyStatesStream()
         ) { habits, allHistory ->
             val today = LocalDate.now()
             val historyByHabit = allHistory.groupBy { it.habitId }

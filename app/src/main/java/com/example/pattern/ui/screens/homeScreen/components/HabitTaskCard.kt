@@ -37,20 +37,20 @@ fun HabitTaskCard(
             )
         },
         action = {
-            TaskRing(
-                checked = habit.isTaskChecked,
-                taskCount = taskCount,
-                completedCount = habit.completedCount,
-                onToggle = {
-                    if (isToday) {
+            if (isToday) {
+                TaskRing(
+                    checked = habit.isTaskChecked,
+                    taskCount = taskCount,
+                    completedCount = habit.completedCount,
+                    onToggle = {
                         if (isMultiStep && !habit.isTaskChecked) {
                             onTaskIncrement(habit.id)
                         } else {
                             onTaskCompleted(habit.id, !habit.isTaskChecked)
                         }
                     }
-                }
-            )
+                )
+            }
         }
     )
 }
