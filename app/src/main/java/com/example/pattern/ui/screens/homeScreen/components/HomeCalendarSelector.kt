@@ -54,6 +54,7 @@ fun HomeCalendarSelector(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth(),
+            userScrollEnabled = false, // Calendar follows the list, but isn't directly swipable
             verticalAlignment = Alignment.CenterVertically,
             pageSpacing = 0.dp,
             beyondViewportPageCount = 1,
