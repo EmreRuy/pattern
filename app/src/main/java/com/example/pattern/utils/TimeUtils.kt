@@ -7,6 +7,9 @@ import androidx.compose.material.icons.rounded.WbCloudy
 import androidx.compose.material.icons.rounded.WbTwilight
 import androidx.compose.ui.graphics.vector.ImageVector
 import java.time.LocalTime
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 enum class TimePeriod(val displayName: String) {
     MORNING("Morning"),
@@ -30,6 +33,15 @@ object TimeUtils {
             in 12..16 -> TimePeriod.AFTERNOON
             in 17..20 -> TimePeriod.EVENING
             else -> TimePeriod.NIGHT
+        }
+    }
+
+    fun getRelativeDateString(selectedDate: LocalDate, today: LocalDate): String {
+        return when (selectedDate) {
+            today -> "Today"
+            today.minusDays(1) -> "Yesterday"
+            today.plusDays(1) -> "Tomorrow"
+            else -> selectedDate.format(DateTimeFormatter.ofPattern("EEEE", Locale.getDefault()))
         }
     }
 }

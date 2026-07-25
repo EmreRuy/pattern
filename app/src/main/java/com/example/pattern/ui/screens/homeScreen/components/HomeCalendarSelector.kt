@@ -5,10 +5,14 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,12 +21,15 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.utils.CalendarDayModel
 import com.example.pattern.utils.CalendarMathProvider
 import com.example.pattern.utils.TimePeriod
+import com.example.pattern.utils.TimeUtils
 import com.example.pattern.utils.toCalendarDayModel
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -38,9 +45,14 @@ fun HomeCalendarSelector(
     pagerState: PagerState,
     selectedDate: LocalDate,
     timePeriod: TimePeriod,
+    onTodayClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
+    val isTodaySelected = remember(selectedDate, today) { selectedDate == today }
+    val anchorText = remember(selectedDate, today) {
+        TimeUtils.getRelativeDateString(selectedDate, today)
+    }
     val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
 
     val currentMonthTitle by remember {
@@ -53,7 +65,10 @@ fun HomeCalendarSelector(
     Column(modifier = modifier.fillMaxWidth()) {
         CalendarHeader(
             title = { currentMonthTitle },
-            timePeriod = timePeriod
+            timePeriod = timePeriod,
+            isToday = isTodaySelected,
+            anchorText = anchorText,
+            onTodayClick = onTodayClick
         )
         
         HorizontalPager(
@@ -96,22 +111,34 @@ fun HomeCalendarSelector(
 @Composable
 private fun CalendarHeader(
     title: () -> String,
-    timePeriod: TimePeriod
+    timePeriod: TimePeriod,
+    isToday: Boolean,
+    anchorText: String,
+    onTodayClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Month / Year Capsule
         Box(
             modifier = Modifier
                 .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     shape = CircleShape
                 )
-                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .widthIn(min = 100.dp)
+                .animateContentSize(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ),
+            contentAlignment = Alignment.Center
         ) {
             AnimatedContent(
                 targetState = title(),
@@ -124,18 +151,89 @@ private fun CalendarHeader(
             ) { targetTitle ->
                 Text(
                     text = targetTitle,
-                    style = MaterialTheme.typography.labelMedium.copy(
+                    style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.4.sp
+                        fontSize = 10.sp
                     ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
                 )
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            DateAnchor(
+                text = anchorText,
+                isToday = isToday,
+                onClick = onTodayClick
+            )
+        }
 
         TimePeriodBadge(timePeriod = timePeriod)
+    }
+}
+
+@Composable
+private fun DateAnchor(
+    text: String,
+    isToday: Boolean,
+    onClick: () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+
+    Box(
+        modifier = Modifier
+            .background(
+                color = color.copy(alpha = 0.1f),
+                shape = CircleShape
+            )
+            .then(
+                if (!isToday) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null
+                    ) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onClick()
+                    }
+                } else Modifier
+            )
+            .padding(horizontal = 14.dp, vertical = 4.dp)
+            .widthIn(min = 90.dp) // Unified minWidth
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            AnimatedContent(
+                targetState = text,
+                transitionSpec = {
+                    fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow))
+                        .togetherWith(fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow)))
+                },
+                label = "anchor_text_transition"
+            ) { targetText ->
+                Text(
+                    text = targetText,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp
+                    ),
+                    color = color.copy(alpha = 0.9f)
+                )
+            }
+        }
     }
 }
 
@@ -144,10 +242,18 @@ private fun TimePeriodBadge(timePeriod: TimePeriod) {
     Box(
         modifier = Modifier
             .background(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 shape = CircleShape
             )
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .padding(horizontal = 14.dp, vertical = 4.dp)
+            .widthIn(min = 90.dp)
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ),
+        contentAlignment = Alignment.Center
     ) {
         AnimatedContent(
             targetState = timePeriod,
@@ -158,7 +264,8 @@ private fun TimePeriodBadge(timePeriod: TimePeriod) {
             label = "time_period_transition"
         ) { targetPeriod ->
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
                     imageVector = targetPeriod.icon,
@@ -173,7 +280,7 @@ private fun TimePeriodBadge(timePeriod: TimePeriod) {
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.sp
                     ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
                 )
             }
         }
@@ -203,9 +310,6 @@ private fun CalendarItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .graphicsLayer {
-                translationY = -CalendarSelectorDefaults.SelectionLift.toPx() * selectionProgressState.value
-            }
     ) {
         DayLetterHeader(
             letter = day.dayLetter,
@@ -324,7 +428,6 @@ private fun DayNumberCircle(
 
 private object CalendarSelectorDefaults {
     val NumberCircleSize = 40.dp
-    val SelectionLift = 2.dp
     val HeaderSpacing = 8.dp
     val VerticalPadding = 12.dp
     val SelectionBorderWidth = 0.5.dp

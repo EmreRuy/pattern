@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import com.example.pattern.ui.screens.homeScreen.components.HomeCalendarSelector
 import com.example.pattern.ui.screens.homeScreen.components.HomeTopBar
 import com.example.pattern.ui.screens.homeScreen.components.CustomBottomBar
 import com.example.pattern.utils.CalendarMathProvider
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @Composable
@@ -75,6 +77,8 @@ private fun HomeContent(
     onPremiumClick: () -> Unit
 ) {
     val actions = LocalNavActions.current
+    val scope = rememberCoroutineScope()
+    
     val calendarPagerState = rememberPagerState(
         initialPage = CalendarMathProvider.getWeekPageIndex(state.selectedDate),
         pageCount = { 50000 }
@@ -139,7 +143,13 @@ private fun HomeContent(
                 HomeCalendarSelector(
                     pagerState = calendarPagerState,
                     selectedDate = visuallySelectedDate,
-                    timePeriod = state.timePeriod
+                    timePeriod = state.timePeriod,
+                    onTodayClick = {
+                        scope.launch {
+                            val targetPage = CalendarMathProvider.getDayPageIndex(LocalDate.now())
+                            habitPagerState.animateScrollToPage(targetPage)
+                        }
+                    }
                 )
             }
         },
