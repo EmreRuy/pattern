@@ -3,6 +3,8 @@ package com.example.pattern.ui.screens.homeScreen
 import androidx.compose.runtime.Immutable
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.CalendarDayModel
+import com.example.pattern.utils.TimePeriod
+import com.example.pattern.utils.TimeUtils
 import com.example.pattern.domain.model.LevelInfo
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -21,6 +23,7 @@ sealed interface HomeUiState {
         val habitsByDate: ImmutableMap<LocalDate, ImmutableList<HabitCardModel>> = persistentMapOf(),
         val hasAnyHabits: Boolean = false,
         val levelInfo: LevelInfo,
+        val timePeriod: TimePeriod = TimePeriod.MORNING,
         val isLoading: Boolean = false
     ) : HomeUiState
 

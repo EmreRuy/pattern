@@ -11,11 +11,14 @@ import com.example.pattern.domain.streak.StreakCalculator
 import com.example.pattern.ui.mapper.toCardModel
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.ExperienceUtils
+import com.example.pattern.utils.TimePeriod
+import com.example.pattern.utils.TimeUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -45,6 +48,13 @@ class HomeViewModel @Inject constructor(
         .distinctUntilChanged()
         .onStart { emit(ExperienceUtils.getLevelInfo(0)) }
 
+    private val timePeriodFlow = flow {
+        while (true) {
+            emit(TimeUtils.getCurrentTimePeriod())
+            delay(60_000) // Update every minute
+        }
+    }.distinctUntilChanged()
+
     // Key Performance Fix: 
     // We observe structural changes ONLY. This keeps the ViewModel silent during timer ticks.
     private val structuralDailyStateFlow = habitRepository.getAllDailyStatesStream()
@@ -53,8 +63,9 @@ class HomeViewModel @Inject constructor(
         _selectedDate,
         habitRepository.getAllHabitsStream(),
         structuralDailyStateFlow,
-        levelInfoFlow
-    ) { date, allHabits, allDailyStates, level ->
+        levelInfoFlow,
+        timePeriodFlow
+    ) { date, allHabits, allDailyStates, level, timePeriod ->
         
         val today = LocalDate.now()
         // We pre-calculate a massive 60-day window around today, PLUS a 14-day window 
@@ -104,6 +115,7 @@ class HomeViewModel @Inject constructor(
             habitsByDate = habitsByDate.mapValues { it.value.toImmutableList() }.toImmutableMap(),
             hasAnyHabits = allHabits.isNotEmpty(),
             levelInfo = level,
+            timePeriod = timePeriod,
             isLoading = false
         )
     }
@@ -113,6 +125,7 @@ class HomeViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState.Success(
             levelInfo = ExperienceUtils.getLevelInfo(0),
+            timePeriod = TimeUtils.getCurrentTimePeriod(),
             isLoading = true
         )
     )

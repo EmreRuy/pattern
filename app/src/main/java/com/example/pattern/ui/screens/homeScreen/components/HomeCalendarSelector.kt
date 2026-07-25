@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pattern.utils.CalendarDayModel
 import com.example.pattern.utils.CalendarMathProvider
+import com.example.pattern.utils.TimePeriod
 import com.example.pattern.utils.toCalendarDayModel
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -36,6 +37,7 @@ import java.util.Locale
 fun HomeCalendarSelector(
     pagerState: PagerState,
     selectedDate: LocalDate,
+    timePeriod: TimePeriod,
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
@@ -49,7 +51,10 @@ fun HomeCalendarSelector(
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        CalendarHeader(title = { currentMonthTitle })
+        CalendarHeader(
+            title = { currentMonthTitle },
+            timePeriod = timePeriod
+        )
         
         HorizontalPager(
             state = pagerState,
@@ -89,25 +94,89 @@ fun HomeCalendarSelector(
 }
 
 @Composable
-private fun CalendarHeader(title: () -> String) {
-    AnimatedContent(
-        targetState = title(),
-        transitionSpec = {
-            (fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) + 
-             slideInVertically { it / 2 })
-                .togetherWith(fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow)))
-        },
-        label = "month_header_transition"
-    ) { targetTitle ->
-        Text(
-            text = targetTitle,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.8.sp
-            ),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-            modifier = Modifier.padding(start = 24.dp, bottom = 4.dp)
-        )
+private fun CalendarHeader(
+    title: () -> String,
+    timePeriod: TimePeriod
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Month / Year Capsule
+        Box(
+            modifier = Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                    shape = CircleShape
+                )
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            AnimatedContent(
+                targetState = title(),
+                transitionSpec = {
+                    (fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) +
+                            slideInVertically { it / 2 })
+                        .togetherWith(fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow)))
+                },
+                label = "month_header_transition"
+            ) { targetTitle ->
+                Text(
+                    text = targetTitle,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.4.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                )
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        TimePeriodBadge(timePeriod = timePeriod)
+    }
+}
+
+@Composable
+private fun TimePeriodBadge(timePeriod: TimePeriod) {
+    Box(
+        modifier = Modifier
+            .background(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                shape = CircleShape
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        AnimatedContent(
+            targetState = timePeriod,
+            transitionSpec = {
+                fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow))
+                    .togetherWith(fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow)))
+            },
+            label = "time_period_transition"
+        ) { targetPeriod ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = targetPeriod.icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = targetPeriod.displayName,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                )
+            }
+        }
     }
 }
 

@@ -138,7 +138,8 @@ private fun HomeContent(
                 )
                 HomeCalendarSelector(
                     pagerState = calendarPagerState,
-                    selectedDate = visuallySelectedDate
+                    selectedDate = visuallySelectedDate,
+                    timePeriod = state.timePeriod
                 )
             }
         },
