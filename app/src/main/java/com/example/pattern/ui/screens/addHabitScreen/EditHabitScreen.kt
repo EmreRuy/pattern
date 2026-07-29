@@ -46,11 +46,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.LocalDate
 import javax.inject.Inject
+import com.example.pattern.domain.repository.DailyLogRepository
 
 @HiltViewModel
 class EditHabitViewModel @Inject constructor(
     private val repository: HabitRepository,
+    private val dailyLogRepository: DailyLogRepository,
     emojiRepository: EmojiRepository,
     private val reminderManager: ReminderManager,
     savedStateHandle: SavedStateHandle
@@ -121,14 +124,15 @@ class EditHabitViewModel @Inject constructor(
         val currentHabit = _habit.value ?: return
         
         val daysList = DayOfWeek.entries.map { selectedDays.contains(it) }
+        val newType = when(type) {
+            "Grow" -> HabitType.BUILD
+            "Drop" -> HabitType.QUIT
+            else -> HabitType.TASK
+        }
         
         val updatedHabit = currentHabit.copy(
             name = name.trim(),
-            type = when(type) {
-                "Grow" -> HabitType.BUILD
-                "Drop" -> HabitType.QUIT
-                else -> HabitType.TASK
-            },
+            type = newType,
             durationInMinutes = if (type == "Grow") (durationHours * 60) + durationMinutes else null,
             taskCount = if (type == "Task") taskCount else null,
             selectedDays = daysList.toImmutableList(),
@@ -138,7 +142,42 @@ class EditHabitViewModel @Inject constructor(
             motivation = if (motivation.isNullOrBlank()) null else motivation.trim()
         )
         viewModelScope.launch {
-            repository.updateHabit(updatedHabit)
+            repository.withTransaction {
+                repository.updateHabit(updatedHabit)
+                
+                // Progress Mapping Logic: If category changed, migrate today's progress
+                if (currentHabit.type != newType) {
+                    val today = LocalDate.now().toString()
+                    val todayState = dailyLogRepository.getDailyStateOnce(habitId, today)
+                    if (todayState != null) {
+                        val mappedState = when {
+                            // Task/Quit -> Build (Grow)
+                            (currentHabit.type == HabitType.TASK || currentHabit.type == HabitType.QUIT) && newType == HabitType.BUILD -> {
+                                if (todayState.isTaskCompleted) {
+                                    todayState.copy(
+                                        isCompleted = true,
+                                        accumulatedTimeMs = (updatedHabit.durationInMinutes ?: 0).toLong() * 60_000L
+                                    )
+                                } else todayState
+                            }
+                            // Build (Grow) -> Task/Quit (Drop)
+                            currentHabit.type == HabitType.BUILD && (newType == HabitType.TASK || newType == HabitType.QUIT) -> {
+                                if (todayState.isCompleted) {
+                                    todayState.copy(
+                                        isTaskCompleted = true,
+                                        completedCount = updatedHabit.taskCount ?: 1
+                                    )
+                                } else todayState
+                            }
+                            else -> todayState
+                        }
+                        if (mappedState != todayState) {
+                            dailyLogRepository.upsertDailyState(mappedState)
+                        }
+                    }
+                }
+            }
+            
             if (updatedHabit.reminderTime != null) {
                 reminderManager.scheduleReminder(updatedHabit)
             } else {

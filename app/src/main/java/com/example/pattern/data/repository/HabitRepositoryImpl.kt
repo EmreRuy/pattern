@@ -35,7 +35,9 @@ class HabitRepositoryImpl @Inject constructor(
                     o.selectedDays == n.selectedDays &&
                     o.iconCode == n.iconCode &&
                     o.accentColorHex == n.accentColorHex &&
-                    o.reminderTime == n.reminderTime
+                    o.reminderTime == n.reminderTime &&
+                    o.taskCount == n.taskCount &&
+                    o.motivation == n.motivation
                 }
             }
             .map { list -> list.map { it.toDomain() } }

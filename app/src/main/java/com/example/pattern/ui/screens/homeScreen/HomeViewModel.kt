@@ -70,7 +70,7 @@ class HomeViewModel @Inject constructor(
     }.map { windowMap ->
         windowMap.mapValues { (_, habits) ->
             habits.map { status ->
-                val cacheKey = "${status.habit.id}_${status.dailyState?.hashCode()}_${status.currentStreak}"
+                val cacheKey = "${status.habit.hashCode()}_${status.dailyState?.hashCode()}_${status.currentStreak}"
                 modelCache.getOrPut(cacheKey) {
                     status.toCardModel()
                 }
