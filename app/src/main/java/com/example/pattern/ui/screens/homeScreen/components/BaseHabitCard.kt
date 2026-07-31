@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,6 +42,7 @@ fun BaseHabitCard(
     habit: HabitCardModel,
     onCardClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     subtitle: @Composable () -> Unit,
     action: @Composable (Color) -> Unit
 ) {
@@ -48,6 +50,8 @@ fun BaseHabitCard(
     val surface = MaterialTheme.colorScheme.surface
     val fallbackColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val onSurface = MaterialTheme.colorScheme.onSurface
+
+    val contentAlpha = if (enabled) 1f else 0.4f
 
     val accentColor = remember(habit.accentColorHex, isDark, surface, fallbackColor) {
         runCatching { Color(habit.accentColorHex.toColorInt()) }
@@ -70,7 +74,8 @@ fun BaseHabitCard(
             .clip(RoundedCornerShape(28.dp))
             .clickable(
                 indication = null,
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = remember { MutableInteractionSource() },
+                enabled = enabled
             ) { onCardClick(habit.id) },
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
@@ -86,7 +91,9 @@ fun BaseHabitCard(
         ) {
             // Icon Section
             Box(
-                modifier = Modifier.size(52.dp)
+                modifier = Modifier
+                    .size(52.dp)
+                    .graphicsLayer { alpha = contentAlpha }
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -123,6 +130,7 @@ fun BaseHabitCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .graphicsLayer { alpha = contentAlpha }
             ) {
                 Text(
                     text = habit.name.trim().replaceFirstChar { it.uppercase() },

@@ -34,7 +34,7 @@ class GetProfileStatsUseCase @Inject constructor(
             val today = LocalDate.now()
             val historyByHabit = allHistory.groupBy { it.habitId }
             val completedDatesMap = allHistory
-                .filter { it.isCompleted || it.isTaskCompleted }
+                .filter { it.isCompleted }
                 .groupBy { it.habitId }
                 .mapValues { (_, states) -> states.map { LocalDate.parse(it.date) }.toSet() }
 

@@ -24,7 +24,8 @@ data class HabitCardModel(
     val accumulatedTimeMs: Long = 0L,
     val activeSessionStartMs: Long? = null,
     val isCompleted: Boolean = false,
-    val currentStreak: Int = 0
+    val currentStreak: Int = 0,
+    val isReadOnly: Boolean = false
 ) {
     val isTimerRunning: Boolean get() = activeSessionStartMs != null
     

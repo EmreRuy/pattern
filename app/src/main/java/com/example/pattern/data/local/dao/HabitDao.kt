@@ -89,15 +89,18 @@ interface HabitDao {
 
     @Query("""
         SELECT date FROM habit_daily_state
-        WHERE habit_id = :habitId AND (is_completed = 1 OR is_task_completed = 1)
+        WHERE habit_id = :habitId AND is_completed = 1
     """)
     fun getCompletedDatesForHabit(habitId: Int): Flow<List<String>>
 
     @Query("""
         SELECT habit_id AS habitId, date FROM habit_daily_state
-        WHERE is_completed = 1 OR is_task_completed = 1
+        WHERE is_completed = 1
     """)
     fun getAllCompletedDates(): Flow<List<HabitCompletionDate>>
+
+    @Query("SELECT * FROM habit_daily_state WHERE date >= :startDate AND date <= :endDate")
+    fun getDailyStatesInRange(startDate: String, endDate: String): Flow<List<HabitDailyState>>
 
     @Query("SELECT * FROM habit_daily_state WHERE date >= :startDate")
     fun getDailyStatesFromDate(startDate: String): Flow<List<HabitDailyState>>
@@ -113,7 +116,7 @@ interface HabitDao {
         )
         FROM habit_daily_state ds
         JOIN habits h ON ds.habit_id = h.id
-        WHERE ds.is_completed = 1 OR ds.is_task_completed = 1
+        WHERE ds.is_completed = 1
     """)
     fun getTotalXP(): Flow<Int?>
 
@@ -127,7 +130,7 @@ interface HabitDao {
     // Task Completion
     @Query("""
         UPDATE habit_daily_state
-        SET is_task_completed = :completed,
+        SET is_completed = :completed,
             completed_count = CASE 
                 WHEN :completed THEN (SELECT COALESCE(task_count, 1) FROM habits WHERE id = :habitId) 
                 ELSE 0 
@@ -143,7 +146,7 @@ interface HabitDao {
     @Query("""
         UPDATE habit_daily_state
         SET completed_count = completed_count + 1,
-            is_task_completed = CASE 
+            is_completed = CASE 
                 WHEN completed_count + 1 >= (SELECT COALESCE(task_count, 1) FROM habits WHERE id = :habitId) THEN 1 
                 ELSE 0 
             END

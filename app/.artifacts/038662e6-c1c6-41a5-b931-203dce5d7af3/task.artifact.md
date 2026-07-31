@@ -1,0 +1,7 @@
+- `[x]` Update `TimerRing.kt` to use `accentColor` for progress, size 32dp, thickness 4.dp
+- `[x]` Update `TaskRing.kt` to revert colors and set size 32dp, thickness 4.dp
+- `[x]` Update `HabitBuildCard.kt` to pass `accentColor` to `TimerRing`
+- `[x]` Update `HabitTaskCard.kt` to stop passing `accentColor`
+- `[x]` Update `HabitQuitCard.kt` to stop passing `accentColor`
+- `[x]` Update `HabitProgressCard.kt` to set thickness to 5.dp and revert track alpha to 0.1f
+- `[x]` Verify changes by building

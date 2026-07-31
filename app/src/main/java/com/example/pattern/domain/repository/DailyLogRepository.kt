@@ -8,6 +8,7 @@ interface DailyLogRepository {
     fun getDailyStatesForDate(date: String): Flow<List<HabitDailyState>>
     fun getDailyStatesForHabit(habitId: Int): Flow<List<HabitDailyState>>
     fun getAllDailyStatesStream(): Flow<List<HabitDailyState>>
+    fun getDailyStatesInRangeStream(startDate: String, endDate: String): Flow<List<HabitDailyState>>
     fun getDailyStatesFromDateStream(startDate: String): Flow<List<HabitDailyState>>
     fun getCompletedDatesStream(): Flow<Map<Int, Set<LocalDate>>>
     suspend fun getDailyStatesForHabitOnce(habitId: Int): List<HabitDailyState>

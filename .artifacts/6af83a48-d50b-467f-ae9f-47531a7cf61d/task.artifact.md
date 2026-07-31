@@ -1,0 +1,3 @@
+- [x] Update `DailyLogRepositoryImpl.kt` to observe timer ticks
+- [x] Implement active timer flushing in `EditHabitViewModel.kt`
+- [x] Verify fix for "stuck" timer during edit

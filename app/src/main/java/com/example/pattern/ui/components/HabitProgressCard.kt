@@ -70,7 +70,7 @@ fun HabitProgressCard(habit: HabitDetailsUi, accentColor: Color) {
                         progress = { levelInfo.progress },
                         modifier = Modifier.size(48.dp),
                         color = accentColor,
-                        strokeWidth = 4.dp,
+                        strokeWidth = 5.dp,
                         trackColor = accentColor.copy(alpha = 0.1f),
                         strokeCap = StrokeCap.Round
                     )

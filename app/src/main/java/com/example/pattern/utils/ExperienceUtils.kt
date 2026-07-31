@@ -32,12 +32,7 @@ object ExperienceUtils {
      * Calculates XP for a single habit completion.
      */
     fun calculateHabitXP(habit: Habit, dailyState: HabitDailyState): Int {
-        val isDone = when (habit.type) {
-            HabitType.BUILD -> dailyState.isCompleted
-            HabitType.TASK, HabitType.QUIT -> dailyState.isTaskCompleted
-        }
-        
-        if (!isDone) return 0
+        if (!dailyState.isCompleted) return 0
 
         return when (habit.type) {
             HabitType.TASK -> XP_TASK_COMPLETION

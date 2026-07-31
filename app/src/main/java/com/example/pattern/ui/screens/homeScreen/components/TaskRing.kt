@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -26,15 +27,18 @@ import androidx.compose.ui.unit.sp
 fun TaskRing(
     checked: Boolean,
     onToggle: () -> Unit,
+    accentColor: Color,
     taskCount: Int = 1,
-    completedCount: Int = 0
+    completedCount: Int = 0,
+    enabled: Boolean = true
 ) {
-    val ringSize = 34.dp
+    val ringSize = 32.dp
     val iconSize = 18.dp
-    val strokeWidthDp = 3.dp
+    val strokeWidthDp = 4.0.dp
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val contentAlpha = if (enabled) 1f else 0.4f
 
     // High-performance progress animation
     val progress by animateFloatAsState(
@@ -59,19 +63,21 @@ fun TaskRing(
         ),
         label = "taskScale"
     )
-    val standardColor = MaterialTheme.colorScheme.onSurface
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    val standardColor = if (checked) accentColor else MaterialTheme.colorScheme.onSurface
+    val trackColor = accentColor.copy(alpha = 0.12f)
     Box(
         modifier = Modifier
             .size(ringSize)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
+                alpha = contentAlpha
             }
             .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,
-                indication = null
+                indication = null,
+                enabled = enabled
             ) { onToggle() },
         contentAlignment = Alignment.Center
     ) {

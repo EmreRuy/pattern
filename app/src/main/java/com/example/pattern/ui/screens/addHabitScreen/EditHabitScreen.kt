@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.addHabitScreen
 
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -23,10 +24,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitEmoji
 import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.repository.DailyLogRepository
 import com.example.pattern.domain.repository.EmojiRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
@@ -35,156 +38,231 @@ import com.example.pattern.ui.components.PatternTimePickerDialog
 import com.example.pattern.ui.components.SectionHeader
 import com.example.pattern.ui.screens.addHabitScreen.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import javax.inject.Inject
-import com.example.pattern.domain.repository.DailyLogRepository
 
 @HiltViewModel
 class EditHabitViewModel @Inject constructor(
     private val repository: HabitRepository,
     private val dailyLogRepository: DailyLogRepository,
-    emojiRepository: EmojiRepository,
+    private val emojiRepository: EmojiRepository,
     private val reminderManager: ReminderManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val habitId: Int = checkNotNull(savedStateHandle["habitId"])
     
-    private val _habit = MutableStateFlow<Habit?>(null)
-    val habit: StateFlow<Habit?> = _habit.asStateFlow()
+    private val _uiState = MutableStateFlow(EditHabitUiState())
+    val uiState: StateFlow<EditHabitUiState> = _uiState.asStateFlow()
 
-    private val _emojiSearchQuery = MutableStateFlow("")
-    val emojiSearchQuery = _emojiSearchQuery.asStateFlow()
-
-    private val _selectedEmojiCategory = MutableStateFlow("All")
-    val selectedEmojiCategory = _selectedEmojiCategory.asStateFlow()
-
-    private val _showCustomEmojiDialog = MutableStateFlow(false)
-    val showCustomEmojiDialog = _showCustomEmojiDialog.asStateFlow()
-
-    val availableEmojiCategories: StateFlow<ImmutableList<String>> = emojiRepository.getCategories()
-        .map { it.toImmutableList() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<String>().toImmutableList())
-
-    val filteredEmojis: StateFlow<ImmutableList<HabitEmoji>> = combine(
-        emojiRepository.getAllEmojis(),
-        _emojiSearchQuery,
-        _selectedEmojiCategory
-    ) { allEmojis, query, category ->
-        allEmojis.filter { emoji ->
-            val matchesCategory = (category == "All") || (emoji.category == category)
-            val matchesSearch = query.isBlank() || 
-                    emoji.value.contains(query, ignoreCase = true) || 
-                    emoji.keywords.any { it.contains(query, ignoreCase = true) }
-            matchesCategory && matchesSearch
-        }.toImmutableList()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<HabitEmoji>().toImmutableList())
+    private val _eventFlow = MutableSharedFlow<EditHabitEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     init {
+        loadHabit()
+        observeEmojis()
+    }
+
+    private fun loadHabit() {
         viewModelScope.launch {
-            _habit.value = repository.getHabitOnce(habitId)
+            val habit = repository.getHabitOnce(habitId)
+            if (habit != null) {
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        habitName = habit.name,
+                        habitType = when (habit.type) {
+                            HabitType.BUILD -> "Grow"
+                            HabitType.QUIT -> "Drop"
+                            HabitType.TASK -> "Task"
+                        },
+                        emoji = habit.iconCode,
+                        motivation = habit.motivation ?: "",
+                        buildHabitDays = DayOfWeek.entries.filterIndexed { index, _ -> 
+                            habit.selectedDays.getOrElse(index) { false } 
+                        }.toImmutableList(),
+                        durationHours = (habit.durationInMinutes ?: 0) / 60,
+                        durationMinutes = (habit.durationInMinutes ?: 0) % 60,
+                        taskCount = habit.taskCount ?: 1,
+                        selectedColor = habit.accentColorHex,
+                        reminderEnabled = habit.reminderTime != null,
+                        reminderTime = habit.reminderTime ?: "09:00"
+                    )
+                }
+            }
         }
+    }
+
+    private fun observeEmojis() {
+        combine(
+            emojiRepository.getAllEmojis(),
+            emojiRepository.getCategories(),
+            _uiState.map { it.emojiSearchQuery }.distinctUntilChanged(),
+            _uiState.map { it.selectedEmojiCategory }.distinctUntilChanged()
+        ) { allEmojis, categories, query, category ->
+            val filtered = allEmojis.filter { emoji ->
+                val matchesCategory = (category == "All") || (emoji.category == category)
+                val matchesSearch = query.isBlank() || 
+                        emoji.value.contains(query, ignoreCase = true) || 
+                        emoji.keywords.any { it.contains(query, ignoreCase = true) }
+                matchesCategory && matchesSearch
+            }.toImmutableList()
+            
+            _uiState.update { it.copy(
+                filteredEmojis = filtered,
+                availableEmojiCategories = categories.toImmutableList()
+            ) }
+        }.launchIn(viewModelScope)
+    }
+
+    fun onNameChange(name: String) {
+        _uiState.update { it.copy(habitName = name.take(20)) }
+    }
+
+    fun onTypeChange(type: String) {
+        _uiState.update { state ->
+            val updatedState = state.copy(habitType = type)
+            // Principal Requirement: If switching to GROW and duration is 0, default to 1 min
+            if (type == "Grow" && updatedState.durationHours == 0 && updatedState.durationMinutes == 0) {
+                updatedState.copy(durationMinutes = 1)
+            } else {
+                updatedState
+            }
+        }
+    }
+
+    fun onDurationChange(hours: Int, minutes: Int) {
+        _uiState.update { it.copy(durationHours = hours, durationMinutes = minutes) }
     }
 
     fun onEmojiSearchQueryChange(query: String) {
-        _emojiSearchQuery.value = query
+        _uiState.update { it.copy(emojiSearchQuery = query) }
     }
 
     fun onEmojiCategoryChange(category: String) {
-        _selectedEmojiCategory.value = category
+        _uiState.update { it.copy(selectedEmojiCategory = category) }
     }
 
     fun onShowCustomEmojiDialogChange(show: Boolean) {
-        _showCustomEmojiDialog.value = show
+        _uiState.update { it.copy(showCustomEmojiDialog = show) }
+    }
+    
+    fun onEmojiSelected(emoji: String) {
+        _uiState.update { it.copy(emoji = emoji, currentStep = AddHabitStep.Main) }
     }
 
-    fun updateHabit(
-        name: String,
-        type: String,
-        durationHours: Int,
-        durationMinutes: Int,
-        selectedDays: List<DayOfWeek>,
-        emoji: String,
-        colorHex: String,
-        reminderEnabled: Boolean,
-        reminderTime: String?,
-        motivation: String?,
-        taskCount: Int?
-    ) {
-        val currentHabit = _habit.value ?: return
-        
-        val daysList = DayOfWeek.entries.map { selectedDays.contains(it) }
-        val newType = when(type) {
-            "Grow" -> HabitType.BUILD
-            "Drop" -> HabitType.QUIT
-            else -> HabitType.TASK
-        }
-        
-        val updatedHabit = currentHabit.copy(
-            name = name.trim(),
-            type = newType,
-            durationInMinutes = if (type == "Grow") (durationHours * 60) + durationMinutes else null,
-            taskCount = if (type == "Task") taskCount else null,
-            selectedDays = daysList.toImmutableList(),
-            iconCode = emoji,
-            accentColorHex = colorHex,
-            reminderTime = if (reminderEnabled) reminderTime else null,
-            motivation = if (motivation.isNullOrBlank()) null else motivation.trim()
-        )
+    fun onColorSelected(color: String) {
+        _uiState.update { it.copy(selectedColor = color, currentStep = AddHabitStep.Main) }
+    }
+
+    fun onDaysChange(days: List<DayOfWeek>) {
+        _uiState.update { it.copy(buildHabitDays = days.toImmutableList()) }
+    }
+
+    fun onTaskCountChange(count: Int) {
+        _uiState.update { it.copy(taskCount = count) }
+    }
+
+    fun onReminderEnabledChange(enabled: Boolean) {
+        _uiState.update { it.copy(reminderEnabled = enabled) }
+    }
+
+    fun onReminderTimeChange(time: String) {
+        _uiState.update { it.copy(reminderTime = time, showTimePicker = false) }
+    }
+
+    fun onStepChange(step: AddHabitStep) {
+        _uiState.update { it.copy(currentStep = step) }
+    }
+
+    fun onMotivationChange(motivation: String) {
+        _uiState.update { it.copy(motivation = motivation) }
+    }
+
+    fun onShowTimePickerChange(show: Boolean) {
+        _uiState.update { it.copy(showTimePicker = show) }
+    }
+
+    fun saveHabit() {
+        val state = _uiState.value
+        if (!state.isValid) return
+
         viewModelScope.launch {
-            repository.withTransaction {
-                repository.updateHabit(updatedHabit)
+            try {
+                val currentHabit = repository.getHabitOnce(habitId) ?: return@launch
                 
-                // Progress Mapping Logic: If category changed, migrate today's progress
-                if (currentHabit.type != newType) {
-                    val today = LocalDate.now().toString()
-                    val todayState = dailyLogRepository.getDailyStateOnce(habitId, today)
-                    if (todayState != null) {
-                        val mappedState = when {
-                            // Task/Quit -> Build (Grow)
-                            (currentHabit.type == HabitType.TASK || currentHabit.type == HabitType.QUIT) && newType == HabitType.BUILD -> {
-                                if (todayState.isTaskCompleted) {
-                                    todayState.copy(
-                                        isCompleted = true,
-                                        accumulatedTimeMs = (updatedHabit.durationInMinutes ?: 0).toLong() * 60_000L
-                                    )
-                                } else todayState
+                val newType = when(state.habitType) {
+                    "Grow" -> HabitType.BUILD
+                    "Drop" -> HabitType.QUIT
+                    else -> HabitType.TASK
+                }
+                
+                // Principal Requirement: Validate non-zero duration for GROW
+                var durationInMins = if (state.habitType == "Grow") ((state.durationHours * 60) + state.durationMinutes) else null
+                if (newType == HabitType.BUILD) {
+                    durationInMins = (durationInMins ?: 0).coerceAtLeast(1)
+                }
+                
+                Log.d("EditHabitSave", "Saving Habit: id=$habitId, category=$newType, durationGoal=$durationInMins, name=${state.habitName}")
+
+                val updatedHabit = currentHabit.copy(
+                    name = state.habitName.trim(),
+                    type = newType,
+                    durationInMinutes = durationInMins,
+                    taskCount = if (state.habitType == "Task") state.taskCount else null,
+                    selectedDays = DayOfWeek.entries.map { state.buildHabitDays.contains(it) }.toImmutableList(),
+                    iconCode = state.emoji,
+                    accentColorHex = state.selectedColor,
+                    reminderTime = if (state.reminderEnabled) state.reminderTime else null,
+                    motivation = if (state.motivation.isBlank()) null else state.motivation.trim()
+                )
+
+                repository.withTransaction {
+                    repository.updateHabit(updatedHabit)
+                    
+                    // Principal Requirement: If category changed, reset today's progress to avoid "zombie" state
+                    if (currentHabit.type != newType) {
+                        val today = LocalDate.now().toString()
+                        val todayState = dailyLogRepository.getDailyStateOnce(habitId, today)
+                        if (todayState != null) {
+                            val resetState = todayState.copy(
+                                accumulatedTimeMs = 0L,
+                                activeSessionStartMs = null,
+                                isCompleted = false,
+                                completedCount = 0
+                            )
+                            dailyLogRepository.upsertDailyState(resetState)
+                            
+                            // Re-calculate XP if the old state was completed
+                            if (todayState.isCompleted) {
+                                // Since we reset it, we subtract the XP previously earned for this habit today
+                                // Note: calculateHabitXP returns the total XP for the completed state
+                                val xpToRemove = com.example.pattern.utils.ExperienceUtils.calculateHabitXP(currentHabit, todayState)
+                                dailyLogRepository.addXP(-xpToRemove)
                             }
-                            // Build (Grow) -> Task/Quit (Drop)
-                            currentHabit.type == HabitType.BUILD && (newType == HabitType.TASK || newType == HabitType.QUIT) -> {
-                                if (todayState.isCompleted) {
-                                    todayState.copy(
-                                        isTaskCompleted = true,
-                                        completedCount = updatedHabit.taskCount ?: 1
-                                    )
-                                } else todayState
-                            }
-                            else -> todayState
-                        }
-                        if (mappedState != todayState) {
-                            dailyLogRepository.upsertDailyState(mappedState)
                         }
                     }
                 }
-            }
-            
-            if (updatedHabit.reminderTime != null) {
-                reminderManager.scheduleReminder(updatedHabit)
-            } else {
-                reminderManager.cancelReminder(updatedHabit.id)
+                
+                if (updatedHabit.reminderTime != null) {
+                    reminderManager.scheduleReminder(updatedHabit)
+                } else {
+                    reminderManager.cancelReminder(updatedHabit.id)
+                }
+                _eventFlow.emit(EditHabitEvent.SaveSuccess)
+            } catch (e: Exception) {
+                _eventFlow.emit(EditHabitEvent.Error(e.message ?: "Failed to update habit"))
             }
         }
     }
+}
+
+sealed class EditHabitEvent {
+    object SaveSuccess : EditHabitEvent()
+    data class Error(val message: String) : EditHabitEvent()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -194,57 +272,31 @@ fun EditHabitScreen(
     onBack: () -> Unit,
     viewModel: EditHabitViewModel = hiltViewModel()
 ) {
-    val habit by viewModel.habit.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
-    if (habit == null) {
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is EditHabitEvent.SaveSuccess -> onSaveSuccess()
+                is EditHabitEvent.Error -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+    }
+
+    if (uiState.isLoading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
 
-    val filteredEmojis by viewModel.filteredEmojis.collectAsState()
-    val emojiSearchQuery by viewModel.emojiSearchQuery.collectAsState()
-    val selectedEmojiCategory by viewModel.selectedEmojiCategory.collectAsState()
-    val availableEmojiCategories by viewModel.availableEmojiCategories.collectAsState()
-    val showCustomEmojiDialog by viewModel.showCustomEmojiDialog.collectAsState()
-
-    val initialHabit = habit!!
-    
-    // Initialize states with existing habit data
-    var currentStep by remember { mutableStateOf(AddHabitStep.Main) }
-    var habitName by remember { mutableStateOf(initialHabit.name) }
-    var habitType by remember { 
-        mutableStateOf(
-            when(initialHabit.type) {
-                HabitType.BUILD -> "Grow"
-                HabitType.QUIT -> "Drop"
-                HabitType.TASK -> "Task"
-            }
-        ) 
-    }
-    var emoji by remember { mutableStateOf(initialHabit.iconCode) }
-    var motivation by remember { mutableStateOf(initialHabit.motivation ?: "") }
-    var buildHabitDays by remember { 
-        mutableStateOf(
-            DayOfWeek.entries.filterIndexed { index, _ -> initialHabit.selectedDays.getOrElse(index) { false } }.toImmutableList()
-        ) 
-    }
-
-    var durationHours by remember { mutableIntStateOf((initialHabit.durationInMinutes ?: 0) / 60) }
-    var durationMinutes by remember { mutableIntStateOf((initialHabit.durationInMinutes ?: 0) % 60) }
-    var taskCount by remember { mutableIntStateOf(initialHabit.taskCount ?: 1) }
-    var selectedColor by remember { mutableStateOf(initialHabit.accentColorHex) }
-    var reminderEnabled by remember { mutableStateOf(initialHabit.reminderTime != null) }
-    var reminderTime by remember { mutableStateOf(initialHabit.reminderTime ?: "09:00") }
-    
-    val snackbarHostState = remember { SnackbarHostState() }
-    var showTimePicker by remember { mutableStateOf(false) }
-    val focusManager = LocalFocusManager.current
-    val scope = rememberCoroutineScope()
-
-    val screenTitle = remember(currentStep) {
-        when (currentStep) {
+    val screenTitle = remember(uiState.currentStep) {
+        when (uiState.currentStep) {
             AddHabitStep.Main -> "EDIT PATTERN"
             AddHabitStep.Category -> "CATEGORY"
             AddHabitStep.Color -> "SELECT COLOR"
@@ -267,8 +319,8 @@ fun EditHabitScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (currentStep == AddHabitStep.Main) onBack()
-                        else currentStep = AddHabitStep.Main
+                        if (uiState.currentStep == AddHabitStep.Main) onBack()
+                        else viewModel.onStepChange(AddHabitStep.Main)
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
@@ -278,27 +330,14 @@ fun EditHabitScreen(
                     }
                 },
                 actions = {
-                    if (currentStep == AddHabitStep.Main) {
+                    if (uiState.currentStep == AddHabitStep.Main) {
                         IconButton(onClick = {
-                            if (habitName.isBlank()) {
+                            if (uiState.habitName.isBlank()) {
                                 scope.launch { snackbarHostState.showSnackbar("Please enter a habit name") }
-                            } else if (buildHabitDays.isEmpty()) {
+                            } else if (uiState.buildHabitDays.isEmpty()) {
                                 scope.launch { snackbarHostState.showSnackbar("Please select at least one day") }
                             } else {
-                                viewModel.updateHabit(
-                                    name = habitName,
-                                    type = habitType,
-                                    durationHours = durationHours,
-                                    durationMinutes = durationMinutes,
-                                    selectedDays = buildHabitDays,
-                                    emoji = emoji,
-                                    colorHex = selectedColor,
-                                    reminderEnabled = reminderEnabled,
-                                    reminderTime = reminderTime,
-                                    motivation = motivation,
-                                    taskCount = taskCount
-                                )
-                                onSaveSuccess()
+                                viewModel.saveHabit()
                             }
                         }) {
                             Icon(
@@ -308,8 +347,8 @@ fun EditHabitScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                    } else if (currentStep == AddHabitStep.Category || currentStep == AddHabitStep.Motivation) {
-                        IconButton(onClick = { currentStep = AddHabitStep.Main }) {
+                    } else if (uiState.currentStep == AddHabitStep.Category || uiState.currentStep == AddHabitStep.Motivation) {
+                        IconButton(onClick = { viewModel.onStepChange(AddHabitStep.Main) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Check,
                                 contentDescription = "Done",
@@ -328,7 +367,7 @@ fun EditHabitScreen(
         contentWindowInsets = WindowInsets.statusBars
     ) { padding ->
         AnimatedContent(
-            targetState = currentStep,
+            targetState = uiState.currentStep,
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
@@ -350,12 +389,9 @@ fun EditHabitScreen(
                         SectionHeader("The Basics")
                         
                         HabitNameCard(
-                            name = habitName,
-                            onNameChange = { habitName = it }
+                            name = uiState.habitName,
+                            onNameChange = viewModel::onNameChange
                         )
-                        
-                        // We could also reuse the inline editor from AddHabitScreen or keep it simple
-                        // For consistency, let's use a similar layout
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -363,14 +399,14 @@ fun EditHabitScreen(
                         ) {
                             Box(modifier = Modifier.weight(1f)) {
                                 EmojiSelector(
-                                    selectedEmoji = emoji,
-                                    onOpen = { currentStep = AddHabitStep.Emoji }
+                                    selectedEmoji = uiState.emoji,
+                                    onOpen = { viewModel.onStepChange(AddHabitStep.Emoji) }
                                 )
                             }
                             Box(modifier = Modifier.weight(1f)) {
                                 ColorSelector(
-                                    selectedColor = selectedColor,
-                                    onOpen = { currentStep = AddHabitStep.Color }
+                                    selectedColor = uiState.selectedColor,
+                                    onOpen = { viewModel.onStepChange(AddHabitStep.Color) }
                                 )
                             }
                         }
@@ -378,21 +414,21 @@ fun EditHabitScreen(
                         SectionHeader("Structure")
                         
                         HabitTypeSelectorCard(
-                            selectedType = habitType,
-                            onOpen = { currentStep = AddHabitStep.Category }
+                            selectedType = uiState.habitType,
+                            onOpen = { viewModel.onStepChange(AddHabitStep.Category) }
                         )
                         
                         HabitReminderCard(
-                            isEnabled = reminderEnabled,
-                            reminderTime = reminderTime,
-                            onEnabledChange = { reminderEnabled = it },
-                            onOpenTimePicker = { showTimePicker = true }
+                            isEnabled = uiState.reminderEnabled,
+                            reminderTime = uiState.reminderTime,
+                            onEnabledChange = viewModel::onReminderEnabledChange,
+                            onOpenTimePicker = { viewModel.onShowTimePickerChange(true) }
                         )
 
                         SectionHeader("Mindset")
 
                         MotivationCard(
-                            onOpen = { currentStep = AddHabitStep.Motivation }
+                            onOpen = { viewModel.onStepChange(AddHabitStep.Motivation) }
                         )
 
                         Spacer(modifier = Modifier.height(40.dp))
@@ -402,45 +438,36 @@ fun EditHabitScreen(
                 AddHabitStep.Category -> {
                     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                         HabitTypeSelectorModern(
-                            selectedType = habitType,
-                            onTypeChange = { habitType = it },
-                            selectedDays = buildHabitDays,
-                            onDaysChange = { buildHabitDays = it.toImmutableList() },
-                            durationHours = durationHours,
-                            durationMinutes = durationMinutes,
-                            onDurationChange = { h, m ->
-                                durationHours = h
-                                durationMinutes = m
-                            },
-                            taskCount = taskCount,
-                            onTaskCountChange = { taskCount = it }
+                            selectedType = uiState.habitType,
+                            onTypeChange = viewModel::onTypeChange,
+                            selectedDays = uiState.buildHabitDays,
+                            onDaysChange = viewModel::onDaysChange,
+                            durationHours = uiState.durationHours,
+                            durationMinutes = uiState.durationMinutes,
+                            onDurationChange = viewModel::onDurationChange,
+                            taskCount = uiState.taskCount,
+                            onTaskCountChange = viewModel::onTaskCountChange
                         )
                     }
                 }
                 
                 AddHabitStep.Color -> {
                     ColorPickerView(
-                        selectedColor = selectedColor,
-                        onColorSelected = { 
-                            selectedColor = it
-                            currentStep = AddHabitStep.Main
-                        }
+                        selectedColor = uiState.selectedColor,
+                        onColorSelected = viewModel::onColorSelected
                     )
                 }
                 
                 AddHabitStep.Emoji -> {
                     EmojiPickerView(
-                        selectedEmoji = emoji,
-                        onEmojiSelected = { 
-                            emoji = it
-                            currentStep = AddHabitStep.Main
-                        },
-                        searchQuery = emojiSearchQuery,
+                        selectedEmoji = uiState.emoji,
+                        onEmojiSelected = viewModel::onEmojiSelected,
+                        searchQuery = uiState.emojiSearchQuery,
                         onSearchQueryChange = viewModel::onEmojiSearchQueryChange,
-                        selectedCategory = selectedEmojiCategory,
+                        selectedCategory = uiState.selectedEmojiCategory,
                         onCategorySelected = viewModel::onEmojiCategoryChange,
-                        categories = availableEmojiCategories,
-                        emojis = filteredEmojis,
+                        categories = uiState.availableEmojiCategories,
+                        emojis = uiState.filteredEmojis,
                         onCustomEmojiClick = { viewModel.onShowCustomEmojiDialogChange(true) }
                     )
                 }
@@ -448,8 +475,8 @@ fun EditHabitScreen(
                 AddHabitStep.Motivation -> {
                     Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
                         BasicTextField(
-                            value = motivation,
-                            onValueChange = { motivation = it },
+                            value = uiState.motivation,
+                            onValueChange = viewModel::onMotivationChange,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
@@ -458,7 +485,7 @@ fun EditHabitScreen(
                             ),
                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                             decorationBox = { innerTextField ->
-                                if (motivation.isEmpty()) {
+                                if (uiState.motivation.isEmpty()) {
                                     Text(
                                         text = "Add a reason or reminder...",
                                         style = MaterialTheme.typography.bodyLarge.copy(
@@ -475,24 +502,20 @@ fun EditHabitScreen(
         }
     }
 
-    if (showTimePicker) {
+    if (uiState.showTimePicker) {
         PatternTimePickerDialog(
-            initialTime = reminderTime,
-            onTimeSelected = {
-                reminderTime = it
-                showTimePicker = false
-            },
-            onDismiss = { showTimePicker = false }
+            initialTime = uiState.reminderTime,
+            onTimeSelected = viewModel::onReminderTimeChange,
+            onDismiss = { viewModel.onShowTimePickerChange(false) }
         )
     }
 
     PatternEmojiInputDialog(
-        isVisible = showCustomEmojiDialog,
+        isVisible = uiState.showCustomEmojiDialog,
         onDismiss = { viewModel.onShowCustomEmojiDialogChange(false) },
         onEmojiSubmitted = { 
-            emoji = it
+            viewModel.onEmojiSelected(it)
             viewModel.onShowCustomEmojiDialogChange(false)
-            currentStep = AddHabitStep.Main
         }
     )
 }

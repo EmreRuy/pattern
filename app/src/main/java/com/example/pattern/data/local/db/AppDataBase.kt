@@ -17,13 +17,15 @@ import com.example.pattern.data.local.entity.SettingsEntity
 
 @Database(
     entities = [Habit::class, HabitDailyState::class, SettingsEntity::class],
-    version = 5, // Incremented to remove redundant timer fields from Habit table
+    version = 7, // Unified completion flag
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDataBase.MigrationFrom1To2::class),
         AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4),
-        AutoMigration(from = 4, to = 5, spec = AppDataBase.MigrationFrom4To5::class)
+        AutoMigration(from = 4, to = 5, spec = AppDataBase.MigrationFrom4To5::class),
+        AutoMigration(from = 5, to = 6),
+        AutoMigration(from = 6, to = 7, spec = AppDataBase.MigrationFrom6To7::class)
     ]
 )
 @TypeConverters(Converters::class)
@@ -49,4 +51,10 @@ abstract class AppDataBase : RoomDatabase() {
     @DeleteColumn(tableName = "habits", columnName = "accumulated_time_ms")
     @DeleteColumn(tableName = "habits", columnName = "active_session_start_ms")
     class MigrationFrom4To5 : AutoMigrationSpec
+
+    /**
+     * Unified completion flag: Deleting the redundant 'is_task_completed' column.
+     */
+    @DeleteColumn(tableName = "habit_daily_state", columnName = "is_task_completed")
+    class MigrationFrom6To7 : AutoMigrationSpec
 }

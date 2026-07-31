@@ -49,9 +49,6 @@ data class HabitDailyState(
     @ColumnInfo(name = "is_completed")
     val isCompleted: Boolean = false,
 
-    @ColumnInfo(name = "is_task_completed")
-    val isTaskCompleted: Boolean = false,
-
     @ColumnInfo(name = "completed_count", defaultValue = "0")
     val completedCount: Int = 0
 ) {

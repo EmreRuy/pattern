@@ -25,6 +25,7 @@ fun HabitTaskCard(
     BaseHabitCard(
         habit = habit,
         onCardClick = onCardClick,
+        enabled = !habit.isReadOnly,
         subtitle = {
             Text(
                 text = if (isMultiStep) "$taskCount times goal" else stringResource(R.string.habit_type_task),
@@ -36,12 +37,14 @@ fun HabitTaskCard(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        action = {
-            if (isToday) {
+        action = { accentColor ->
+            if (!habit.isReadOnly) {
                 TaskRing(
                     checked = habit.isTaskChecked,
                     taskCount = taskCount,
                     completedCount = habit.completedCount,
+                    accentColor = accentColor,
+                    enabled = isToday,
                     onToggle = {
                         if (isMultiStep && !habit.isTaskChecked) {
                             onTaskIncrement(habit.id)

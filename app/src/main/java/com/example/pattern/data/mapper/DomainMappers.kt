@@ -5,12 +5,14 @@ import com.example.pattern.data.local.entity.HabitDailyState as LocalDailyState
 import com.example.pattern.data.local.entity.SettingsEntity
 import com.example.pattern.data.local.entity.HabitType as LocalHabitType
 import com.example.pattern.data.local.entity.HabitWithHistory as LocalHabitWithHistory
+import com.example.pattern.domain.model.FrequencyType
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.model.HabitWithHistory
 import com.example.pattern.domain.model.Settings
 import kotlinx.collections.immutable.toImmutableList
+import java.time.LocalDate
 
 /**
  * Staff Engineer Note:
@@ -42,7 +44,12 @@ fun LocalHabit.toDomain(): Habit = Habit(
     accentColorHex = accentColorHex,
     reminderTime = reminderTime,
     motivation = motivation,
-    taskCount = taskCount
+    taskCount = taskCount,
+    startDate = LocalDate.parse(startDate),
+    endDate = endDate?.let { LocalDate.parse(it) },
+    frequencyType = FrequencyType.valueOf(frequencyType),
+    frequencyInterval = frequencyInterval,
+    daysOfWeekBitmask = daysOfWeekBitmask
 )
 
 fun Habit.toLocal(): LocalHabit = LocalHabit(
@@ -57,7 +64,12 @@ fun Habit.toLocal(): LocalHabit = LocalHabit(
     accentColorHex = accentColorHex,
     reminderTime = reminderTime,
     motivation = motivation,
-    taskCount = taskCount
+    taskCount = taskCount,
+    startDate = startDate.toString(),
+    endDate = endDate?.toString(),
+    frequencyType = frequencyType.name,
+    frequencyInterval = frequencyInterval,
+    daysOfWeekBitmask = daysOfWeekBitmask
 )
 
 fun LocalDailyState.toDomain(): HabitDailyState = HabitDailyState(
@@ -66,7 +78,6 @@ fun LocalDailyState.toDomain(): HabitDailyState = HabitDailyState(
     accumulatedTimeMs = accumulatedTimeMs,
     activeSessionStartMs = activeSessionStartMs,
     isCompleted = isCompleted,
-    isTaskCompleted = isTaskCompleted,
     completedCount = completedCount
 )
 
@@ -76,7 +87,6 @@ fun HabitDailyState.toLocal(): LocalDailyState = LocalDailyState(
     accumulatedTimeMs = accumulatedTimeMs,
     activeSessionStartMs = activeSessionStartMs,
     isCompleted = isCompleted,
-    isTaskCompleted = isTaskCompleted,
     completedCount = completedCount
 )
 

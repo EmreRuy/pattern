@@ -1,5 +1,6 @@
 package com.example.pattern.ui.screens.homeScreen.components
 
+import android.os.SystemClock
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -14,10 +15,9 @@ import kotlinx.coroutines.delay
 /**
  * Staff Engineer Optimized HabitBuildCard.
  * 
- * Performance Perfection:
- * 1. Zero-Allocation Ticking: Replaced String.format and Triple with primitive calculations 
- *    to reduce GC pressure shown in your Flame Chart.
- * 2. Optimized Formatter: Manual string construction is ~10x faster than String.format.
+ * Top 1% Refinements:
+ * 1. Clock-Jump Protection: Uses SystemClock.elapsedRealtime() for the UI ticker.
+ *    This ensures the countdown remains accurate even if the system clock shifts.
  */
 @Composable
 fun HabitBuildCard(
@@ -34,19 +34,30 @@ fun HabitBuildCard(
         (habit.durationInMinutes ?: 0) * 60_000L
     }
 
-    // Isolate the ticking state. 
-    // produceState is more efficient than LaunchedEffect + mutableStateOf.
-    val currentTimeState = produceState(initialValue = System.currentTimeMillis()) {
-        while (true) {
-            delay(1000)
-            value = System.currentTimeMillis()
+    // Capture baseline values to make the ticker immune to wall-clock changes.
+    val baseTimeState = remember(habit.id, habit.activeSessionStartMs, habit.accumulatedTimeMs, habit.durationInMinutes) {
+        val nowWall = System.currentTimeMillis()
+        val nowElapsed = SystemClock.elapsedRealtime()
+        val initialElapsed = habit.calculateTotalTimeMs(nowWall)
+        initialElapsed to nowElapsed
+    }
+
+    val currentElapsedMs = produceState(initialValue = baseTimeState.first, keys = arrayOf(baseTimeState, habit.isTimerRunning)) {
+        if (habit.isTimerRunning) {
+            while (true) {
+                delay(1000)
+                val nowElapsed = SystemClock.elapsedRealtime()
+                val sessionIncrement = (nowElapsed - baseTimeState.second).coerceAtLeast(0L)
+                value = baseTimeState.first + sessionIncrement
+            }
+        } else {
+            value = baseTimeState.first
         }
     }
 
     // Derived states for UI
-    val remainingMillis = remember(habit, totalMillis, currentTimeState.value) {
-        val elapsed = habit.calculateTotalTimeMs(currentTimeState.value)
-        (totalMillis - elapsed).coerceAtLeast(0L)
+    val remainingMillis = remember(currentElapsedMs.value, totalMillis) {
+        (totalMillis - currentElapsedMs.value).coerceAtLeast(0L)
     }
 
     val progress = remember(remainingMillis, totalMillis) {
@@ -54,8 +65,14 @@ fun HabitBuildCard(
         else 1f - (remainingMillis.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
     }
 
-    val formattedTime = remember(remainingMillis) {
-        formatDurationFast(remainingMillis)
+    val formattedElapsed = remember(currentElapsedMs.value, totalMillis) {
+        // Cap displayed elapsed time at the goal to prevent UI confusion
+        val displayElapsed = if (habit.isCompleted) totalMillis else currentElapsedMs.value.coerceAtMost(totalMillis)
+        formatDurationFast(displayElapsed)
+    }
+
+    val formattedTotal = remember(totalMillis) {
+        formatDurationFast(totalMillis)
     }
 
     val showSuccess = remember { mutableStateOf(false) }
@@ -76,12 +93,13 @@ fun HabitBuildCard(
     BaseHabitCard(
         habit = habit,
         onCardClick = onCardClick,
+        enabled = !habit.isReadOnly,
         subtitle = {
             if (totalMillis > 0) {
                 val text = if (habit.isCompleted) {
                     stringResource(R.string.habit_goal_reached)
                 } else {
-                    formattedTime
+                    "$formattedElapsed / $formattedTotal"
                 }
                 
                 Text(
@@ -96,14 +114,16 @@ fun HabitBuildCard(
                 )
             }
         },
-        action = {
-            if (isToday) {
+        action = { accentColor ->
+            if (!habit.isReadOnly) {
                 TimerRing(
                     progress = progress,
                     isCompleted = habit.isCompleted,
                     isRunning = habit.isTimerRunning,
                     isPaused = !habit.isTimerRunning && habit.accumulatedTimeMs > 0 && !habit.isCompleted,
                     showSuccess = showSuccess.value,
+                    accentColor = accentColor,
+                    enabled = isToday,
                     onClick = {
                         if (habit.isCompleted) {
                             onUnfinishTimer(habit.id)

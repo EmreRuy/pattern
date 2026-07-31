@@ -37,14 +37,16 @@ fun TimerRing(
     isRunning: Boolean,
     isPaused: Boolean,
     showSuccess: Boolean,
+    accentColor: Color,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val ringSize = 34.dp
-    val iconSize = 20.dp
-    val strokeWidthDp = 3.5.dp
+    val ringSize = 32.dp
+    val iconSize = 18.dp
+    val strokeWidthDp = 4.0.dp
     // Theme color capture
-    val backgroundRingColor = MaterialTheme.colorScheme.surfaceVariant
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val backgroundRingColor = accentColor.copy(alpha = 0.12f)
+    val contentAlpha = if (enabled) 1f else 0.4f
 
     //Progress Animation
     val animatedProgress by animateFloatAsState(
@@ -71,11 +73,13 @@ fun TimerRing(
             .graphicsLayer {
                 scaleX = successScale
                 scaleY = successScale
+                alpha = contentAlpha
             }
             .clip(CircleShape)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
+                indication = null,
+                enabled = enabled
             ) {
                 if (!isCompleted) onClick()
             },
@@ -99,9 +103,9 @@ fun TimerRing(
                             style = stroke
                         )
                         val arcColor = when {
-                            isCompleted -> primaryColor
-                            isPaused -> primaryColor.copy(alpha = 0.6f)
-                            else -> primaryColor
+                            isCompleted -> accentColor
+                            isPaused -> accentColor.copy(alpha = 0.6f)
+                            else -> accentColor
                         }
                         drawArc(
                             color = arcColor,
@@ -123,7 +127,7 @@ fun TimerRing(
             imageVector = icon,
             contentDescription = null,
             tint = if (isCompleted) {
-                primaryColor.copy(alpha = iconAlpha)
+                accentColor.copy(alpha = iconAlpha)
             } else {
                 MaterialTheme.colorScheme.onSurface
             },

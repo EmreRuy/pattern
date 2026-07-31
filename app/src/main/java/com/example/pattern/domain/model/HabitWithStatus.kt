@@ -6,5 +6,6 @@ package com.example.pattern.domain.model
 data class HabitWithStatus(
     val habit: Habit,
     val dailyState: HabitDailyState?,
-    val currentStreak: Int
+    val currentStreak: Int,
+    val isReadOnly: Boolean = false
 )

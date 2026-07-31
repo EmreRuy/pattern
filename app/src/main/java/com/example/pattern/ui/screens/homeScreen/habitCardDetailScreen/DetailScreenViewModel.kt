@@ -93,7 +93,7 @@ class HabitDetailsViewModel @Inject constructor(
             totalXP = totalXP,
             reminderTime = habit.reminderTime,
             motivation = habit.motivation,
-            completedDates = CompletedDates(dailyStates.filter { it.isCompleted || it.isTaskCompleted }.map { it.date }.toSet())
+            completedDates = CompletedDates(dailyStates.filter { it.isCompleted }.map { it.date }.toSet())
         )
     }
 }

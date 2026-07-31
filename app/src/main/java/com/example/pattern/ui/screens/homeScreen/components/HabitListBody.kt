@@ -60,7 +60,7 @@ fun HabitListBody(
         ) {
             items(
                 items = habits,
-                key = { it.habit.id },
+                key = { "${it.habit.id}_${it.habit.type}_${it.habit.durationInMinutes ?: 0}" },
                 contentType = { "habit_item" }
             ) { model ->
                 HabitListItem(

@@ -6,6 +6,7 @@ import com.example.pattern.utils.CalendarDayModel
 import com.example.pattern.utils.TimePeriod
 import com.example.pattern.utils.TimeUtils
 import com.example.pattern.domain.model.LevelInfo
+import com.example.pattern.domain.usecase.HabitProjectionData
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -19,8 +20,7 @@ sealed interface HomeUiState {
     data class Success(
         val selectedDate: LocalDate = LocalDate.now(),
         val isSelectedDateToday: Boolean = true,
-        val habits: ImmutableList<HabitCardModel> = persistentListOf(),
-        val habitsByDate: ImmutableMap<LocalDate, ImmutableList<HabitCardModel>> = persistentMapOf(),
+        val projectionData: HabitProjectionData? = null,
         val hasAnyHabits: Boolean = false,
         val levelInfo: LevelInfo,
         val timePeriod: TimePeriod = TimePeriod.MORNING,

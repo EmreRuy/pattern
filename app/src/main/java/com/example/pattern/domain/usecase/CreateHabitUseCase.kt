@@ -1,11 +1,13 @@
 package com.example.pattern.domain.usecase
 
+import com.example.pattern.domain.model.FrequencyType
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.notifications.ReminderManager
 import kotlinx.collections.immutable.toImmutableList
 import java.time.DayOfWeek
+import java.time.LocalDate
 import javax.inject.Inject
 
 /**
@@ -42,6 +44,10 @@ class CreateHabitUseCase @Inject constructor(
             null
         }
 
+        val bitmask = selectedDays.fold(0) { acc, day ->
+            acc or (1 shl (day.value - 1))
+        }
+
         val habit = Habit(
             id = 0,
             name = name.trim(),
@@ -58,7 +64,10 @@ class CreateHabitUseCase @Inject constructor(
             reminderTime = if (reminderEnabled) reminderTime else null,
             motivation = if (motivation.isBlank()) null else motivation.trim(),
             isCompleted = false,
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            startDate = LocalDate.now(),
+            frequencyType = if (selectedDays.size == 7) FrequencyType.DAILY else FrequencyType.WEEKLY,
+            daysOfWeekBitmask = bitmask
         )
 
         val id = repository.upsertHabit(habit)

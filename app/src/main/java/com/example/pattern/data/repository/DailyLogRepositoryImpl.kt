@@ -33,8 +33,9 @@ class DailyLogRepositoryImpl @Inject constructor(
                     o.habitId == n.habitId && 
                     o.date == n.date && 
                     o.isCompleted == n.isCompleted && 
-                    o.isTaskCompleted == n.isTaskCompleted &&
-                    o.completedCount == n.completedCount
+                    o.completedCount == n.completedCount &&
+                    o.accumulatedTimeMs == n.accumulatedTimeMs &&
+                    o.activeSessionStartMs == n.activeSessionStartMs
                 }
             }
             .map { list -> list.map { it.toDomain() } }
@@ -50,7 +51,21 @@ class DailyLogRepositoryImpl @Inject constructor(
                     o.habitId == n.habitId && 
                     o.date == n.date && 
                     o.isCompleted == n.isCompleted && 
-                    o.isTaskCompleted == n.isTaskCompleted &&
+                    o.completedCount == n.completedCount &&
+                    o.accumulatedTimeMs == n.accumulatedTimeMs &&
+                    o.activeSessionStartMs == n.activeSessionStartMs
+                }
+            }
+            .map { list -> list.map { it.toDomain() } }
+
+    override fun getDailyStatesInRangeStream(startDate: String, endDate: String): Flow<List<HabitDailyState>> =
+        habitDao.getDailyStatesInRange(startDate, endDate)
+            .distinctUntilChanged { old, new ->
+                if (old.size != new.size) return@distinctUntilChanged false
+                old.zip(new).all { (o, n) ->
+                    o.habitId == n.habitId && 
+                    o.date == n.date && 
+                    o.isCompleted == n.isCompleted && 
                     o.completedCount == n.completedCount &&
                     o.accumulatedTimeMs == n.accumulatedTimeMs &&
                     o.activeSessionStartMs == n.activeSessionStartMs

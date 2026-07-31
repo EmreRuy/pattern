@@ -18,7 +18,7 @@ class StreakCalculatorImpl @Inject constructor() : StreakCalculator {
         if (history.isEmpty()) return StreakInfo(0, 0, 0)
 
         val completedEpochs = history
-            .filter { it.isCompleted || it.isTaskCompleted }
+            .filter { it.isCompleted }
             .map { LocalDate.parse(it.date).toEpochDay() }
             .toSet()
 

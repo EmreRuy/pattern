@@ -1,0 +1,6 @@
+- [x] Update `HomeViewModel` to correctly initialize initial state from `SavedStateHandle`
+- [x] Refactor `HomeScreen` pager synchronization logic
+    - [x] Add `rememberUpdatedState` for callbacks and state references
+    - [x] Add guards for `isScrollInProgress` to avoid fighting user input
+    - [x] Optimize Pager -> ViewModel sync
+- [x] Verify implementation consistency

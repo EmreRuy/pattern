@@ -45,7 +45,22 @@ data class Habit(
     val motivation: String? = null,
 
     @ColumnInfo(name = "task_count")
-    val taskCount: Int? = null
+    val taskCount: Int? = null,
+
+    @ColumnInfo(name = "start_date", defaultValue = "2024-01-01")
+    val startDate: String = "2024-01-01", // Default to anchor date
+
+    @ColumnInfo(name = "end_date")
+    val endDate: String? = null,
+
+    @ColumnInfo(name = "frequency_type", defaultValue = "DAILY")
+    val frequencyType: String = "DAILY",
+
+    @ColumnInfo(name = "frequency_interval", defaultValue = "1")
+    val frequencyInterval: Int = 1,
+
+    @ColumnInfo(name = "days_of_week_bitmask", defaultValue = "127")
+    val daysOfWeekBitmask: Int = 127
 )
 
 enum class HabitType {

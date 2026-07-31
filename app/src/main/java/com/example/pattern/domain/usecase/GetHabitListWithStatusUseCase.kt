@@ -2,7 +2,6 @@ package com.example.pattern.domain.usecase
 
 import com.example.pattern.domain.model.Habit
 import com.example.pattern.domain.model.HabitDailyState
-import com.example.pattern.domain.model.HabitType
 import com.example.pattern.domain.repository.DailyLogRepository
 import com.example.pattern.domain.repository.HabitRepository
 import com.example.pattern.utils.ExperienceUtils
@@ -44,10 +43,7 @@ class GetHabitListWithStatusUseCase @Inject constructor(
             allHabits.map { habit ->
                 val todayState = statesByHabit[habit.id] ?: HabitDailyState(habitId = habit.id, date = dateStr)
                 
-                val isCompleted = when (habit.type) {
-                    HabitType.BUILD -> todayState.isCompleted
-                    HabitType.TASK, HabitType.QUIT -> todayState.isTaskCompleted
-                }
+                val isCompleted = todayState.isCompleted
 
                 val currentXP = ExperienceUtils.calculateHabitXP(habit, todayState)
                 val maxXP = ExperienceUtils.calculateMaxXP(habit)

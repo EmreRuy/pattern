@@ -1,0 +1,247 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "c09536bbddb555e831520bd789c78773",
+    "entities": [
+      {
+        "tableName": "habits",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `duration_in_minutes` INTEGER, `selected_days` TEXT NOT NULL, `icon_code` TEXT NOT NULL, `is_completed` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `accent_color_hex` TEXT NOT NULL, `reminder_time` TEXT, `motivation` TEXT, `task_count` INTEGER, `start_date` TEXT NOT NULL DEFAULT '2024-01-01', `end_date` TEXT, `frequency_type` TEXT NOT NULL DEFAULT 'DAILY', `frequency_interval` INTEGER NOT NULL DEFAULT 1, `days_of_week_bitmask` INTEGER NOT NULL DEFAULT 127)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "durationInMinutes",
+            "columnName": "duration_in_minutes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "selectedDays",
+            "columnName": "selected_days",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iconCode",
+            "columnName": "icon_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCompleted",
+            "columnName": "is_completed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accentColorHex",
+            "columnName": "accent_color_hex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reminderTime",
+            "columnName": "reminder_time",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "motivation",
+            "columnName": "motivation",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "taskCount",
+            "columnName": "task_count",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "startDate",
+            "columnName": "start_date",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'2024-01-01'"
+          },
+          {
+            "fieldPath": "endDate",
+            "columnName": "end_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "frequencyType",
+            "columnName": "frequency_type",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'DAILY'"
+          },
+          {
+            "fieldPath": "frequencyInterval",
+            "columnName": "frequency_interval",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "daysOfWeekBitmask",
+            "columnName": "days_of_week_bitmask",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "127"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "habit_daily_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`habit_id` INTEGER NOT NULL, `date` TEXT NOT NULL, `accumulated_time_ms` INTEGER NOT NULL, `active_session_start_ms` INTEGER, `is_completed` INTEGER NOT NULL, `is_task_completed` INTEGER NOT NULL, `completed_count` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`habit_id`, `date`), FOREIGN KEY(`habit_id`) REFERENCES `habits`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "habitId",
+            "columnName": "habit_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accumulatedTimeMs",
+            "columnName": "accumulated_time_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeSessionStartMs",
+            "columnName": "active_session_start_ms",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isCompleted",
+            "columnName": "is_completed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isTaskCompleted",
+            "columnName": "is_task_completed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedCount",
+            "columnName": "completed_count",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "habit_id",
+            "date"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_habit_daily_state_habit_id",
+            "unique": false,
+            "columnNames": [
+              "habit_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_habit_daily_state_habit_id` ON `${TABLE_NAME}` (`habit_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "habits",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habit_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "settings_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `quiet_hours_enabled` INTEGER NOT NULL, `start_time` TEXT NOT NULL, `end_time` TEXT NOT NULL, `total_xp` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quietHoursEnabled",
+            "columnName": "quiet_hours_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startTime",
+            "columnName": "start_time",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTime",
+            "columnName": "end_time",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalXP",
+            "columnName": "total_xp",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c09536bbddb555e831520bd789c78773')"
+    ]
+  }
+}

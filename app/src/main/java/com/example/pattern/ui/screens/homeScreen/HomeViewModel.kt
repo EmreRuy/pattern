@@ -3,25 +3,17 @@ package com.example.pattern.ui.screens.homeScreen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pattern.domain.model.HabitWithStatus
 import com.example.pattern.domain.repository.DailyLogRepository
 import com.example.pattern.domain.repository.HabitRepository
-import com.example.pattern.domain.usecase.GetHomeHabitsUseCase
+import com.example.pattern.domain.usecase.GetHabitProjectionDataUseCase
 import com.example.pattern.domain.usecase.UpdateHabitProgressUseCase
 import com.example.pattern.di.DefaultDispatcher
-import com.example.pattern.domain.streak.StreakCalculator
-import com.example.pattern.ui.mapper.toCardModel
 import com.example.pattern.ui.model.HabitCardModel
+import com.example.pattern.ui.screens.homeScreen.mapper.HabitProjectionMapper
 import com.example.pattern.utils.ExperienceUtils
 import com.example.pattern.utils.TimePeriod
 import com.example.pattern.utils.TimeUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableMap
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toImmutableMap
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -41,16 +33,15 @@ Optimization:
 class HomeViewModel @Inject constructor(
     habitRepository: HabitRepository,
     dailyLogRepository: DailyLogRepository,
-    private val getHomeHabitsUseCase: GetHomeHabitsUseCase,
+    private val getHabitProjectionDataUseCase: GetHabitProjectionDataUseCase,
     private val updateHabitProgressUseCase: UpdateHabitProgressUseCase,
-    private val streakCalculator: StreakCalculator,
+    private val projectionMapper: HabitProjectionMapper,
     private val savedStateHandle: SavedStateHandle,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _selectedDate = savedStateHandle.getStateFlow("selected_date", LocalDate.now())
     private val _todayFlow = MutableStateFlow(LocalDate.now())
-    private val modelCache = mutableMapOf<String, HabitCardModel>()
 
     private val levelInfoFlow = habitRepository.getSettingsStream()
         .map { settings -> ExperienceUtils.getLevelInfo(settings?.totalXP ?: 0) }
@@ -64,44 +55,19 @@ class HomeViewModel @Inject constructor(
         }
     }.distinctUntilChanged()
 
-    // Optimization: Habit list for the window is now delegated to a specialized UseCase.
-    private val habitWindowFlow = _selectedDate.flatMapLatest { date ->
-        getHomeHabitsUseCase(date)
-    }.map { windowMap ->
-        windowMap.mapValues { (_, habits) ->
-            habits.map { status ->
-                val cacheKey = "${status.habit.hashCode()}_${status.dailyState?.hashCode()}_${status.currentStreak}"
-                modelCache.getOrPut(cacheKey) {
-                    status.toCardModel()
-                }
-            }.toImmutableList()
-        }.toImmutableMap()
-    }
-
-    // Optimization: The calendar window dots are calculated separately and much more simply.
-    // We only need to know if SOMETHING was completed on a given date.
-    private val calendarDotsFlow = dailyLogRepository.getDailyStatesFromDateStream(
-        LocalDate.now().minusDays(14).toString()
-    ).map { states ->
-        states.filter { it.isCompleted || it.isTaskCompleted }
-            .groupBy { it.date }
-            .mapValues { true }
-    }.distinctUntilChanged()
-
     val uiState: StateFlow<HomeUiState> = combine(
         combine(_selectedDate, _todayFlow) { date, today -> date to today },
-        habitWindowFlow,
+        getHabitProjectionDataUseCase(),
         levelInfoFlow,
         timePeriodFlow,
         habitRepository.getAllHabitsStream().map { it.isNotEmpty() }.distinctUntilChanged()
-    ) { dateAndToday, window, level, timePeriod, hasHabits ->
+    ) { dateAndToday, projectionData, level, timePeriod, hasHabits ->
         val (date, today) = dateAndToday
         
         HomeUiState.Success(
             selectedDate = date,
             isSelectedDateToday = date == today,
-            habits = window[date] ?: persistentListOf(),
-            habitsByDate = window,
+            projectionData = projectionData,
             hasAnyHabits = hasHabits,
             levelInfo = level,
             timePeriod = timePeriod,
@@ -116,11 +82,21 @@ class HomeViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState.Success(
+            selectedDate = _selectedDate.value,
             levelInfo = ExperienceUtils.getLevelInfo(0),
             timePeriod = TimeUtils.getCurrentTimePeriod(),
             isLoading = true
         )
     )
+
+    fun project(date: LocalDate): List<HabitCardModel> {
+        val state = uiState.value
+        return if (state is HomeUiState.Success && state.projectionData != null) {
+            projectionMapper.map(state.projectionData, date)
+        } else {
+            emptyList()
+        }
+    }
 
     fun onEvent(event: HomeUiEvent) {
         when (event) {

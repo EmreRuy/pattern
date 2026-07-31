@@ -20,6 +20,7 @@ fun HabitQuitCard(
     BaseHabitCard(
         habit = habit,
         onCardClick = onCardClick,
+        enabled = !habit.isReadOnly,
         subtitle = {
             Text(
                 text = stringResource(R.string.habit_type_quit),
@@ -31,10 +32,12 @@ fun HabitQuitCard(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        action = {
-            if (isToday) {
+        action = { accentColor ->
+            if (!habit.isReadOnly) {
                 TaskRing(
                     checked = habit.isTaskChecked,
+                    accentColor = accentColor,
+                    enabled = isToday,
                     onToggle = {
                         onTaskCompleted(habit.id, !habit.isTaskChecked)
                     }

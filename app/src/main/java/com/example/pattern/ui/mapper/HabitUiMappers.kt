@@ -25,7 +25,7 @@ fun HabitWithStatus.toCardModel(): HabitCardModel {
         type = habit.type,
         icon = icon,
         iconEmoji = habit.iconCode,
-        isTaskChecked = dailyState?.isTaskCompleted ?: false,
+        isTaskChecked = dailyState?.isCompleted ?: false,
         completedCount = dailyState?.completedCount ?: 0,
         accentColorHex = habit.accentColorHex,
         durationInMinutes = habit.durationInMinutes,
@@ -33,6 +33,7 @@ fun HabitWithStatus.toCardModel(): HabitCardModel {
         accumulatedTimeMs = dailyState?.accumulatedTimeMs ?: 0L,
         activeSessionStartMs = dailyState?.activeSessionStartMs,
         isCompleted = dailyState?.isCompleted ?: false,
-        currentStreak = currentStreak
+        currentStreak = currentStreak,
+        isReadOnly = isReadOnly
     )
 }

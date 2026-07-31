@@ -17,6 +17,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.example.pattern.domain.model.HabitType
+import com.example.pattern.domain.usecase.HabitProjectionData
 import com.example.pattern.ui.model.HabitCardModel
 import com.example.pattern.utils.CalendarMathProvider
 import java.time.LocalDate
@@ -31,7 +32,8 @@ data class HabitCardList(val items: List<HabitCardModel>)
 @Composable
 fun HabitCardsPager(
     pagerState: PagerState,
-    habitsByDate: Map<LocalDate, List<HabitCardModel>>,
+    onProject: (LocalDate) -> List<HabitCardModel>,
+    projectionData: HabitProjectionData?,
     hasAnyHabits: Boolean,
     isLoading: Boolean,
     paddingValues: PaddingValues,
@@ -63,7 +65,11 @@ fun HabitCardsPager(
         val date = remember(pageIndex) {
             CalendarMathProvider.getDateFromDayIndex(pageIndex)
         }
-        val habits = habitsByDate[date] ?: emptyList()
+        
+        val habits = remember(pageIndex, projectionData) {
+            onProject(date)
+        }
+        
         val isToday = date == today
 
         HabitListContent(
@@ -118,7 +124,7 @@ private fun HabitListContent(
         ) {
             items(
                 items = habits.items,
-                key = { it.id },
+                key = { "${it.id}_${it.type}_${it.durationInMinutes ?: 0}_${it.taskCount ?: 0}" },
                 contentType = { it.type }
             ) { habit ->
                 when (habit.type) {
